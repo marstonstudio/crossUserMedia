@@ -21,9 +21,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!--scm>
-        <developerConnection>scm:git:ssh://git@admin.babelcentral.com:7999/sv/apacheflex.git</developerConnection>
-    </scm-->
+    <scm>
+        <developerConnection>scm:git:https://github.com/marstonstudio/crossUserMedia.git</developerConnection>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -39,18 +39,5 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <!--distributionManagement>
-        <repository>
-            <id>release.nexus.babelcentral.com</id>
-            <uniqueVersion>false</uniqueVersion>
-            <url>http://admin.babelcentral.com:10080/content/repositories/releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshot.nexus.babelcentral.com</id>
-            <uniqueVersion>false</uniqueVersion>
-            <url>http://admin.babelcentral.com:10080/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement-->
 
 </project>
