@@ -2,4 +2,5 @@
 .idea/
 *.iml
 target/
+fonts.ser
 crossUserServer/src/main/webapp/crossUserMicrophone.swf
