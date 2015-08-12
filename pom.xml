@@ -40,4 +40,11 @@
         </dependencies>
     </dependencyManagement>
 
+    <!--repositories>
+        <repository>
+            <id>tomp2p.net</id>
+            <url>http://tomp2p.net/dev/mvn/</url>
+        </repository>
+    </repositories-->
+
 </project>

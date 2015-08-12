@@ -23,7 +23,7 @@ public class AudioREST {
 
     protected static final Logger logger = Logger.getLogger(AudioREST.class);
 
-    public static Set<String> ACCEPTED_AUDIO_FORMATS = new HashSet<String>(Arrays.asList("wav", "mp3", "mp4"));
+    public static Set<String> ACCEPTED_AUDIO_FORMATS = new HashSet<String>(Arrays.asList("wav", "ogg", "mp4"));
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
@@ -65,7 +65,7 @@ public class AudioREST {
     private void validateAudioFormat(String paramName, String audioFormat) {
 
         if(audioFormat == null) {
-            throw new WebApplicationException(paramName + " is required", Response.Status.NOT_ACCEPTABLE);
+            throw new WebApplicationException(paramName + " is required", Response.Status.METHOD_NOT_ALLOWED);
         }
 
         if(!ACCEPTED_AUDIO_FORMATS.contains(audioFormat)) {

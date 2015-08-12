@@ -6,10 +6,6 @@ body {
 }
 object:focus { outline:none; }
 
-a {
-    padding:10px;
-}
-
 #root {width: 350px; padding:10px;}
 
 div.container { width:310px; height:20px; padding:10px;}

@@ -1,20 +1,15 @@
-package org.bytearray.micrecorder.encoder {
+package com.marstonstudio.crossUserServer.encoder {
 
-    import com.marstonstudio.crossUserServer.util.Constants;
+import flash.utils.ByteArray;
+import flash.utils.Endian;
 
-    import flash.utils.ByteArray;
-    import flash.utils.Endian;
-
-    public class WavEncoder implements IEncoder {
+public class WavEncoder extends AbstractEncoder {
 
         private var _bytes:ByteArray = new ByteArray();
         private var _buffer:ByteArray = new ByteArray();
-        
-        /**
-         * 
-         * @param volume
-         * 
-         */        
+
+        private static const _sampleRate:int = 16000;   //Wav encoder supports different values
+
         public function WavEncoder() {}
 
         /*
@@ -74,9 +69,9 @@ package org.bytearray.micrecorder.encoder {
          44        *   Data             The actual sound data.
          */
 
-        public function encode(samples:ByteArray):ByteArray
-        {
-            var data:ByteArray = create( samples );
+        override public function encode(samples:ByteArray):ByteArray {
+
+            var data:ByteArray = transform32BitFloatTo16BitShort( samples );
             
             _bytes.length = 0;
             _bytes.endian = Endian.LITTLE_ENDIAN;
@@ -87,11 +82,11 @@ package org.bytearray.micrecorder.encoder {
             _bytes.writeUTFBytes( "fmt " );
             _bytes.writeInt( uint( 16 ) );
             _bytes.writeShort( uint( 1 ) );
-            _bytes.writeShort( Constants.CHANNELS );
-            _bytes.writeInt( Constants.SAMPLE_RATE );
-            _bytes.writeInt( uint( Constants.SAMPLE_RATE * Constants.CHANNELS * ( Constants.BIT_RATE >> 3 ) ) );
-            _bytes.writeShort( uint( Constants.CHANNELS * ( Constants.BIT_RATE >> 3 ) ) );
-            _bytes.writeShort( Constants.BIT_RATE );
+            _bytes.writeShort( channels );
+            _bytes.writeInt( sampleRate );
+            _bytes.writeInt( uint( sampleRate * channels * ( bitDepth >> 3 ) ) );
+            _bytes.writeShort( uint( channels * ( bitDepth >> 3 ) ) );
+            _bytes.writeShort( bitDepth );
             _bytes.writeUTFBytes( "data" );
             _bytes.writeInt( data.length );
             _bytes.writeBytes( data );
@@ -100,8 +95,7 @@ package org.bytearray.micrecorder.encoder {
             return _bytes;
         }
                 
-        private function create( bytes:ByteArray ):ByteArray
-        {
+        private function transform32BitFloatTo16BitShort( bytes:ByteArray ):ByteArray {
             _buffer.endian = Endian.LITTLE_ENDIAN;
             _buffer.length = 0;
             bytes.position = 0;
@@ -110,6 +104,10 @@ package org.bytearray.micrecorder.encoder {
                 _buffer.writeShort(bytes.readFloat() * (0x7fff));
             }
             return _buffer;
+        }
+
+        override protected function get sampleRate():int {
+            return _sampleRate;
         }
     }
 }
