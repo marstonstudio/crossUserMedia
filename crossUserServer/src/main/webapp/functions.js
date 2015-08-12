@@ -41,7 +41,7 @@ function onClickStartRecording() {
             console.error(e.message);
         });
     } else {
-        document.getElementById("crossUserMicrophoneSwf").startRecording(false);
+        document.getElementById("crossUserMicrophoneSwf").startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
     }
 }
 
@@ -108,8 +108,8 @@ var audioStream = null;
 var context = null;
 var recorder = null;
 var audioInput = null;
-var inputFormat = "wav";
-var outputFormat = "mp4";
+var inputFormat = "wav"; // wav || ogg
+var outputFormat = "mp4"; // wav || ogg || mp4 || mp3
 var outputUrl = null;
 
 function startUserMediaRecording(stream) {
