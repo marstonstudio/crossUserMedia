@@ -41,7 +41,7 @@ function onClickStartRecording() {
             console.error(e.message);
         });
     } else {
-        document.getElementById("crossUserMicrophoneSwf").startRecording();
+        document.getElementById("crossUserMicrophoneSwf").startRecording(false);
     }
 }
 

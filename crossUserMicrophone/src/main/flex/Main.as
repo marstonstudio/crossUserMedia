@@ -1,28 +1,24 @@
 package {
 
+    import com.marstonstudio.crossUserServer.events.RecordingEvent;
+    import com.marstonstudio.crossUserServer.microphone.MicRecorder;
+
     import flash.display.Sprite;
     import flash.display.StageAlign;
     import flash.display.StageScaleMode;
     import flash.events.Event;
-
     import flash.external.ExternalInterface;
     import flash.text.AntiAliasType;
     import flash.text.TextField;
     import flash.text.TextFieldAutoSize;
-
     import flash.text.TextFormat;
 
     import mx.utils.Base64Encoder;
 
-    import org.bytearray.micrecorder.MicRecorder;
-    import org.bytearray.micrecorder.encoder.PassThruEncoder;
-    import org.bytearray.micrecorder.encoder.WavEncoder;
-    import org.bytearray.micrecorder.events.RecordingEvent;
-    
-    [SWF(width="310", height="138", frameRate="31", backgroundColor="#F5F5DC")]
+[SWF(width="310", height="138", frameRate="31", backgroundColor="#F5F5DC")]
     public class Main extends Sprite {
 
-        private var _recorder:MicRecorder = new MicRecorder( new WavEncoder() );
+        private var _recorder:MicRecorder;
 
         private var _display:TextField;
 
@@ -56,16 +52,16 @@ package {
             _display.autoSize = TextFieldAutoSize.LEFT;
             addChild(_display);
 
-            _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
-            _recorder.addEventListener(Event.COMPLETE, onRecordComplete);
-            _recorder.gain = 75;
-
             ExternalInterface.addCallback("startRecording", externalStartRecording);
             ExternalInterface.addCallback("stopRecording", externalStopRecording);
         }
 
-        private function externalStartRecording():void {
-            _display.text = "clicked start";
+        private function externalStartRecording(useSpeex:Boolean = false):void {
+            _display.text = "clicked start " + (useSpeex ? "with speex" : "with wav");
+
+            _recorder = new MicRecorder( useSpeex );
+            _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
+            _recorder.addEventListener(RecordingEvent.COMPLETE, onRecordComplete);
             _recorder.record();
         }
 
@@ -78,12 +74,12 @@ package {
             _display.text = "recording since : " + event.time + " ms.";
         }
 
-        private function onRecordComplete(event:Event):void {
+        private function onRecordComplete(event:RecordingEvent):void {
             _display.text = "saving recorded sound.";
 
             var b64:Base64Encoder = new Base64Encoder();
             b64.insertNewLines = false;
-            b64.encodeBytes(_recorder.output);
+            b64.encodeBytes(event.data);
             ExternalInterface.call("onFlashSoundRecorded", b64.toString());
         }
 
