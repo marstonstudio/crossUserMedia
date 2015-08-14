@@ -150,7 +150,7 @@ function startUserMediaRecording(stream) {
         leftchannel.push (new Float32Array (left));
         rightchannel.push (new Float32Array (right));
         recordingLength += bufferSize;
-    }
+    };
 
     // we connect the recorder
     volume.connect (recorder);
@@ -253,8 +253,7 @@ function onFlashSoundRecorded(audioBase64) {
 function embedLocalBlob(audioBlob) {
     console.log("embedLocalBlob");
 
-    var audioUrl = URL.createObjectURL(audioBlob);
-    document.getElementById("sourceAudio").src = audioUrl;
+    document.getElementById("sourceAudio").src = URL.createObjectURL(audioBlob);
     document.getElementById("sourceButton").innerHTML = "play base64 source";// (" + document.getElementById("sourceAudio").duration + " sec)";
     document.getElementById("sourceButton").style.display = "block";
 }
