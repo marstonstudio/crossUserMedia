@@ -41,7 +41,7 @@ function onClickStartRecording() {
             console.error(e.message);
         });
     } else {
-        document.getElementById("crossUserMicrophoneSwf").startRecording(false);
+        document.getElementById("crossUserMicrophoneSwf").startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
     }
 }
 
@@ -108,8 +108,8 @@ var audioStream = null;
 var context = null;
 var recorder = null;
 var audioInput = null;
-var inputFormat = "wav";
-var outputFormat = "mp4";
+var inputFormat = "wav"; // wav || ogg
+var outputFormat = "mp4"; // wav || ogg || mp4 || mp3
 var outputUrl = null;
 
 function startUserMediaRecording(stream) {
@@ -150,7 +150,7 @@ function startUserMediaRecording(stream) {
         leftchannel.push (new Float32Array (left));
         rightchannel.push (new Float32Array (right));
         recordingLength += bufferSize;
-    }
+    };
 
     // we connect the recorder
     volume.connect (recorder);
@@ -253,8 +253,7 @@ function onFlashSoundRecorded(audioBase64) {
 function embedLocalBlob(audioBlob) {
     console.log("embedLocalBlob");
 
-    var audioUrl = URL.createObjectURL(audioBlob);
-    document.getElementById("sourceAudio").src = audioUrl;
+    document.getElementById("sourceAudio").src = URL.createObjectURL(audioBlob);
     document.getElementById("sourceButton").innerHTML = "play base64 source";// (" + document.getElementById("sourceAudio").duration + " sec)";
     document.getElementById("sourceButton").style.display = "block";
 }
