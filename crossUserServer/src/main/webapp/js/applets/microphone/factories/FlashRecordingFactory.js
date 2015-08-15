@@ -3,16 +3,35 @@ angular.module('Microphone')
         '$q',
         'CONFIG',
         function($q, CONFIG) {
+
             var Service = {};
             var recordingDeferred;
 
+            var initialized = false;
+            Service.initialize = function() {
+                if (initialized) {
+                    return;
+                }
+
+                var flashvars = {};
+                var params = {
+                    id: "crossUserMicrophoneSwf"
+                };
+                var attributes = {
+                    id: "crossUserMicrophoneSwf"
+                };
+                swfobject.embedSWF("crossUserMicrophone.swf", "crossUserMicrophone", "310", "138", "14.0.0", "expressInstall.swf", flashvars, params, attributes);
+
+                initialized = true;
+            };
+
             Service.startRecording = function() {
-                $('#crossUserMicrophoneSwf').startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
+                document.getElementById('crossUserMicrophoneSwf').startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
             };
 
             Service.stopRecording = function() {
                 recordingDeferred = $q.defer();
-                $('#crossUserMicrophoneSwf').stopRecording();
+                document.getElementById('crossUserMicrophoneSwf').stopRecording();
 
                 return recordingDeferred.promise;
             };

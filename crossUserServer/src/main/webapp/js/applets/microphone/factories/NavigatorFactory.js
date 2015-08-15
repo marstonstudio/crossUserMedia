@@ -1,7 +1,7 @@
 angular.module('Microphone')
-    .factory('NavigatorFactory', ['$window', function($window) {
+    .factory('NavigatorFactory', [function() {
         var Service = {};
-        var navigator = $window.navigator;
+        var navigator = window.navigator;
 
         if (!navigator.getUserMedia) {
             navigator.getUserMedia =
@@ -11,9 +11,14 @@ angular.module('Microphone')
                 navigator.msGetUserMedia;
         }
 
+        window.navigator.getUserMedia = navigator.getUserMedia;
+
         Service.enabled = typeof navigator.getUserMedia === 'function';
 
-        Service.getUserMedia = navigator.getUserMedia;
+        Service.getNavigator = function() {
+            return window.navigator;
+        };
+
 
         return Service;
     }]);
