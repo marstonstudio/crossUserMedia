@@ -2,8 +2,9 @@ angular.module('Microphone')
     .factory('UploadFactory', [
         '$log',
         '$q',
+        '$rootScope',
         'CONFIG',
-        function($log, $q, CONFIG) {
+        function($log, $q, $rootScope, CONFIG) {
 
             var Service = {};
 
@@ -20,12 +21,12 @@ angular.module('Microphone')
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.open("POST", "/rest/audio", true);
                 xmlhttp.onreadystatechange = function() {
-
                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                         deferred.resolve(xmlhttp.responseText);
                         $rootScope.$apply();
                     } else {
                         deferred.reject('Error during upload');
+                        $rootScope.$apply();
                     }
                 };
                 xmlhttp.send(formData);

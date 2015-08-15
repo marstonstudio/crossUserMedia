@@ -7,7 +7,6 @@ angular.module('Microphone')
         'UploadFactory',
         function($log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
 
-
             var FORMAT_WAV = 'wav';
             var FORMAT_OGG = 'ogg';
             var FORMAT_MP4 = 'mp4';
