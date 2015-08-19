@@ -29,7 +29,11 @@
                 ng-click="microphone.playOutput();">
             output
         </div>
-        <div id="downloadButton" class="button" onclick="onClickDownloadOutput();">download</div>
+        <div
+                id="downloadButton"
+                class="button ng-hide"
+                ng-show="microphone.showDownloadOutputButton"
+                ng-click="microphone.downloadOutput();">download</div>
         <Audio id="outputAudio"></Audio>
         <Audio id="sourceAudio"></Audio>
     </div>

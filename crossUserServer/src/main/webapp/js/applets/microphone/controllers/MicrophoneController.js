@@ -5,7 +5,7 @@ angular.module('Microphone')
         'FlashRecordingFactory',
         'NativeRecordingFactory',
         'UploadFactory',
-        function($log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
+        function ($log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
 
             var FORMAT_WAV = 'wav';
             var FORMAT_OGG = 'ogg';
@@ -20,23 +20,25 @@ angular.module('Microphone')
             this.inputFormat = DEFAULT_INPUT_FORMAT;
             this.outputFormat = DEFAULT_OUTPUT_FORMAT;
 
-            this.setInputFormat = function(format) {
+            this.setInputFormat = function (format) {
                 this.inputFormat = format;
             };
 
-            this.setOutputFormat = function(format) {
+            this.setOutputFormat = function (format) {
                 this.outputFormat = format;
             };
 
             this.flashMode = false;
             this.showSourceAudioButton = false;
             this.showOutputAudioButton = false;
+            this.showDownloadOutputButton = false;
             this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
             this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
             this.outputButtonElement = angular.element(document.querySelector('#outputButton'));
             this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
+            this.downloadUrl = '';
 
-            var getRecordingObject = function() {
+            var getRecordingObject = function () {
                 var recordingObject;
 
                 if (Navigator.enabled) {
@@ -54,16 +56,22 @@ angular.module('Microphone')
 
             var self = this;
 
-            this.startRecording = function() {
+            var resetState = function() {
                 self.showSourceAudioButton = false;
                 self.showOutputAudioButton = false;
+                self.showDownloadOutputButton = false;
+                self.downloadUrl = '';
+            };
+
+            this.startRecording = function () {
+                resetState();
                 getRecordingObject().startRecording();
             };
 
-            this.stopRecording = function() {
+            this.stopRecording = function () {
                 return getRecordingObject()
                     .stopRecording()
-                    .then(function(audioBlob) {
+                    .then(function (audioBlob) {
                         embedLocalBlob(audioBlob);
                         return UploadRecording
                             .send(audioBlob, self.inputFormat, self.outputFormat)
@@ -71,12 +79,53 @@ angular.module('Microphone')
                     });
             };
 
-            this.playSource = function() {
+            this.playSource = function () {
                 document.getElementById('sourceAudio').play();
             };
 
-            this.playOutput = function() {
+            this.playOutput = function () {
                 document.getElementById('outputAudio').play();
+            };
+
+            // http://pixelscommander.com/en/javascript/javascript-file-download-ignore-content-type/
+            this.downloadOutput = function () {
+
+
+                if (!self.downloadUrl) {
+                    return;
+                }
+                
+                var outputUrl = self.downloadUrl;
+
+                $log.log("Downloading " + outputUrl);
+                //If in Chrome or Safari - download via virtual link click
+                if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1 ||
+                    navigator.userAgent.toLowerCase().indexOf('safari') > -1
+                ) {
+                    //Creating new link node.
+                    var link = document.createElement('a');
+                    link.href = outputUrl;
+
+                    if (link.download !== undefined) {
+                        //Set HTML5 download attribute. This will prevent file from opening if supported.
+                        var fileName = outputUrl.substring(outputUrl.lastIndexOf('/') + 1, outputUrl.length);
+                        link.download = fileName;
+                    }
+
+                    //Dispatching click event.
+                    if (document.createEvent) {
+                        var e = document.createEvent('MouseEvents');
+                        e.initEvent('click', true, true);
+                        link.dispatchEvent(e);
+                        return true;
+                    }
+                }
+
+                // Force file download (whether supported by server).
+                var query = '?download';
+
+                window.open(outputUrl + query, "_blank");
+
             };
 
             function embedLocalBlob(audioBlob) {
@@ -88,15 +137,16 @@ angular.module('Microphone')
             }
 
             function displayProcessedOutput(response) {
-                console.log(response);
+                $log.log(response);
                 if (response) {
-                    self.outputAudioElement.src = response;
+                    self.downloadUrl = response;
+                    self.outputAudioElement.attr('src', response);
 
                     self.outputButtonElement.html('play processed output');
                     self.showOutputAudioButton = true;
 
                     self.downloadButtonElement.html('download ' + self.outputFormat + ' file');
-                    self.downloadButtonElement.show();
+                    self.showDownloadOutputButton = true;
                 }
             }
 
