@@ -1,17 +1,25 @@
+var onFlashSoundRecorded;
+
 angular.module('Microphone')
     .factory('FlashRecordingFactory', [
         '$q',
         'CONFIG',
-        function($q, CONFIG) {
+        function ($q, CONFIG) {
 
             var Service = {};
             var recordingDeferred;
 
             var initialized = false;
-            Service.initialize = function() {
+            Service.initialize = function () {
                 if (initialized) {
                     return;
                 }
+
+                onFlashSoundRecorded = function (audioBase64) {
+                    injector.invoke(['FlashRecordingFactory', function (FlashRecordingFactory) {
+                        Service.notifySoundRecorded(audioBase64);
+                    }]);
+                };
 
                 var flashvars = {};
                 var params = {
@@ -25,18 +33,18 @@ angular.module('Microphone')
                 initialized = true;
             };
 
-            Service.startRecording = function() {
+            Service.startRecording = function () {
                 document.getElementById('crossUserMicrophoneSwf').startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
             };
 
-            Service.stopRecording = function() {
+            Service.stopRecording = function () {
                 recordingDeferred = $q.defer();
                 document.getElementById('crossUserMicrophoneSwf').stopRecording();
 
                 return recordingDeferred.promise;
             };
 
-            Service.notifySoundRecorded = function() {
+            Service.notifySoundRecorded = function () {
                 console.log("onSoundRecorded length:" + audioBase64.length);
 
                 var audioBlob = b64toBlob(audioBase64, 'audio/wav');
@@ -69,15 +77,5 @@ angular.module('Microphone')
             return Service;
         }
     ]);
-
-angular.element(document).ready(function() {
-    var injector = angular.bootstrap(document, ['Microphone']);
-
-    function onFlashSoundRecorded(audioBase64) {
-        injector.invoke(['FlashRecordingFactory', function(FlashRecordingFactory) {
-            FlashRecordingFactory.notifySoundRecorded(audioBase64);
-        }]);
-    }
-});
 
 
