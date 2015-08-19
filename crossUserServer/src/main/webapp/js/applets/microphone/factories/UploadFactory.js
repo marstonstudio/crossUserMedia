@@ -21,11 +21,15 @@ angular.module('Microphone')
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.open("POST", "/rest/audio", true);
                 xmlhttp.onreadystatechange = function() {
-                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                        deferred.resolve(xmlhttp.responseText);
-                        $rootScope.$apply();
-                    } else {
-                        deferred.reject('Error during upload');
+                    if (xmlhttp.readyState == 4) {
+                        if (xmlhttp.status == 200) {
+                            deferred.resolve(xmlhttp.responseText);
+                            $log.log('promise resolved: ' + xmlhttp.responseText);
+                        } else {
+                            deferred.reject('Error during upload');
+                            $log.log('promise rejected');
+                        }
+
                         $rootScope.$apply();
                     }
                 };

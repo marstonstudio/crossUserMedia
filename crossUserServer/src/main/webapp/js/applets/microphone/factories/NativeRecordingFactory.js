@@ -66,7 +66,7 @@ angular.module('Microphone')
                 recorder = context.createScriptProcessor(bufferSize, 2, 2);
 
                 recorder.onaudioprocess = function(e) {
-                    console.log('recording');
+                    $log.log('recording');
                     var left = e.inputBuffer.getChannelData(0);
                     var right = e.inputBuffer.getChannelData(1);
                     // we clone the samples
