@@ -23,11 +23,11 @@ angular.module('Microphone')
                 xmlhttp.onreadystatechange = function() {
                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                         deferred.resolve(xmlhttp.responseText);
-                        $rootScope.$apply();
                     } else {
                         deferred.reject('Error during upload');
-                        $rootScope.$apply();
-                    }
+                    };
+                    console.log('promise resolved');
+                    $rootScope.$apply();
                 };
                 xmlhttp.send(formData);
 
