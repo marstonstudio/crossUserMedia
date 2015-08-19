@@ -11,7 +11,7 @@
         <div id="startButton" class="button" ng-click="microphone.startRecording();">start</div>
         <div id="stopButton" class="button" ng-click="microphone.stopRecording();">stop</div>
     </div>
-    <div id="flashContainer" class="container">
+    <div id="flashContainer" class="container ng-hide" ng-show="microphone.flashMode">
         <div id="crossUserMicrophone">Flash</div>
     </div>
     <div id="resultsContainer" class="container">
@@ -19,14 +19,14 @@
                 id="sourceButton"
                 class="button ng-hide"
                 ng-show="microphone.showSourceAudioButton"
-                ng-click="microphone.sourceAudioElement.play();">
+                ng-click="microphone.playSource();">
             source
         </div>
         <div
                 id="outputButton"
                 class="button ng-hide"
                 ng-show="microphone.showOutputAudioButton"
-                ng-click="microphone.outputAudioElement.play();">
+                ng-click="microphone.playOutput();">
             output
         </div>
         <div id="downloadButton" class="button" onclick="onClickDownloadOutput();">download</div>
@@ -34,7 +34,9 @@
         <Audio id="sourceAudio"></Audio>
     </div>
 </div>
-
+<script type="text/javascript">
+    var CONFIG = {};
+</script>
 <script type="text/javascript" src="js/libs/swfobject.js"></script>
 <script type="text/javascript" src="js/libs/angular.min.js"></script>
 <script type="text/javascript" src="js/applets/microphone/App.js"></script>

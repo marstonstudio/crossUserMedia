@@ -4,9 +4,8 @@ angular.module('Microphone')
         'NavigatorFactory',
         'FlashRecordingFactory',
         'NativeRecordingFactory',
-        'UploadRecordingFactory',
+        'UploadFactory',
         function($log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
-
 
             var FORMAT_WAV = 'wav';
             var FORMAT_OGG = 'ogg';
@@ -29,25 +28,40 @@ angular.module('Microphone')
                 this.outputFormat = format;
             };
 
+            this.flashMode = false;
             this.showSourceAudioButton = false;
             this.showOutputAudioButton = false;
-            this.sourceAudioElement = angular.element('#sourceAudio');
-            this.outputAudioElement = angular.element('#outputAudio');
-            this.outputButtonElement = angular.element('#outputButton');
-            this.downloadButtonElement = angular.element('#downloadButton');
+            this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
+            this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
+            this.outputButtonElement = angular.element(document.querySelector('#outputButton'));
+            this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
 
-            var recordingObject = Navigator.enabled ? NativeRecording : FlashRecording;
+            var getRecordingObject = function() {
+                var recordingObject;
+
+                if (Navigator.enabled) {
+                    recordingObject = NativeRecording;
+                    self.flashMode = false;
+                } else {
+                    recordingObject = FlashRecording;
+                    self.flashMode = true;
+                }
+
+                recordingObject.initialize();
+
+                return recordingObject;
+            };
 
             var self = this;
 
             this.startRecording = function() {
                 self.showSourceAudioButton = false;
                 self.showOutputAudioButton = false;
-                recordingObject.startRecording();
+                getRecordingObject().startRecording();
             };
 
             this.stopRecording = function() {
-                return recordingObject
+                return getRecordingObject()
                     .stopRecording()
                     .then(function(audioBlob) {
                         embedLocalBlob(audioBlob);
@@ -57,17 +71,26 @@ angular.module('Microphone')
                     });
             };
 
+            this.playSource = function() {
+                document.getElementById('sourceAudio').play();
+            };
+
+            this.playOutput = function() {
+                document.getElementById('outputAudio').play();
+            };
+
             function embedLocalBlob(audioBlob) {
                 $log.log("embedLocalBlob");
 
-                angular.element('#sourceButton').html('play base64 source');
+                angular.element(document.querySelector('#sourceButton')).html('play base64 source');
                 self.sourceAudioElement.attr('src', URL.createObjectURL(audioBlob));
                 self.showSourceAudioButton = true;
             }
 
             function displayProcessedOutput(response) {
-                if (response.data) {
-                    self.outputAudioElement.src = response.data;
+                console.log(response);
+                if (response) {
+                    self.outputAudioElement.src = response;
 
                     self.outputButtonElement.html('play processed output');
                     self.showOutputAudioButton = true;

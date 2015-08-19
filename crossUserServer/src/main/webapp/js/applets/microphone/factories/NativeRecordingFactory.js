@@ -5,24 +5,6 @@ angular.module('Microphone')
         'NavigatorFactory',
         function($log, $q, Navigator) {
 
-            var Service = {};
-
-            Service.startRecording = function() {
-                $log.log("Start Recording");
-
-                if (Navigator.enabled) {
-                    Navigator.getUserMedia({audio: true}, startUserMediaRecording, function(e) {
-                        $log.error(e.message);
-                    });
-                }
-            };
-
-            Service.stopRecording = function() {
-                $log.log("Stop Recording");
-
-                stopUserMediaRecording();
-            };
-
             var leftchannel = [];
             var rightchannel = [];
             var recordingLength = 0;
@@ -32,6 +14,26 @@ angular.module('Microphone')
             var context = null;
             var recorder = null;
             var audioInput = null;
+
+            var Service = {};
+
+            Service.initialize = function() {};
+
+            Service.startRecording = function() {
+                $log.log("Start Recording");
+
+                if (Navigator.enabled) {
+                    Navigator.getNavigator().getUserMedia({audio: true}, startUserMediaRecording, function(e) {
+                        $log.error(e.message);
+                    });
+                }
+            };
+
+            Service.stopRecording = function() {
+                $log.log("Stop Recording");
+
+                return stopUserMediaRecording();
+            };
 
             function startUserMediaRecording(stream) {
 
