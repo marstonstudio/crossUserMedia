@@ -30,6 +30,12 @@
             output
         </div>
         <div
+                id="error"
+                class="button"
+                ng-show="microphone.showError"
+                >
+        </div>
+        <div
                 id="downloadButton"
                 class="button ng-hide"
                 ng-show="microphone.showDownloadOutputButton"

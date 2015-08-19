@@ -32,11 +32,15 @@ angular.module('Microphone')
             this.showSourceAudioButton = false;
             this.showOutputAudioButton = false;
             this.showDownloadOutputButton = false;
+            this.showError = false;
             this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
             this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
             this.outputButtonElement = angular.element(document.querySelector('#outputButton'));
             this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
+            this.errorElement = angular.element(document.querySelector('#error'));
             this.downloadUrl = '';
+
+            var self = this;
 
             var getRecordingObject = function () {
                 var recordingObject;
@@ -48,18 +52,18 @@ angular.module('Microphone')
                     recordingObject = FlashRecording;
                     self.flashMode = true;
                 }
-
-                recordingObject.initialize();
-
                 return recordingObject;
             };
 
-            var self = this;
+            (function init() {
+                getRecordingObject().initialize();
+            })();
 
             var resetState = function() {
                 self.showSourceAudioButton = false;
                 self.showOutputAudioButton = false;
                 self.showDownloadOutputButton = false;
+                self.showError = false;
                 self.downloadUrl = '';
             };
 
@@ -76,6 +80,8 @@ angular.module('Microphone')
                         return UploadRecording
                             .send(audioBlob, self.inputFormat, self.outputFormat)
                             .then(displayProcessedOutput);
+                    }, function(error) {
+                        self.errorElement.html(error);
                     });
             };
 
@@ -132,6 +138,7 @@ angular.module('Microphone')
                 $log.log("embedLocalBlob");
 
                 angular.element(document.querySelector('#sourceButton')).html('play base64 source');
+                console.log(URL.createObjectURL(audioBlob))
                 self.sourceAudioElement.attr('src', URL.createObjectURL(audioBlob));
                 self.showSourceAudioButton = true;
             }

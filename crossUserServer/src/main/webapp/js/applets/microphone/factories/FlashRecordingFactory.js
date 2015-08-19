@@ -1,4 +1,5 @@
 var onFlashSoundRecorded;
+var onFlashSoundRecordingError;
 
 angular.module('Microphone')
     .factory('FlashRecordingFactory', [
@@ -16,9 +17,14 @@ angular.module('Microphone')
                 }
 
                 onFlashSoundRecorded = function (audioBase64) {
-                    injector.invoke(['FlashRecordingFactory', function (FlashRecordingFactory) {
-                        Service.notifySoundRecorded(audioBase64);
-                    }]);
+                    console.log("onSoundRecorded length:" + audioBase64.length);
+
+                    var audioBlob = b64toBlob(audioBase64, 'audio/wav');
+                    recordingDeferred.resolve(audioBlob);
+                };
+
+                onFlashSoundRecordingError = function (error) {
+                    recordingDeferred.reject(error);
                 };
 
                 var flashvars = {};
@@ -42,13 +48,6 @@ angular.module('Microphone')
                 document.getElementById('crossUserMicrophoneSwf').stopRecording();
 
                 return recordingDeferred.promise;
-            };
-
-            Service.notifySoundRecorded = function () {
-                console.log("onSoundRecorded length:" + audioBase64.length);
-
-                var audioBlob = b64toBlob(audioBase64, 'audio/wav');
-                recordingDeferred.resolve(audioBlob);
             };
 
             function b64toBlob(b64Data, contentType, sliceSize) {
