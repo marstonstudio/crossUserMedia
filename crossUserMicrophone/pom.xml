@@ -15,6 +15,7 @@
     <properties>
         <flex.version>4.14.1</flex.version>
         <player.version>14.0</player.version>
+        <player.debug>false</player.debug>
         <configurationReport>true</configurationReport>
         <skipTests>true</skipTests>
     </properties>
@@ -69,9 +70,9 @@
                     <defaultFrameRate>24</defaultFrameRate>
 
                     <flashVersion>${player.version}</flashVersion>
+                    <debug>${player.debug}</debug>
                     <headlessServer>true</headlessServer>
                     <storepass>changeit</storepass>
-                    <debug>true</debug>
 
                     <fonts>
                         <advancedAntiAliasing>true</advancedAntiAliasing>
@@ -79,7 +80,7 @@
                             <en>U+0020-U+007E</en>
                         </languageRange>
                         <managers>
-                            <!--manager>flash.fonts.JREFontManager</manager-->
+                            <manager>flash.fonts.JREFontManager</manager>
                             <manager>flash.fonts.BatikFontManager</manager>
                             <manager>flash.fonts.AFEFontManager</manager>
                             <manager>flash.fonts.CFFFontManager</manager>
