@@ -71,7 +71,7 @@
 
                     <flashVersion>${player.version}</flashVersion>
                     <debug>${player.debug}</debug>
-                    <!--headlessServer>true</headlessServer-->
+                    <headlessServer>true</headlessServer>
                     <storepass>changeit</storepass>
 
                     <fonts>
@@ -80,7 +80,7 @@
                             <en>U+0020-U+007E</en>
                         </languageRange>
                         <managers>
-                            <!--manager>flash.fonts.JREFontManager</manager-->
+                            <manager>flash.fonts.JREFontManager</manager>
                             <manager>flash.fonts.BatikFontManager</manager>
                             <manager>flash.fonts.AFEFontManager</manager>
                             <manager>flash.fonts.CFFFontManager</manager>

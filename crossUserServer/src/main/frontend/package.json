@@ -1,17 +1,25 @@
 {
   "name": "angularMicrophone",
   "version": "1.0.0",
-  "description": "angular microphone",
+  "description": "Angular microphone",
   "main": "gulpfile.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marstonstudio/crossUserMedia"
+  },
   "dependencies": {
     "angular": "^1.4.4",
     "gulp": "^3.9.0",
-    "swfobject": "^2.2.1"
+    "jakobmattsson-swfobject": "^2.2.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "gulp-concat": "^2.6.0",
+    "gulp-sourcemaps": "^1.5.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jon Marston <jon@marstonstudio.com> (http://www.marstonstudio.com)",
-  "license": "ISC"
+  "license": "MIT",
+  "private": true
 }
