@@ -20,6 +20,7 @@
     </properties>
 
     <build>
+        <finalName>crossUserMicrophone</finalName>
         <sourceDirectory>src/main/flex</sourceDirectory>
         <testSourceDirectory>src/test/flex</testSourceDirectory>
         <plugins>
@@ -28,6 +29,7 @@
                 <artifactId>flexmojos-maven-plugin</artifactId>
                 <version>7.1.0-SNAPSHOT</version>
                 <extensions>true</extensions>
+
                 <dependencies>
                     <dependency>
                         <groupId>org.apache.flex</groupId>
@@ -40,20 +42,70 @@
                         <artifactId>fontkit</artifactId>
                         <version>1.0</version>
                     </dependency>
+                    <dependency>
+                        <groupId>com.adobe.fontkit</groupId>
+                        <artifactId>afe</artifactId>
+                        <version>1.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.adobe.fontkit</groupId>
+                        <artifactId>aglj40</artifactId>
+                        <version>1.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.adobe.fontkit</groupId>
+                        <artifactId>rideau</artifactId>
+                        <version>1.0</version>
+                    </dependency>
                 </dependencies>
                 <configuration>
+
                     <sourceFile>Main.as</sourceFile>
-                    <debug>true</debug>
+                    <defaultSize>
+                        <width>215</width>
+                        <height>138</height>
+                    </defaultSize>
+                    <defaultBackgroundColor>#F5F5DC</defaultBackgroundColor>
+                    <defaultFrameRate>24</defaultFrameRate>
+
+                    <flashVersion>${player.version}</flashVersion>
+                    <headlessServer>true</headlessServer>
                     <storepass>changeit</storepass>
+                    <debug>true</debug>
+
+                    <fonts>
+                        <advancedAntiAliasing>true</advancedAntiAliasing>
+                        <languageRange>
+                            <en>U+0020-U+007E</en>
+                        </languageRange>
+                        <managers>
+                            <manager>flash.fonts.JREFontManager</manager>
+                            <manager>flash.fonts.BatikFontManager</manager>
+                            <manager>flash.fonts.AFEFontManager</manager>
+                            <manager>flash.fonts.CFFFontManager</manager>
+                        </managers>
+                    </fonts>
+                    <localesCompiled>
+                        <locale>en_US</locale>
+                    </localesCompiled>
+
                     <defines>
                         <property>
                             <name>BUILD::timestamp</name>
                             <value>"${maven.build.timestamp}"</value>
                         </property>
                     </defines>
+
                 </configuration>
             </plugin>
         </plugins>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+
     </build>
 
     <dependencies>

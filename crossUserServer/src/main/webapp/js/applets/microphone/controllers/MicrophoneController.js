@@ -96,7 +96,6 @@ angular.module('Microphone')
             // http://pixelscommander.com/en/javascript/javascript-file-download-ignore-content-type/
             this.downloadOutput = function () {
 
-
                 if (!self.downloadUrl) {
                     return;
                 }

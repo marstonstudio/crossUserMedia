@@ -15,24 +15,22 @@ package {
 
     import mx.utils.Base64Encoder;
 
-[SWF(width="310", height="138", frameRate="31", backgroundColor="#F5F5DC")]
     public class Main extends Sprite {
 
-        private static const BUILD_TIMESTAMP:String = BUILD::timestamp;
+        public static const BUILD_TIMESTAMP:String = BUILD::timestamp;
 
         private var _recorder:MicRecorder;
 
         private var _display:TextField;
 
-        [Embed(systemFont="Arial",
-                fontName = "arialFont",
-                mimeType = "application/x-font",
-                fontWeight="normal",
-                fontStyle="normal",
-                unicodeRange="U+0020-007E",
-                advancedAntiAliasing="true",
-                embedAsCFF="false")]
-        private var arialEmbeddedFont:Class;
+        //AdobeSansF1-Regular.otf
+        //SourceSansPro-Regular.otf"
+        //Arial.ttf
+        [Embed( source = "../resources/Arial.ttf",
+            mimeType = "application/x-font",
+            fontFamily = "recorderFont",
+            embedAsCFF="true")]
+        private var recorderFontEmbed:Class;
 
         public function Main() {
             addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
@@ -40,7 +38,7 @@ package {
 
         private function onAddedToStage(event:Event):void {
             var format:TextFormat = new TextFormat();
-            format.font = "arialFont";
+            format.font = "recorderFont";
             format.size = 16;
 
             _display = new TextField();
@@ -48,7 +46,7 @@ package {
             _display.antiAliasType = AntiAliasType.ADVANCED;
             _display.defaultTextFormat = format;
             _display.selectable = false;
-            _display.text = "flash microphone widget " + BUILD_TIMESTAMP;
+            _display.text = "flash microphone widget";
             stage.align = StageAlign.TOP_LEFT;
             stage.scaleMode = StageScaleMode.NO_SCALE;
             _display.autoSize = TextFieldAutoSize.LEFT;
