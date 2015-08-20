@@ -15,6 +15,7 @@
     <properties>
         <flex.version>4.14.1</flex.version>
         <player.version>14.0</player.version>
+        <player.debug>false</player.debug>
         <configurationReport>true</configurationReport>
         <skipTests>true</skipTests>
     </properties>
@@ -69,9 +70,9 @@
                     <defaultFrameRate>24</defaultFrameRate>
 
                     <flashVersion>${player.version}</flashVersion>
-                    <headlessServer>true</headlessServer>
+                    <debug>${player.debug}</debug>
+                    <!--headlessServer>true</headlessServer-->
                     <storepass>changeit</storepass>
-                    <debug>true</debug>
 
                     <fonts>
                         <advancedAntiAliasing>true</advancedAntiAliasing>

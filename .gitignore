@@ -4,5 +4,6 @@
 target/
 fonts.ser
 crossUserServer/src/main/webapp/crossUserMicrophone.swf
+/crossUserServer/src/main/angular/node_modules
 
 crossUserSpeex/samples

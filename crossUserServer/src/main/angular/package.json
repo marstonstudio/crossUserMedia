@@ -1,0 +1,17 @@
+{
+  "name": "angularMicrophone",
+  "version": "1.0.0",
+  "description": "angular microphone",
+  "main": "gulpfile.js",
+  "dependencies": {
+    "angular": "^1.4.4",
+    "gulp": "^3.9.0",
+    "swfobject": "^2.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jon Marston <jon@marstonstudio.com> (http://www.marstonstudio.com)",
+  "license": "ISC"
+}
