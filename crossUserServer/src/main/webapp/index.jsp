@@ -47,8 +47,7 @@
 <script type="text/javascript">
     var CONFIG = {};
 </script>
-<script type="text/javascript" src="js/libs/swfobject.js"></script>
-<script type="text/javascript" src="js/libs/angular.min.js"></script>
+<script type="text/javascript" src="js/modules.js"></script>
 <script type="text/javascript" src="js/applets/microphone/App.js"></script>
 <script type="text/javascript" src="js/applets/microphone/controllers/MicrophoneController.js"></script>
 <script type="text/javascript" src="js/applets/microphone/factories/FlashRecordingFactory.js"></script>
