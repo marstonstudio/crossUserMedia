@@ -79,7 +79,7 @@
                             <en>U+0020-U+007E</en>
                         </languageRange>
                         <managers>
-                            <manager>flash.fonts.JREFontManager</manager>
+                            <!--manager>flash.fonts.JREFontManager</manager-->
                             <manager>flash.fonts.BatikFontManager</manager>
                             <manager>flash.fonts.AFEFontManager</manager>
                             <manager>flash.fonts.CFFFontManager</manager>

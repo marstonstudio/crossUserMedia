@@ -23,14 +23,19 @@ package {
 
         private var _display:TextField;
 
-        //AdobeSansF1-Regular.otf
-        //SourceSansPro-Regular.otf"
-        //Arial.ttf
-        [Embed( source = "../resources/Arial.ttf",
-                mimeType = "application/x-font",
+        /*
+        [Embed( source = "../resources/SourceSansPro-Regular.otf",
+                mimeType = "application/x-font-opentype",
                 fontFamily = "recorderFont",
-                fontWeight="normal",
-                fontStyle="normal",
+                fontWeight="Regular",
+                fontStyle="Regular",
+                embedAsCFF="true")]
+                */
+        [Embed( source = "../resources/Arial.ttf",
+                mimeType = "application/x-font-truetype-collection",
+                fontFamily = "recorderFont",
+                fontWeight="Regular",
+                fontStyle="Regular",
                 embedAsCFF="true")]
         private var recorderFontEmbed:Class;
 
