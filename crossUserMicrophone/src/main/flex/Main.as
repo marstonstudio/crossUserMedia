@@ -27,9 +27,11 @@ package {
         //SourceSansPro-Regular.otf"
         //Arial.ttf
         [Embed( source = "../resources/Arial.ttf",
-            mimeType = "application/x-font",
-            fontFamily = "recorderFont",
-            embedAsCFF="true")]
+                mimeType = "application/x-font",
+                fontFamily = "recorderFont",
+                fontWeight="normal",
+                fontStyle="normal",
+                embedAsCFF="true")]
         private var recorderFontEmbed:Class;
 
         public function Main() {
