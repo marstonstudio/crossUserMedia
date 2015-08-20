@@ -18,6 +18,8 @@ package {
 [SWF(width="310", height="138", frameRate="31", backgroundColor="#F5F5DC")]
     public class Main extends Sprite {
 
+        private static const BUILD_TIMESTAMP:String = BUILD::timestamp;
+
         private var _recorder:MicRecorder;
 
         private var _display:TextField;
@@ -46,7 +48,7 @@ package {
             _display.antiAliasType = AntiAliasType.ADVANCED;
             _display.defaultTextFormat = format;
             _display.selectable = false;
-            _display.text = "flash microphone widget";
+            _display.text = "flash microphone widget " + BUILD_TIMESTAMP;
             stage.align = StageAlign.TOP_LEFT;
             stage.scaleMode = StageScaleMode.NO_SCALE;
             _display.autoSize = TextFieldAutoSize.LEFT;

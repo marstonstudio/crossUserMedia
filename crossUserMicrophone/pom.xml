@@ -22,7 +22,6 @@
     <build>
         <sourceDirectory>src/main/flex</sourceDirectory>
         <testSourceDirectory>src/test/flex</testSourceDirectory>
-
         <plugins>
             <plugin>
                 <groupId>net.flexmojos.oss</groupId>
@@ -46,16 +45,15 @@
                     <sourceFile>Main.as</sourceFile>
                     <debug>true</debug>
                     <storepass>changeit</storepass>
+                    <defines>
+                        <property>
+                            <name>BUILD::timestamp</name>
+                            <value>"${maven.build.timestamp}"</value>
+                        </property>
+                    </defines>
                 </configuration>
             </plugin>
         </plugins>
-
-        <!--resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources-->
     </build>
 
     <dependencies>
@@ -65,12 +63,6 @@
             <version>${flex.version}</version>
             <type>pom</type>
         </dependency>
-        <!--dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>spark</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency-->
         <dependency>
             <groupId>com.adobe.flash.framework</groupId>
             <artifactId>playerglobal</artifactId>
