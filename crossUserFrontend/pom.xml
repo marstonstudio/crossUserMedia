@@ -13,17 +13,11 @@
     <name>crossUserMedia Frontend</name>
 
     <build>
-
         <plugins>
-
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>0.0.24</version>
-                <!--configuration>
-                    <workingDirectory>src/main/frontend</workingDirectory>
-                    <installDirectory>src/main/frontend</installDirectory>
-                </configuration-->
                 <executions>
 
                     <execution>
