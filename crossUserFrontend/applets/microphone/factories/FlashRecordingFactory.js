@@ -34,7 +34,7 @@ angular.module('Microphone')
                 var attributes = {
                     id: "crossUserMicrophoneSwf"
                 };
-                swfobject.embedSWF("crossUserMicrophone.swf", "crossUserMicrophone", "215", "138", "14.0.0", false, flashvars, params, attributes);
+                swfobject.embedSWF("/swf/crossUserMicrophone.swf", "crossUserMicrophone", "215", "138", "14.0.0", false, flashvars, params, attributes);
 
                 initialized = true;
             };

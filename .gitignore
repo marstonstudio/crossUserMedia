@@ -6,5 +6,4 @@ fonts.ser
 crossUserFrontend/dist
 crossUserFrontend/node
 crossUserFrontend/node_modules
-crossUserServer/src/main/webapp/crossUserMicrophone.swf
 crossUserSpeex/samples
