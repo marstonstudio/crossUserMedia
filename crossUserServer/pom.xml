@@ -37,7 +37,7 @@
                         <configuration>
                             <stripVersion>true</stripVersion>
                             <includeTypes>swf</includeTypes>
-                            <outputDirectory>src/main/webapp</outputDirectory>
+                            <outputDirectory>src/main/webapp/swf</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>

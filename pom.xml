@@ -13,6 +13,7 @@
     </prerequisites>
 
     <modules>
+        <module>crossUserFrontend</module>
         <module>crossUserMicrophone</module>
         <module>crossUserServer</module>
     </modules>

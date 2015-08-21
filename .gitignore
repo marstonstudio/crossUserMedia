@@ -3,8 +3,8 @@
 *.iml
 target/
 fonts.ser
-crossUserServer/src/main/frontend/node
-crossUserServer/src/main/frontend/node_modules
+crossUserFrontend/dist
+crossUserFrontend/node
+crossUserFrontend/node_modules
 crossUserServer/src/main/webapp/crossUserMicrophone.swf
-crossUserServer/src/main/webapp/js/modules.js
 crossUserSpeex/samples
