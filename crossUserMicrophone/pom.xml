@@ -15,8 +15,8 @@
     <properties>
         <flex.version>4.14.1</flex.version>
         <player.version>14.0</player.version>
-        <player.debug>false</player.debug>
         <configurationReport>true</configurationReport>
+        <player.debug>true</player.debug>
         <skipTests>true</skipTests>
     </properties>
 
@@ -41,21 +41,6 @@
                     <dependency>
                         <groupId>com.adobe</groupId>
                         <artifactId>fontkit</artifactId>
-                        <version>1.0</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>com.adobe.fontkit</groupId>
-                        <artifactId>afe</artifactId>
-                        <version>1.0</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>com.adobe.fontkit</groupId>
-                        <artifactId>aglj40</artifactId>
-                        <version>1.0</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>com.adobe.fontkit</groupId>
-                        <artifactId>rideau</artifactId>
                         <version>1.0</version>
                     </dependency>
                 </dependencies>
@@ -116,6 +101,60 @@
             <version>${flex.version}</version>
             <type>pom</type>
         </dependency>
+        <!--dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>apache</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>authoringsupport</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>core</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>experimental</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>flash-integration</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>framework</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>textLayout</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>mx</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>rpc</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+        </dependency-->
         <dependency>
             <groupId>com.adobe.flash.framework</groupId>
             <artifactId>playerglobal</artifactId>

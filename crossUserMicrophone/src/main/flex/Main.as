@@ -2,69 +2,71 @@ package {
 
     import com.marstonstudio.crossUserServer.events.RecordingEvent;
     import com.marstonstudio.crossUserServer.microphone.MicRecorder;
+    import com.marstonstudio.crossUserServer.sprites.CFFTextField;
+    import com.marstonstudio.crossUserServer.util.Console;
 
     import flash.display.Sprite;
     import flash.display.StageAlign;
     import flash.display.StageScaleMode;
     import flash.events.Event;
     import flash.external.ExternalInterface;
-    import flash.text.AntiAliasType;
-    import flash.text.TextField;
-    import flash.text.TextFieldAutoSize;
-    import flash.text.TextFormat;
 
     import mx.utils.Base64Encoder;
 
     public class Main extends Sprite {
 
-        public static const BUILD_TIMESTAMP:String = BUILD::timestamp;
+        private static const WIDTH:Number = 215;
+
 
         private var _recorder:MicRecorder;
 
-        private var _display:TextField;
+        private var _textField:CFFTextField;
 
-        /*
-        [Embed( source = "../resources/SourceSansPro-Regular.otf",
-                mimeType = "application/x-font-opentype",
-                fontFamily = "recorderFont",
-                fontWeight="Regular",
-                fontStyle="Regular",
-                embedAsCFF="true")]
-                */
+        private static const FONT_NAME:String = "recorderFont";
+
+        private static const FONT_SIZE:Number = 16;
+
         [Embed( source = "../resources/Arial.ttf",
                 mimeType = "application/x-font-truetype-collection",
                 fontFamily = "recorderFont",
-                fontWeight="Regular",
-                fontStyle="Regular",
-                embedAsCFF="true")]
-        private var recorderFontEmbed:Class;
+                fontWeight = "Regular",
+                fontStyle = "Regular",
+                embedAsCFF = "true")]
+        private var recorderFontTTFEmbed:Class;
+
+        /*
+        Works for flexmojo, but not IntelliJ
+        [Embed( source = "../resources/SourceSansPro-Regular.otf",
+                mimeType = "application/x-font-opentype",
+                fontFamily = "recorderFont",
+                fontWeight = "Regular",
+                fontStyle = "Regular",
+                embedAsCFF = "true")]
+        private var recorderFontOTFEmbed:Class;
+        */
 
         public function Main() {
+            Console.log("Flash Microphone build timestamp:" + BUILD::timestamp);
+            Console.logCapabilities();
+
             addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
 
         private function onAddedToStage(event:Event):void {
-            var format:TextFormat = new TextFormat();
-            format.font = "recorderFont";
-            format.size = 16;
-
-            _display = new TextField();
-            _display.embedFonts = true;
-            _display.antiAliasType = AntiAliasType.ADVANCED;
-            _display.defaultTextFormat = format;
-            _display.selectable = false;
-            _display.text = "flash microphone widget";
             stage.align = StageAlign.TOP_LEFT;
             stage.scaleMode = StageScaleMode.NO_SCALE;
-            _display.autoSize = TextFieldAutoSize.LEFT;
-            addChild(_display);
+
+            _textField = new CFFTextField();
+            _textField.init(FONT_NAME, FONT_SIZE, WIDTH);
+            addChild(_textField);
+            _textField.text = "flash microphone";
 
             ExternalInterface.addCallback("startRecording", externalStartRecording);
             ExternalInterface.addCallback("stopRecording", externalStopRecording);
         }
 
         private function externalStartRecording(useSpeex:Boolean = false):void {
-            _display.text = "clicked start " + (useSpeex ? "with speex" : "with wav");
+            _textField.text = "clicked start " + (useSpeex ? "with speex" : "with wav");
 
             _recorder = new MicRecorder( useSpeex );
             _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
@@ -73,16 +75,16 @@ package {
         }
 
         private function externalStopRecording():void {
-            _display.text = "clicked stop";
+            _textField.text = "clicked stop";
             _recorder.stop();
         }
 
         private function onRecording(event:RecordingEvent):void {
-            _display.text = "recording since : " + event.time + " ms.";
+            _textField.text = "recording since : " + event.time + " ms.";
         }
 
         private function onRecordComplete(event:RecordingEvent):void {
-            _display.text = "saving recorded sound.";
+            _textField.text = "saving recorded sound.";
 
             var b64:Base64Encoder = new Base64Encoder();
             b64.insertNewLines = false;
