@@ -90,6 +90,8 @@ package {
             b64.insertNewLines = false;
             b64.encodeBytes(event.data);
             ExternalInterface.call("onFlashSoundRecorded", b64.toString());
+
+            _textField.text = "saved recorded sound.";
         }
 
     }
