@@ -36,6 +36,7 @@ package {
 
         /*
         Works for flexmojo, but not IntelliJ
+        */
         [Embed( source = "../resources/SourceSansPro-Regular.otf",
                 mimeType = "application/x-font-opentype",
                 fontFamily = "recorderFont",
@@ -43,7 +44,6 @@ package {
                 fontStyle = "Regular",
                 embedAsCFF = "true")]
         private var recorderFontOTFEmbed:Class;
-        */
 
         public function Main() {
             Console.log("Flash Microphone build timestamp:" + BUILD::timestamp);

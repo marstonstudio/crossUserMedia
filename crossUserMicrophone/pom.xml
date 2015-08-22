@@ -57,7 +57,6 @@
                     <flashVersion>${player.version}</flashVersion>
                     <debug>${player.debug}</debug>
                     <headlessServer>true</headlessServer>
-                    <storepass>changeit</storepass>
 
                     <fonts>
                         <advancedAntiAliasing>true</advancedAntiAliasing>
@@ -101,60 +100,6 @@
             <version>${flex.version}</version>
             <type>pom</type>
         </dependency>
-        <!--dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>apache</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>authoringsupport</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>core</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>experimental</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>flash-integration</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>framework</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>textLayout</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>mx</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flex.framework</groupId>
-            <artifactId>rpc</artifactId>
-            <version>${flex.version}</version>
-            <type>swc</type>
-        </dependency-->
         <dependency>
             <groupId>com.adobe.flash.framework</groupId>
             <artifactId>playerglobal</artifactId>
