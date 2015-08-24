@@ -10,40 +10,54 @@ var buffer =     require('vinyl-buffer');
 var glob =       require('glob');
 var del =        require('del');
 
+
 //npm install --save-dev glob
 
-gulp.task('default', ['clean', 'prepareAngular', 'prepareSwfObject', 'prepareApplets']);
+var distDir =   'dist';
+var webappDir = '../crossUserServer/src/main/webapp';
 
-gulp.task('clean', function() {
+gulp.task('default', ['clean', 'assembleLibs', 'assembleApplets', 'build']);
+
+gulp.task('clean', function(callback) {
     console.log('[gulp]: clean task');
 
-    return del('dist/**/*');
+    del([
+            distDir + '/**/*',
+            webappDir + '/js/*',
+            !webappDir + '/*/.gitignore'
+        ]
+        , {force: true}
+        , callback);
 });
 
-gulp.task('prepareAngular', ['clean'], function() {
-    console.log('[gulp]: prepareAngular task');
+gulp.task('assembleLibs', ['clean'] , function() {
+   console.log('[gulp]: assembleLibs task');
 
-    return gulp.src('node_modules/angular/angular.js')
-        .pipe(gulp.dest('dist/js/src/libs'));
+    return gulp.src([
+        'node_modules/angular/angular.js',
+        'node_modules/jakobmattsson-swfobject/swfobject/src/swfobject.js'
+    ])
+        .pipe(gulp.dest(distDir + '/js/src/libs'));
 });
 
-gulp.task('prepareSwfObject', ['clean'], function() {
-    console.log('[gulp]: prepareSwfobject task');
-
-    return gulp.src('node_modules/jakobmattsson-swfobject/swfobject/src/swfobject.js')
-        .pipe(gulp.dest('dist/js/src/libs'));
-});
-
-gulp.task('prepareApplets', ['clean'], function() {
-    console.log('[gulp]: prepareApplets task');
+gulp.task('assembleApplets', ['clean'] , function() {
+    console.log('[gulp]: assembleApplets task');
 
     return gulp.src('applets/**/*.js')
-        .pipe(gulp.dest('dist/js/src/applets'));
+        .pipe(gulp.dest(distDir + '/js/src/applets'));
 });
+
+gulp.task('build', ['assembleLibs', 'assembleApplets'], function() {
+    console.log('[gulp]: build task');
+
+    return gulp.src(distDir + '/**/*')
+        .pipe(gulp.dest(webappDir));
+});
+
 
 //https://github.com/gulpjs/gulp/blob/master/docs/recipes/running-tasks-in-series.md
 
-gulp.task('build', function() {
+gulp.task('scratch', function() {
     console.log('[gulp]: build task');
 
     //glob.sync('dist/src/js/**/ *.js'),
