@@ -22,6 +22,7 @@ var webappDir = '../crossUserServer/src/main/webapp';
 gulp.task('default', [
     'clean',
     'assembleStyles',
+    'assembleHtml',
     'assembleLibraries',
     'assembleApplication',
     'build'
@@ -34,6 +35,7 @@ gulp.task('clean', function(callback) {
             distDir + '/**/*',
             webappDir + '/css/*',
             webappDir + '/js/*',
+            webappDir + '/*.html',
             !webappDir + '/*/.gitignore'
         ]
         , {force: true}
@@ -45,8 +47,15 @@ gulp.task('assembleStyles', ['clean'] , function() {
 
     return gulp.src('styles/**/*.less')
         .pipe(less())
-        //.pipe(minifyCSS())
+        .pipe(minifyCSS())
         .pipe(gulp.dest(distDir + '/css'));
+});
+
+gulp.task('assembleHtml', ['clean'] , function() {
+    console.log('[gulp]: assembleHtml task');
+
+    return gulp.src('html/**/*.html')
+        .pipe(gulp.dest(distDir));
 });
 
 gulp.task('assembleLibraries', ['clean'] , function() {
