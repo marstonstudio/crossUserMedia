@@ -10,19 +10,29 @@ var buffer =     require('vinyl-buffer');
 var glob =       require('glob');
 var del =        require('del');
 
+var less =       require('gulp-less');
+var minifyCSS =  require('gulp-minify-css');
+
 
 //npm install --save-dev glob
 
 var distDir =   'dist';
 var webappDir = '../crossUserServer/src/main/webapp';
 
-gulp.task('default', ['clean', 'assembleLibs', 'assembleApplets', 'build']);
+gulp.task('default', [
+    'clean',
+    'assembleStyles',
+    'assembleLibraries',
+    'assembleApplication',
+    'build'
+]);
 
 gulp.task('clean', function(callback) {
     console.log('[gulp]: clean task');
 
     del([
             distDir + '/**/*',
+            webappDir + '/css/*',
             webappDir + '/js/*',
             !webappDir + '/*/.gitignore'
         ]
@@ -30,24 +40,33 @@ gulp.task('clean', function(callback) {
         , callback);
 });
 
-gulp.task('assembleLibs', ['clean'] , function() {
-   console.log('[gulp]: assembleLibs task');
+gulp.task('assembleStyles', ['clean'] , function() {
+    console.log('[gulp]: assembleStyles task');
+
+    return gulp.src('styles/**/*.less')
+        .pipe(less())
+        //.pipe(minifyCSS())
+        .pipe(gulp.dest(distDir + '/css'));
+});
+
+gulp.task('assembleLibraries', ['clean'] , function() {
+   console.log('[gulp]: assembleLibraries task');
 
     return gulp.src([
-        'node_modules/angular/angular.js',
-        'node_modules/jakobmattsson-swfobject/swfobject/src/swfobject.js'
-    ])
+            'node_modules/angular/angular.js',
+            'node_modules/jakobmattsson-swfobject/swfobject/src/swfobject.js'
+        ])
         .pipe(gulp.dest(distDir + '/js/src/libs'));
 });
 
-gulp.task('assembleApplets', ['clean'] , function() {
-    console.log('[gulp]: assembleApplets task');
+gulp.task('assembleApplication', ['clean'] , function() {
+    console.log('[gulp]: assembleApplication task');
 
-    return gulp.src('applets/**/*.js')
-        .pipe(gulp.dest(distDir + '/js/src/applets'));
+    return gulp.src('scripts/**/*.js')
+        .pipe(gulp.dest(distDir + '/js/src/app'));
 });
 
-gulp.task('build', ['assembleLibs', 'assembleApplets'], function() {
+gulp.task('build', ['assembleLibraries', 'assembleApplication'], function() {
     console.log('[gulp]: build task');
 
     return gulp.src(distDir + '/**/*')

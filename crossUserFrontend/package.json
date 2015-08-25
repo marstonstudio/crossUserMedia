@@ -9,14 +9,16 @@
   },
   "dependencies": {
     "angular": "^1.4.4",
-    "gulp": "^3.9.0",
     "jakobmattsson-swfobject": "^2.2.0"
   },
   "devDependencies": {
     "browserify": "^11.0.1",
     "del": "^1.2.1",
     "glob": "^5.0.14",
+    "gulp": "^3.9.0",
     "gulp-concat": "^2.6.0",
+    "gulp-less": "^3.0.3",
+    "gulp-minify-css": "^1.2.1",
     "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "^1.2.0",
     "gulp-util": "^3.0.6",

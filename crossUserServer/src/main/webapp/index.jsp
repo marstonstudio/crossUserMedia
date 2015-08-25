@@ -3,7 +3,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <link rel="stylesheet" type="text/css" href="/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="/css/Microphone.css">
 </head>
 <body>
 <div id="root" ng-app="Microphone" ng-controller="MicrophoneController as microphone">
@@ -49,12 +49,12 @@
 </script>
 <script type="text/javascript" src="/js/src/libs/angular.js"></script>
 <script type="text/javascript" src="/js/src/libs/swfobject.js"></script>
-<script type="text/javascript" src="/js/src/applets/microphone/App.js"></script>
-<script type="text/javascript" src="/js/src/applets/microphone/controllers/MicrophoneController.js"></script>
-<script type="text/javascript" src="/js/src/applets/microphone/factories/FlashRecordingFactory.js"></script>
-<script type="text/javascript" src="/js/src/applets/microphone/factories/NativeRecordingFactory.js"></script>
-<script type="text/javascript" src="/js/src/applets/microphone/factories/NavigatorFactory.js"></script>
-<script type="text/javascript" src="/js/src/applets/microphone/factories/UploadFactory.js"></script>
+<script type="text/javascript" src="/js/src/app/MicrophoneApplication.js"></script>
+<script type="text/javascript" src="/js/src/app/controllers/MicrophoneController.js"></script>
+<script type="text/javascript" src="/js/src/app/factories/FlashRecordingFactory.js"></script>
+<script type="text/javascript" src="/js/src/app/factories/NativeRecordingFactory.js"></script>
+<script type="text/javascript" src="/js/src/app/factories/NavigatorFactory.js"></script>
+<script type="text/javascript" src="/js/src/app/factories/UploadFactory.js"></script>
 
 </body>
 </html>
