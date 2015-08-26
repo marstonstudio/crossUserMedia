@@ -1,11 +1,12 @@
-var onFlashSoundRecorded;
-var onFlashSoundRecordingError;
+var swfobject  = require('jakobmattsson-swfobject');
 
 angular.module('Microphone')
     .factory('FlashRecordingFactory', [
+        '$log',
         '$q',
         'CONFIG',
-        function ($q, CONFIG) {
+        function ($log, $q, CONFIG) {
+            $log.log("FlashRecordingFactory initialized");
 
             var Service = {};
             var recordingDeferred;
@@ -16,14 +17,15 @@ angular.module('Microphone')
                     return;
                 }
 
-                onFlashSoundRecorded = function (audioBase64) {
-                    console.log("onSoundRecorded length:" + audioBase64.length);
+                //functions accessible from flash ExternalInterface
+                window.onFlashSoundRecorded = function (audioBase64) {
+                    $log.log("onFlashSoundRecorded length:" + audioBase64.length);
 
                     var audioBlob = b64toBlob(audioBase64, 'audio/wav');
                     recordingDeferred.resolve(audioBlob);
                 };
 
-                onFlashSoundRecordingError = function (error) {
+                window.onFlashSoundRecordingError = function (error) {
                     recordingDeferred.reject(error);
                 };
 
@@ -34,6 +36,7 @@ angular.module('Microphone')
                 var attributes = {
                     id: "crossUserMicrophoneSwf"
                 };
+
                 swfobject.embedSWF("/swf/crossUserMicrophone.swf", "crossUserMicrophone", "215", "138", "14.0.0", false, flashvars, params, attributes);
 
                 initialized = true;
@@ -76,5 +79,3 @@ angular.module('Microphone')
             return Service;
         }
     ]);
-
-

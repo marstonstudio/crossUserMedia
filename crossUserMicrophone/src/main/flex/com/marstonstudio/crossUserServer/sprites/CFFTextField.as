@@ -34,7 +34,6 @@ import com.marstonstudio.crossUserServer.util.Console;
          * @return
          */
         public function init(fontName:String, fontSize:Number, width:Number):* {
-            _textBlock = new TextBlock();
 
             _width = width;
 
@@ -44,6 +43,8 @@ import com.marstonstudio.crossUserServer.util.Console;
 
             _fontFormat = new ElementFormat(fontDescription);
             _fontFormat.fontSize = fontSize;
+
+            _textBlock = new TextBlock();
         }
 
         /**

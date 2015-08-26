@@ -6,6 +6,7 @@ angular.module('Microphone')
         'NativeRecordingFactory',
         'UploadFactory',
         function ($log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
+            $log.log("MicrophoneController initialized");
 
             var FORMAT_WAV = 'wav';
             var FORMAT_OGG = 'ogg';
@@ -137,7 +138,6 @@ angular.module('Microphone')
                 $log.log("embedLocalBlob");
 
                 angular.element(document.querySelector('#sourceButton')).html('play base64 source');
-                console.log(URL.createObjectURL(audioBlob))
                 self.sourceAudioElement.attr('src', URL.createObjectURL(audioBlob));
                 self.showSourceAudioButton = true;
             }

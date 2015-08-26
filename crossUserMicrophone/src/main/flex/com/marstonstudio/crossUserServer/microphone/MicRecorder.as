@@ -77,9 +77,6 @@ import flash.utils.getTimer;
 
             if(_useSpeex) {
                 _encoder = new SpeexEncoder();
-                _microphone.codec = SoundCodec.SPEEX;
-                _microphone.encodeQuality = _encoder.quality;
-                _microphone.framesPerPacket = _encoder.framesPerPacket;
             } else {
                 _encoder = new WavEncoder();
             }

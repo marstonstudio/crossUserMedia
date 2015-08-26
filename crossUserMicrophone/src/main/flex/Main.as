@@ -63,6 +63,7 @@ package {
             addChild(_textField);
             _textField.text = "flash microphone";
 
+            ExternalInterface.marshallExceptions = true;
             ExternalInterface.addCallback("startRecording", externalStartRecording);
             ExternalInterface.addCallback("stopRecording", externalStopRecording);
         }

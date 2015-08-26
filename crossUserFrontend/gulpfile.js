@@ -1,18 +1,14 @@
-var gulp =       require('gulp');
-var concat =     require('gulp-concat');
-var uglify =     require('gulp-uglify');
-var sourcemaps = require('gulp-sourcemaps');
-var gutil =      require('gulp-util');
-
 var browserify = require('browserify');
-var source =     require('vinyl-source-stream');
-var buffer =     require('vinyl-buffer');
-var glob =       require('glob');
 var del =        require('del');
-
+var gulp =       require('gulp');
 var less =       require('gulp-less');
 var minifyCSS =  require('gulp-minify-css');
-
+var sourcemaps = require('gulp-sourcemaps');
+var uglify =     require('gulp-uglify');
+var gutil =      require('gulp-util');
+var buffer =     require('vinyl-buffer');
+var source =     require('vinyl-source-stream');
+var transform =  require('vinyl-transform');
 
 //npm install --save-dev glob
 
@@ -23,9 +19,8 @@ gulp.task('default', [
     'clean',
     'assembleStyles',
     'assembleHtml',
-    'assembleLibraries',
-    'assembleApplication',
-    'build'
+    'browserifyApplication',
+    'copy'
 ]);
 
 gulp.task('clean', function(callback) {
@@ -58,52 +53,28 @@ gulp.task('assembleHtml', ['clean'] , function() {
         .pipe(gulp.dest(distDir));
 });
 
-gulp.task('assembleLibraries', ['clean'] , function() {
-   console.log('[gulp]: assembleLibraries task');
+gulp.task('browserifyApplication', ['clean'] , function() {
+    console.log('[gulp]: browserifyApplication');
 
-    return gulp.src([
-            'node_modules/angular/angular.js',
-            'node_modules/jakobmattsson-swfobject/swfobject/src/swfobject.js'
-        ])
-        .pipe(gulp.dest(distDir + '/js/src/libs'));
-});
-
-gulp.task('assembleApplication', ['clean'] , function() {
-    console.log('[gulp]: assembleApplication task');
-
-    return gulp.src('scripts/**/*.js')
-        .pipe(gulp.dest(distDir + '/js/src/app'));
-});
-
-gulp.task('build', ['assembleLibraries', 'assembleApplication'], function() {
-    console.log('[gulp]: build task');
-
-    return gulp.src(distDir + '/**/*')
-        .pipe(gulp.dest(webappDir));
-});
-
-
-//https://github.com/gulpjs/gulp/blob/master/docs/recipes/running-tasks-in-series.md
-
-gulp.task('scratch', function() {
-    console.log('[gulp]: build task');
-
-    //glob.sync('dist/src/js/**/ *.js'),
-
-    var b = browserify({
-        entries: ['dist/js/src/libs/angular.js','dist/js/src/libs/swfobject.js'],
+    var browserified = browserify({
+        entries: './scripts/Main.js',
         debug: true
     });
 
-    return b.bundle()
-        .pipe(source('application.js'))
+    return browserified
+        .bundle()
+        .pipe(source('Application.js'))
         .pipe(buffer())
         .pipe(sourcemaps.init({loadMaps: true}))
         .pipe(uglify())
         .on('error', gutil.log)
         .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest('./dist/js/'));
-
+        .pipe(gulp.dest(distDir + '/js/'));
 });
 
-//http://ponyfoo.com/articles/my-first-gulp-adventure
+gulp.task('copy', ['assembleHtml', 'assembleStyles', 'browserifyApplication'], function() {
+    console.log('[gulp]: copy task');
+
+    return gulp.src(distDir + '/**/*')
+        .pipe(gulp.dest(webappDir));
+});
