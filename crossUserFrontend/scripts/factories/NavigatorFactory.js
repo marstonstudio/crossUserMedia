@@ -1,24 +1,22 @@
-angular.module('Microphone')
-    .factory('NavigatorFactory', [function() {
-        var Service = {};
-        var navigator = window.navigator;
+module.exports = function() {
+    var Service = {};
+    var navigator = window.navigator;
 
-        if (!navigator.getUserMedia) {
-            navigator.getUserMedia =
-                navigator.getUserMedia ||
-                navigator.webkitGetUserMedia ||
-                navigator.mozGetUserMedia ||
-                navigator.msGetUserMedia;
-        }
+    if (!navigator.getUserMedia) {
+        navigator.getUserMedia =
+            navigator.getUserMedia ||
+            navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia ||
+            navigator.msGetUserMedia;
+    }
 
-        window.navigator.getUserMedia = navigator.getUserMedia;
+    window.navigator.getUserMedia = navigator.getUserMedia;
 
-        Service.enabled = typeof navigator.getUserMedia === 'function';
+    Service.enabled = typeof navigator.getUserMedia === 'function';
 
-        Service.getNavigator = function() {
-            return window.navigator;
-        };
+    Service.getNavigator = function() {
+        return window.navigator;
+    };
 
-
-        return Service;
-    }]);
+    return Service;
+}
