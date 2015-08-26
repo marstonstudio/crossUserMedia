@@ -10,11 +10,17 @@ angular.module('Microphone', [])
         'UploadFactory',
         require('./controllers/MicrophoneController.js')
     ])
+    .directive('swfObject', [
+        '$window',
+        '$timeout',
+        '$interval',
+        require('./directives/SwfObjectDirective.js')
+    ])
     .factory('NavigatorFactory', [
         '$log',
         '$q',
         '$rootScope',
-        require('./factories/UploadFactory.js')
+        require('./factories/NavigatorFactory.js')
     ])
     .factory('NativeRecordingFactory', [
         '$log',
@@ -32,4 +38,4 @@ angular.module('Microphone', [])
         '$q',
         '$rootScope',
         require('./factories/UploadFactory.js')
-    ])
+    ]);

@@ -1,4 +1,4 @@
-var swfobject  = require('jakobmattsson-swfobject');
+//var swfobject  = require('jakobmattsson-swfobject');
 
 module.exports = function ($log, $q) {
     $log.log("FlashRecordingFactory initialized");
@@ -12,7 +12,7 @@ module.exports = function ($log, $q) {
             return;
         }
 
-        //functions accessible from flash ExternalInterface
+        //functions globally accessible for flash ExternalInterface
         window.onFlashSoundRecorded = function (audioBase64) {
             $log.log("onFlashSoundRecorded length:" + audioBase64.length);
 
@@ -24,6 +24,7 @@ module.exports = function ($log, $q) {
             recordingDeferred.reject(error);
         };
 
+        /*
         var flashvars = {};
         var params = {
             id: "crossUserMicrophoneSwf"
@@ -34,6 +35,7 @@ module.exports = function ($log, $q) {
 
         //TODO: switch this to be a separate template using angular-swfobject directive
         swfobject.embedSWF("/swf/crossUserMicrophone.swf", "crossUserMicrophone", "215", "138", "14.0.0", false, flashvars, params, attributes);
+        */
 
         initialized = true;
     };

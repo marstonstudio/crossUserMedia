@@ -3,6 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="stylesheet" type="text/css" href="/css/Microphone.css">
+    <link rel="shortcut icon" href="#" />
 </head>
 <body>
 <div id="root" ng-app="Microphone" ng-controller="MicrophoneController as microphone">
@@ -10,8 +11,15 @@
         <div id="startButton" class="button" ng-click="microphone.startRecording();">start</div>
         <div id="stopButton" class="button" ng-click="microphone.stopRecording();">stop</div>
     </div>
-    <div id="flashContainer" class="container ng-hide" ng-show="microphone.flashMode">
-        <div id="crossUserMicrophone">Flash</div>
+    <div id="flashContainer" class="container" ng-if="microphone.flashMode">
+        <swf-object
+                swf-url="/swf/crossUserMicrophone.swf"
+                swf-width="215"
+                swf-height="138"
+                swf-version="14.0.0"
+                swf-params="{id:'crossUserMicrophoneSwf'}"
+                swf-attrs="{id:'crossUserMicrophoneSwf'}">
+        </swf-object>
     </div>
     <div id="resultsContainer" class="container">
         <div
