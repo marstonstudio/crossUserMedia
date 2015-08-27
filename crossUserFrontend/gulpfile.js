@@ -17,9 +17,9 @@ var webappDir = '../crossUserServer/src/main/webapp';
 
 gulp.task('default', [
     'clean',
-    'assembleStyles',
+    'assembleCss',
     'assembleHtml',
-    'browserifyApplication',
+    'assembleScripts',
     'copy'
 ]);
 
@@ -37,13 +37,18 @@ gulp.task('clean', function(callback) {
         , callback);
 });
 
-gulp.task('assembleStyles', ['clean'] , function() {
+gulp.task('assembleCss', ['clean'] , function(callback) {
     console.log('[gulp]: assembleStyles task');
 
-    return gulp.src('styles/**/*.less')
+    gulp.src('styles/**/*.less')
         .pipe(less())
         .pipe(minifyCSS())
         .pipe(gulp.dest(distDir + '/css'));
+
+    gulp.src('node_modules/angular-material/angular-material.min.css')
+        .pipe(gulp.dest(distDir + '/css'));
+
+    callback();
 });
 
 gulp.task('assembleHtml', ['clean'] , function() {
@@ -53,8 +58,8 @@ gulp.task('assembleHtml', ['clean'] , function() {
         .pipe(gulp.dest(distDir));
 });
 
-gulp.task('browserifyApplication', ['clean'] , function() {
-    console.log('[gulp]: browserifyApplication');
+gulp.task('assembleScripts', ['clean'] , function() {
+    console.log('[gulp]: assembleScripts');
 
     var browserified = browserify({
         entries: './scripts/Main.js',
@@ -63,7 +68,7 @@ gulp.task('browserifyApplication', ['clean'] , function() {
 
     return browserified
         .bundle()
-        .pipe(source('Application.js'))
+        .pipe(source('application.js'))
         .pipe(buffer())
         .pipe(sourcemaps.init({loadMaps: true}))
         .pipe(uglify())
@@ -72,7 +77,7 @@ gulp.task('browserifyApplication', ['clean'] , function() {
         .pipe(gulp.dest(distDir + '/js/'));
 });
 
-gulp.task('copy', ['assembleHtml', 'assembleStyles', 'browserifyApplication'], function() {
+gulp.task('copy', ['assembleHtml', 'assembleCss', 'assembleScripts'], function() {
     console.log('[gulp]: copy task');
 
     return gulp.src(distDir + '/**/*')

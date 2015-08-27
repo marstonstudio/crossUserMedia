@@ -1,6 +1,6 @@
 var angular = require('angular');
 
-angular.module('Microphone', [])
+angular.module('Microphone', [require('angular-material')])
     .constant('CONFIG', CONFIG)
     .controller('MicrophoneController', [
         '$log',
