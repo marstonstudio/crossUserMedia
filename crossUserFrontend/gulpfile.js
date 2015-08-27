@@ -13,16 +13,19 @@ var source      = require('vinyl-source-stream');
 var transform   = require('vinyl-transform');
 
 var distDir =   'dist';
-var webappDir = '../crossUserServer/src/main/webapp';
 var fontDir = '../assets/fonts';
 var fontPath = '/css/fonts'
+var webappDir = '../crossUserServer/src/main/webapp';
+var targetDir = '../crossUserServer/target/crossUserServer';
+
 
 gulp.task('default', [
     'clean',
     'assembleStyles',
     'assembleHtml',
     'assembleScripts',
-    'copy'
+    'copy',
+    'deploy'
 ]);
 
 gulp.task('clean', function(callback) {
@@ -98,4 +101,9 @@ gulp.task('assembleScripts', ['clean'] , function() {
 gulp.task('copy', ['assembleHtml', 'assembleScripts', 'assembleStyles'], function() {
     return gulp.src(distDir + '/**/*')
         .pipe(gulp.dest(webappDir));
+});
+
+gulp.task('deploy', ['copy'], function() {
+    return gulp.src(distDir + '/**/*')
+        .pipe(gulp.dest(targetDir));
 });
