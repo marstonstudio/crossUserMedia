@@ -1,7 +1,5 @@
 package com.marstonstudio.crossUserServer.sprites {
 
-import com.marstonstudio.crossUserServer.util.Console;
-
     import flash.display.Sprite;
     import flash.text.engine.ElementFormat;
     import flash.text.engine.FontDescription;
@@ -33,12 +31,12 @@ import com.marstonstudio.crossUserServer.util.Console;
          * @param width
          * @return
          */
-        public function init(fontName:String, fontSize:Number, width:Number):* {
+        public function init(fontName:String, fontCFF:Boolean, fontSize:Number, width:Number):* {
 
             _width = width;
 
             var fontDescription:FontDescription = new FontDescription();
-            fontDescription.fontLookup = FontLookup.EMBEDDED_CFF;
+            fontDescription.fontLookup = fontCFF ? FontLookup.EMBEDDED_CFF : FontLookup.DEVICE;
             fontDescription.fontName = fontName;
 
             _fontFormat = new ElementFormat(fontDescription);

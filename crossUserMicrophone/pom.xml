@@ -73,6 +73,10 @@
                             <name>BUILD::timestamp</name>
                             <value>"${maven.build.timestamp}"</value>
                         </property>
+                        <property>
+                            <name>CONFIG::cffFont</name>
+                            <value>true</value>
+                        </property>
                     </defines>
 
                 </configuration>

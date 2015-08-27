@@ -15,39 +15,23 @@ package {
 
     public class Main extends Sprite {
 
-        private static const WIDTH:Number = 215;
-
         private var _recorder:MicRecorder;
 
         private var _textField:CFFTextField;
 
-        private static const FONT_NAME:String = "recorderFont";
+        CONFIG::cffFont {
+            [Embed(source="../resources/fonts/SourceSansPro-Regular.otf",
+                    mimeType="application/x-font-opentype",
+                    fontFamily="SourceSansPro",
+                    fontWeight="Regular",
+                    fontStyle="Regular",
+                    embedAsCFF="true")]
+            private var recorderFontOTFEmbed:Class;
+        }
 
-        private static const FONT_SIZE:Number = 16;
-
-        [Embed( source = "../resources/Arial.ttf",
-                mimeType = "application/x-font-truetype-collection",
-                fontFamily = "recorderFont",
-                fontWeight = "Regular",
-                fontStyle = "Regular",
-                embedAsCFF = "true")]
-        private var recorderFontTTFEmbed:Class;
-
-        /*
-        Works for flexmojo, but not IntelliJ
-        */
-        /*
-        [Embed( source = "../resources/SourceSansPro-Regular.otf",
-                mimeType = "application/x-font-opentype",
-                fontFamily = "recorderFont",
-                fontWeight = "Regular",
-                fontStyle = "Regular",
-                embedAsCFF = "true")]
-        private var recorderFontOTFEmbed:Class;
-        */
-
+        [SWF(width="215", height="138", frameRate="24")]
         public function Main() {
-            Console.log("Flash Microphone build timestamp:" + BUILD::timestamp);
+            Console.log("Flash Microphone buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
             Console.logCapabilities();
 
             this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
@@ -58,8 +42,10 @@ package {
             stage.align = StageAlign.TOP_LEFT;
             stage.scaleMode = StageScaleMode.NO_SCALE;
 
+            var fontName:String = CONFIG::cffFont ? "SourceSansPro" : "Arial";
+
             _textField = new CFFTextField();
-            _textField.init(FONT_NAME, FONT_SIZE, WIDTH);
+            _textField.init(fontName, CONFIG::cffFont, 16, 215);
             addChild(_textField);
             _textField.text = "flash microphone";
 
