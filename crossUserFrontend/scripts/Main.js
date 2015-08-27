@@ -12,7 +12,6 @@ angular.module('Microphone', [])
     ])
     .directive('swfObject', [
         '$log',
-        '$window',
         '$timeout',
         '$interval',
         require('./directives/SwfObjectDirective.js')

@@ -19,6 +19,11 @@ package {
 
         private var _textField:CFFTextField;
 
+        /*
+        IntelliJ 14.1 unable to embed CFF Fonts which are supported by flexmojos 7.1.0
+        to prevent build error must add a compiler option to in IntelliJ overriding value set in pom.xml
+        File->Project Structure->Modules->crossUserMicrophone->Compiler Options->Additional compiler options->"-define+=CONFIG::cffFont,false"
+        */
         CONFIG::cffFont {
             [Embed(source="../resources/fonts/SourceSansPro-Regular.otf",
                     mimeType="application/x-font-opentype",

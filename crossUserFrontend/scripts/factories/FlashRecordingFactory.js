@@ -1,5 +1,4 @@
 module.exports = function ($log, $q) {
-    $log.log("FlashRecordingFactory initialized");
 
     var Service = {};
     var recordingDeferred;
@@ -36,6 +35,7 @@ module.exports = function ($log, $q) {
         return recordingDeferred.promise;
     };
 
+    // http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
     function b64toBlob(b64Data, contentType, sliceSize) {
         contentType = contentType || '';
         sliceSize = sliceSize || 512;

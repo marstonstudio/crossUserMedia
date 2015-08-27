@@ -1,5 +1,7 @@
 module.exports = function($log, $q, Navigator) {
 
+    // http://typedarray.org/from-microphone-to-wav-to-server/
+
     var leftchannel = [];
     var rightchannel = [];
     var recordingLength = 0;
@@ -144,20 +146,6 @@ module.exports = function($log, $q, Navigator) {
             var buffer = channelBuffer[i];
             result.set(buffer, offset);
             offset += buffer.length;
-        }
-        return result;
-    }
-
-    function interleave(leftChannel, rightChannel) {
-        var length = leftChannel.length + rightChannel.length;
-        var result = new Float32Array(length);
-
-        var inputIndex = 0;
-
-        for (var index = 0; index < length;) {
-            result[index++] = leftChannel[inputIndex];
-            result[index++] = rightChannel[inputIndex];
-            inputIndex++;
         }
         return result;
     }

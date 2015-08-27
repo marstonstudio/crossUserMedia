@@ -3,7 +3,6 @@ var SwfObject  = require('jakobmattsson-swfobject');
 // https://github.com/jeef3/angular-swfobject
 module.exports = function (
     $log,
-    $window,
     $timeout,
     $interval) {
 
@@ -12,7 +11,6 @@ module.exports = function (
         template: '<div id="{{id}}" ng-transclude></div>',
         transclude: true,
         scope: {
-            callbacks: '=swfCallbacks',
             vars: '=?swfVars',
             expressInstallSwfurl:'=?xiSwfUrlStr',
             swfLoad: '&'
