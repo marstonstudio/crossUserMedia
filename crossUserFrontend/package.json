@@ -7,6 +7,17 @@
     "type": "git",
     "url": "https://github.com/marstonstudio/crossUserMedia"
   },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "angular": "global:angular",
+    "angular-animate": "global:angular-animate",
+    "angular-aria": "global:angular-aria",
+    "angular-material": "global:angular-material"
+  },
   "dependencies": {
     "angular": "^1.4.4",
     "angular-animate": "^1.4.4",
@@ -16,8 +27,11 @@
   },
   "devDependencies": {
     "browserify": "^11.0.1",
+    "browserify-shim": "^3.8.10",
     "del": "^1.2.1",
     "gulp": "^3.9.0",
+    "gulp-concat-css": "^2.2.0",
+    "gulp-fontgen": "^0.1.5",
     "gulp-less": "^3.0.3",
     "gulp-minify-css": "^1.2.1",
     "gulp-sourcemaps": "^1.5.2",

@@ -3,6 +3,7 @@ var SwfObject  = require('jakobmattsson-swfobject');
 // https://github.com/jeef3/angular-swfobject
 module.exports = function (
     $log,
+    $window,
     $timeout,
     $interval) {
 

@@ -1,2 +1,7 @@
 !.gitignore
 *.css
+*.eot
+*.otf
+*.svg
+*.ttf
+*.woff

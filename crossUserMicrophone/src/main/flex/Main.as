@@ -25,7 +25,7 @@ package {
         File->Project Structure->Modules->crossUserMicrophone->Compiler Options->Additional compiler options->"-define+=CONFIG::cffFont,false"
         */
         CONFIG::cffFont {
-            [Embed(source="../resources/fonts/SourceSansPro-Regular.otf",
+            [Embed(source="../../../../assets/fonts/SourceSansPro-Regular.otf",
                     mimeType="application/x-font-opentype",
                     fontFamily="SourceSansPro",
                     fontWeight="Regular",

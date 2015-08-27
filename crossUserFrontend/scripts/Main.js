@@ -1,7 +1,7 @@
 var angular = require('angular');
 
-angular.module('Microphone', [require('angular-material')])
-    .constant('CONFIG', CONFIG)
+angular.module('Microphone', [])
+    .constant('CONFIG', {})
     .controller('MicrophoneController', [
         '$log',
         'NavigatorFactory',
@@ -12,6 +12,7 @@ angular.module('Microphone', [require('angular-material')])
     ])
     .directive('swfObject', [
         '$log',
+        '$window',
         '$timeout',
         '$interval',
         require('./directives/SwfObjectDirective.js')

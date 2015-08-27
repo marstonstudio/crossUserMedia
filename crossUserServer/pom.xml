@@ -14,6 +14,8 @@
 
     <build>
 
+        <finalName>crossUserServer</finalName>
+
         <plugins>
 
             <plugin>
