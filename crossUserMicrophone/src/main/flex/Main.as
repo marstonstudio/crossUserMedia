@@ -17,7 +17,6 @@ package {
 
         private static const WIDTH:Number = 215;
 
-
         private var _recorder:MicRecorder;
 
         private var _textField:CFFTextField;
@@ -51,10 +50,11 @@ package {
             Console.log("Flash Microphone build timestamp:" + BUILD::timestamp);
             Console.logCapabilities();
 
-            addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+            this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
 
         private function onAddedToStage(event:Event):void {
+
             stage.align = StageAlign.TOP_LEFT;
             stage.scaleMode = StageScaleMode.NO_SCALE;
 

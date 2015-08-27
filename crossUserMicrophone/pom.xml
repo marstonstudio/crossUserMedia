@@ -47,12 +47,6 @@
                 <configuration>
 
                     <sourceFile>Main.as</sourceFile>
-                    <defaultSize>
-                        <width>215</width>
-                        <height>138</height>
-                    </defaultSize>
-                    <defaultBackgroundColor>#F5F5DC</defaultBackgroundColor>
-                    <defaultFrameRate>24</defaultFrameRate>
 
                     <flashVersion>${player.version}</flashVersion>
                     <debug>${player.debug}</debug>

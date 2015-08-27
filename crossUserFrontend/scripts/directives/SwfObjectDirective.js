@@ -1,16 +1,17 @@
 var SwfObject  = require('jakobmattsson-swfobject');
 
-//see https://github.com/jeef3/angular-swfobject
-module.exports = function ($window, $timeout, $interval) {
-    'use strict';
+// https://github.com/jeef3/angular-swfobject
+module.exports = function (
+    $log,
+    $window,
+    $timeout,
+    $interval) {
 
     return {
         restrict: 'EAC',
         template: '<div id="{{id}}" ng-transclude></div>',
         transclude: true,
         scope: {
-            params: '=swfParams',
-            attrs: '=swfAttrs',
             callbacks: '=swfCallbacks',
             vars: '=?swfVars',
             expressInstallSwfurl:'=?xiSwfUrlStr',
@@ -23,6 +24,16 @@ module.exports = function ($window, $timeout, $interval) {
                     // Random hash looking thing
                 'swf-' + Math.floor(Math.random() * 1000000000000).toString(16);
 
+            var attributes = {
+                id:scope.id,
+                name:scope.id
+            };
+
+            var params = {
+                bgcolor: attrs.swfBgcolor || "#FFFFFF",
+                wmode: attrs.swfWmode || "window"
+            };
+
             $timeout(function () {
                 SwfObject.embedSWF(attrs.swfUrl,
                     scope.id,
@@ -31,20 +42,10 @@ module.exports = function ($window, $timeout, $interval) {
                     attrs.swfVersion || '10',
                     scope.expressInstallSwfurl,
                     scope.vars,
-                    scope.params,
-                    scope.attrs,
+                    params,
+                    attributes,
                     embedHandler);
             }, 0);
-
-            if (scope.callbacks) {
-                var cbs = scope.callbacks;
-                var cbNames = Object.keys(cbs);
-
-                cbNames.forEach(function (cbName) {
-                    $window[cbName] = cbs[cbName];
-                });
-            }
-
 
             // http://learnswfobject.com/advanced-topics/executing-javascript-when-the-swf-has-finished-loading/
             function swfLoadEvent(evt, fn) {
