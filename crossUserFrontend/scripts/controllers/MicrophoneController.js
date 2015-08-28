@@ -26,12 +26,10 @@
     this.showSourceAudioButton = false;
     this.showOutputAudioButton = false;
     this.showDownloadOutputButton = false;
-    this.showError = false;
     this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
     this.outputButtonElement = angular.element(document.querySelector('#outputButton'));
     this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
-    this.errorElement = angular.element(document.querySelector('#error'));
     this.downloadUrl = '';
 
     var self = this;
@@ -57,7 +55,6 @@
         self.showSourceAudioButton = false;
         self.showOutputAudioButton = false;
         self.showDownloadOutputButton = false;
-        self.showError = false;
         self.downloadUrl = '';
     };
 
@@ -73,7 +70,7 @@
                 embedLocalBlob(audioBlob);
                 return UploadRecording
                     .send(audioBlob, self.inputFormat, self.outputFormat)
-                    .then(displayProcessedOutput, function(reason){$log.error(reason);});
+                    .then(displayProcessedOutput, function(response){$log.error(response);});
             }, function(reason) {$log.error(reason);});
     };
 
@@ -131,8 +128,9 @@
         self.showSourceAudioButton = true;
     }
 
-    function displayProcessedOutput(audioSet) {
-        if (audioSet && audioSet.outputUrl) {
+    function displayProcessedOutput(response) {
+        if (response && response.data && response.data.inputUrl) {
+            var audioSet = response.data;
             $log.log('received audioSet inputUrl:' + audioSet.inputUrl + ', outputUrl:' + audioSet.outputUrl);
 
             self.downloadUrl = audioSet.outputUrl;
@@ -143,6 +141,9 @@
 
             self.downloadButtonElement.html('download ' + self.outputFormat + ' file');
             self.showDownloadOutputButton = true;
+        } else {
+            $log.error('response not in expected json form with inputUrl node');
+            $log.error(response)
         }
     }
 
