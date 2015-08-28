@@ -37,6 +37,6 @@ angular.module('Microphone', [])
     .factory('UploadFactory', [
         '$log',
         '$q',
-        '$rootScope',
+        '$http',
         require('./factories/UploadFactory.js')
     ]);

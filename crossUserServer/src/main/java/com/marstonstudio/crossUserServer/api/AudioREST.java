@@ -1,6 +1,7 @@
 // Copyright (c) 2014. EnglishCentral. All rights reserved.
 package com.marstonstudio.crossUserServer.api;
 
+import com.marstonstudio.crossUserServer.element.AudioSet;
 import com.marstonstudio.crossUserServer.util.AudioUtil;
 import com.marstonstudio.crossUserServer.util.FileUtil;
 import org.apache.log4j.Logger;
@@ -37,7 +38,7 @@ public class AudioREST {
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public String postBlob(
+    public AudioSet postBlob(
             @Context HttpServletRequest hsr,
             @FormDataParam("payload") final InputStream payloadBlob,
             @FormDataParam("inputFormat") final String inputFormat,
@@ -54,7 +55,10 @@ public class AudioREST {
 
         try {
             File outputFile = AudioUtil.convertAudioFile(inputFile, outputFormat, inputFormat.equals(outputFormat));
-            return FileUtil.getAudioUrlFromFile(hsr, outputFile);
+            return new AudioSet(
+                    FileUtil.getAudioUrlFromFile(hsr, inputFile),
+                    FileUtil.getAudioUrlFromFile(hsr, outputFile)
+            );
         } catch (Exception e) {
             logger.error("Encoding Problem", e);
             throw new WebApplicationException(e);

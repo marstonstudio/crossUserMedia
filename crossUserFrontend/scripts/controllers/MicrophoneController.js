@@ -73,10 +73,8 @@
                 embedLocalBlob(audioBlob);
                 return UploadRecording
                     .send(audioBlob, self.inputFormat, self.outputFormat)
-                    .then(displayProcessedOutput);
-            }, function(error) {
-                self.errorElement.html(error);
-            });
+                    .then(displayProcessedOutput, function(reason){$log.error(reason);});
+            }, function(reason) {$log.error(reason);});
     };
 
     this.playSource = function () {
@@ -128,18 +126,17 @@
     };
 
     function embedLocalBlob(audioBlob) {
-        $log.log("embedLocalBlob");
-
         angular.element(document.querySelector('#sourceButton')).html('play base64 source');
         self.sourceAudioElement.attr('src', URL.createObjectURL(audioBlob));
         self.showSourceAudioButton = true;
     }
 
-    function displayProcessedOutput(response) {
-        $log.log(response);
-        if (response) {
-            self.downloadUrl = response;
-            self.outputAudioElement.attr('src', response);
+    function displayProcessedOutput(audioSet) {
+        if (audioSet && audioSet.outputUrl) {
+            $log.log('received audioSet inputUrl:' + audioSet.inputUrl + ', outputUrl:' + audioSet.outputUrl);
+
+            self.downloadUrl = audioSet.outputUrl;
+            self.outputAudioElement.attr('src', audioSet.outputUrl);
 
             self.outputButtonElement.html('play processed output');
             self.showOutputAudioButton = true;

@@ -1,9 +1,8 @@
-module.exports = function($log, $q, $rootScope) {
+module.exports = function($log, $q, $http) {
 
     var Service = {};
 
     Service.send = function(audioBlob, inputFormat, outputFormat) {
-        $log.log('Uploading to server');
 
         var deferred = $q.defer();
 
@@ -12,22 +11,17 @@ module.exports = function($log, $q, $rootScope) {
         formData.append("inputFormat", inputFormat);
         formData.append("outputFormat", outputFormat);
 
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("POST", "/rest/audio", true);
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == 4) {
-                if (xmlhttp.status == 200) {
-                    deferred.resolve(xmlhttp.responseText);
-                    $log.log('promise resolved: ' + xmlhttp.responseText);
-                } else {
-                    deferred.reject('Error during upload');
-                    $log.log('promise rejected');
-                }
-
-                $rootScope.$apply();
+        $http.post(
+            '/rest/audio',
+            formData, {
+                transformRequest: angular.identity,
+                headers: {'Content-Type': undefined}
             }
-        };
-        xmlhttp.send(formData);
+        ).then(function(response) {
+            deferred.resolve(response.data);
+        }, function(response) {
+            deferred.reject(response.data);
+        });
 
         return deferred.promise;
     };
