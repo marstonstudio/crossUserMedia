@@ -13,7 +13,7 @@ var source      = require('vinyl-source-stream');
 var transform   = require('vinyl-transform');
 
 var distDir =   'dist';
-var fontDir = '../assets/fonts';
+var assetDir = '../assets';
 var fontPath = '/css/fonts'
 var webappDir = '../crossUserServer/src/main/webapp';
 var targetDir = '../crossUserServer/target/crossUserServer';
@@ -22,6 +22,7 @@ var targetDir = '../crossUserServer/target/crossUserServer';
 gulp.task('default', [
     'clean',
     'assembleStyles',
+    'assembleImages',
     'assembleHtml',
     'assembleScripts',
     'copy',
@@ -56,7 +57,7 @@ gulp.task('compileLess', ['clean'] , function() {
 gulp.task('generateFonts', ['clean'] , function() {
     // requires system libraries be installed
     // brew install fontforge ttf2eot batik ttfautohint
-    return gulp.src(fontDir + '/*.otf')
+    return gulp.src(assetDir + '/fonts/*.otf')
         .pipe(fontgen({
             dest: distDir + fontPath,
             css_fontpath: fontPath
@@ -72,6 +73,11 @@ gulp.task('concatenateFonts', ['generateFonts'] , function() {
         .pipe(concatCss('fonts.css'))
         .pipe(gulp.dest(distDir + '/css'));
 });
+
+gulp.task('assembleImages', ['clean'], function() {
+    return gulp.src(assetDir + '/images/**/*')
+        .pipe(gulp.dest(distDir + '/img'));
+})
 
 gulp.task('assembleHtml', ['clean'], function() {
     return gulp.src('html/**/*.html')
@@ -98,7 +104,7 @@ gulp.task('assembleScripts', ['clean'] , function() {
         .pipe(gulp.dest(distDir + '/js/'));
 });
 
-gulp.task('copy', ['assembleHtml', 'assembleScripts', 'assembleStyles'], function() {
+gulp.task('copy', ['assembleHtml', 'assembleImages','assembleScripts', 'assembleStyles'], function() {
     return gulp.src(distDir + '/**/*')
         .pipe(gulp.dest(webappDir));
 });

@@ -1,58 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" ng-app="Microphone">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" type="text/css" href="/css/fonts.css">
     <link rel="stylesheet" type="text/css" href="/css/microphone.css">
     <link rel="shortcut icon" href="#" />
 </head>
-<body>
-<div id="root" ng-app="Microphone" ng-controller="MicrophoneController as microphone">
-    <div id="controlContainer" class="container">
-        <div id="startButton" class="button" ng-click="microphone.startRecording();">start</div>
-        <div id="stopButton" class="button" ng-click="microphone.stopRecording();">stop</div>
-    </div>
-    <div id="flashContainer" class="container" ng-if="microphone.flashMode">
-        <swf-object
-                swf-id="crossUserMicrophoneSwf"
-                swf-url="/swf/crossUserMicrophone.swf"
-                swf-version="14.0.0"
-                swf-width="215"
-                swf-height="138"
-                swf-bgcolor="#F5F5DC">
-        </swf-object>
-    </div>
-    <div id="resultsContainer" class="container">
-        <div
-                id="sourceButton"
-                class="button ng-hide"
-                ng-show="microphone.showSourceAudioButton"
-                ng-click="microphone.playSource();">
-            source
-        </div>
-        <div
-                id="outputButton"
-                class="button ng-hide"
-                ng-show="microphone.showOutputAudioButton"
-                ng-click="microphone.playOutput();">
-            output
-        </div>
-        <div
-                id="downloadButton"
-                class="button ng-hide"
-                ng-show="microphone.showDownloadOutputButton"
-                ng-click="microphone.downloadOutput();">download</div>
-        <Audio id="outputAudio"></Audio>
-        <Audio id="sourceAudio"></Audio>
-    </div>
-</div>
+<body layout="column" ng-controller="MicrophoneController as microphone">
+    <md-content>
 
-<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-animate.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-aria.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.js"></script>
-<script type="text/javascript" src="/js/application.js"></script>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
 
+                <md-button class="md-icon-button" aria-label="settings">
+                    <md-icon>menu</md-icon>
+                </md-button>
+
+                <h2><span>Proof of Concept for Cross Browser Compatible Audio Recorder</span></h2>
+
+                <md-button class="md-icon-button" aria-label="source code on github" ng-href="https://github.com/marstonstudio/crossUserMedia" target="_blank">
+                    <md-tooltip>source code on github</md-tooltip>
+                    <md-icon md-svg-src="/img/icons/github.svg"></md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+
+
+            <div id="controlContainer" class="container">
+                <div id="startButton" class="button" ng-click="microphone.startRecording();">start</div>
+                <div id="stopButton" class="button" ng-click="microphone.stopRecording();">stop</div>
+            </div>
+
+            <div id="resultsContainer" class="container">
+                <div
+                        id="sourceButton"
+                        class="button ng-hide"
+                        ng-show="microphone.showSourceAudioButton"
+                        ng-click="microphone.playSource();">
+                    source
+                </div>
+                <div
+                        id="outputButton"
+                        class="button ng-hide"
+                        ng-show="microphone.showOutputAudioButton"
+                        ng-click="microphone.playOutput();">
+                    output
+                </div>
+                <div
+                        id="downloadButton"
+                        class="button ng-hide"
+                        ng-show="microphone.showDownloadOutputButton"
+                        ng-click="microphone.downloadOutput();">download</div>
+                <Audio id="outputAudio"></Audio>
+                <Audio id="sourceAudio"></Audio>
+            </div>
+
+        <div id="flashContainer" class="container" ng-if="microphone.flashMode">
+            <swf-object
+                    swf-id="crossUserMicrophoneSwf"
+                    swf-url="/swf/crossUserMicrophone.swf"
+                    swf-version="14.0.0"
+                    swf-width="215"
+                    swf-height="138"
+                    swf-bgcolor="#F5F5DC">
+            </swf-object>
+        </div>
+
+
+    </md-content>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-animate.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-aria.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.js"></script>
+    <script type="text/javascript" src="/js/application.js"></script>
 </body>
 </html>
