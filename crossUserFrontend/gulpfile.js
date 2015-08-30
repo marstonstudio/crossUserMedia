@@ -95,7 +95,7 @@ gulp.task('assembleScripts', ['clean'] , function() {
         .pipe(source('application.js'))
         .pipe(buffer())
         .pipe(sourcemaps.init({loadMaps: true}))
-        .pipe(uglify())
+        //.pipe(uglify())
         .on('error', function(err){
             console.log(err.toString());
             this.emit('end');

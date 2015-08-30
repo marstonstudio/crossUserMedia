@@ -1,7 +1,18 @@
 var angular = require('angular');
+var angularMaterial = require('angular-material');
+var angularAria = require('angular-aria');
+var angularAnimate = require('angular-animate');
 
-angular.module('Microphone', ['ngMaterial'])
-    .constant('CONFIG', {})
+var microphoneModule = angular.module('Microphone', ['ngMaterial'])
+
+    .config(function($mdThemingProvider) {
+        $mdThemingProvider.theme('default')
+            .primaryPalette('teal')
+            .accentPalette('indigo')
+            .warnPalette('red')
+            .backgroundPalette('grey');
+    })
+
     .controller('MicrophoneController', [
         '$log',
         'NavigatorFactory',
@@ -10,6 +21,7 @@ angular.module('Microphone', ['ngMaterial'])
         'UploadFactory',
         require('./controllers/MicrophoneController.js')
     ])
+
     .directive('swfObject', [
         '$log',
         '$window',
@@ -17,6 +29,7 @@ angular.module('Microphone', ['ngMaterial'])
         '$interval',
         require('./directives/SwfObjectDirective.js')
     ])
+
     .factory('NavigatorFactory', [
         '$log',
         '$q',

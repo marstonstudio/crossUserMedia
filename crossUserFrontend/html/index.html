@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="Microphone">
+<html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.css">
@@ -8,72 +8,84 @@
     <link rel="stylesheet" type="text/css" href="/css/microphone.css">
     <link rel="shortcut icon" href="#" />
 </head>
-<body layout="column" ng-controller="MicrophoneController as microphone">
-    <md-content>
+<body layout="column" ng-app="Microphone" ng-controller="MicrophoneController as microphone">
 
-        <md-toolbar>
-            <div class="md-toolbar-tools">
+    <md-toolbar layout="row" layout-align="space-between left" class="md-toolbar-tools" md-scroll-shrink="true" >
 
-                <md-button class="md-icon-button" aria-label="settings">
-                    <md-icon>menu</md-icon>
-                </md-button>
+            <md-button class="md-icon-button" aria-label="settings">
+                <md-tooltip>menu</md-tooltip>
+                <md-icon>menu</md-icon>
+            </md-button>
 
-                <h2><span>Proof of Concept for Cross Browser Compatible Audio Recorder</span></h2>
+            <h2>Proof of Concept for Cross Browser Compatible Audio Recorder</h2>
 
-                <md-button class="md-icon-button" aria-label="source code on github" ng-href="https://github.com/marstonstudio/crossUserMedia" target="_blank">
-                    <md-tooltip>source code on github</md-tooltip>
-                    <md-icon md-svg-src="/img/icons/github.svg"></md-icon>
-                </md-button>
-            </div>
-        </md-toolbar>
+            <md-button class="md-icon-button" aria-label="source code on github" ng-href="https://github.com/marstonstudio/crossUserMedia" target="_blank">
+                <md-tooltip>github source</md-tooltip>
+                <md-icon md-svg-src="/img/icons/github.svg"></md-icon>
+            </md-button>
 
+    </md-toolbar>
+    <md-content layout="column" class="buttonBox">
 
-            <div id="controlContainer" class="container">
-                <div id="startButton" class="button" ng-click="microphone.startRecording();">start</div>
-                <div id="stopButton" class="button" ng-click="microphone.stopRecording();">stop</div>
-            </div>
+        <md-content layout="row" layout-align="space-between">
+            <md-button id="startButton"
+                       class="md-raised md-accent"
+                       ng-click="microphone.startRecording();">
+                <md-icon>mic</md-icon>
+                Start Recording
+            </md-button>
 
-            <div id="resultsContainer" class="container">
-                <div
-                        id="sourceButton"
-                        class="button ng-hide"
-                        ng-show="microphone.showSourceAudioButton"
-                        ng-click="microphone.playSource();">
-                    source
-                </div>
-                <div
-                        id="outputButton"
-                        class="button ng-hide"
-                        ng-show="microphone.showOutputAudioButton"
-                        ng-click="microphone.playOutput();">
-                    output
-                </div>
-                <div
-                        id="downloadButton"
-                        class="button ng-hide"
-                        ng-show="microphone.showDownloadOutputButton"
-                        ng-click="microphone.downloadOutput();">download</div>
-                <Audio id="outputAudio"></Audio>
-                <Audio id="sourceAudio"></Audio>
-            </div>
+            <md-button id="stopButton"
+                       class="md-raised md-warn"
+                       ng-click="microphone.stopRecording();">
+                <md-icon>stop</md-icon>
+                Stop Recording
+            </md-button>
+        </md-content>
 
-        <div id="flashContainer" class="container" ng-if="microphone.flashMode">
+        <md-content layout="column">
+
+            <md-button id="sourceButton"
+                       class="md-raised md-primary md-hue-2"
+                       ng-disabled="!microphone.showSourceAudioButton"
+                       ng-click="microphone.playSource();" >
+                <md-icon>play_circle_filled</md-icon>
+                Play Original WAV</md-button>
+
+            <md-button id="outputButton"
+                       class="md-raised md-primary md-hue-2"
+                       ng-disabled="!microphone.showOutputAudioButton"
+                       ng-click="microphone.playOutput();">
+                <md-icon>play_circle_outline</md-icon>
+                Play Encoded MP4</md-button>
+
+            <md-button id="downloadButton"
+                       class="md-raised md-primary md-hue-1"
+                       ng-disabled="!microphone.showDownloadOutputButton"
+                       ng-click="microphone.downloadOutput();">
+                <md-icon>file_download</md-icon>
+                Download File</md-button>
+        </md-content>
+
+        <md-content>
+            <Audio id="outputAudio"></Audio>
+            <Audio id="sourceAudio"></Audio>
             <swf-object
-                    swf-id="crossUserMicrophoneSwf"
-                    swf-url="/swf/crossUserMicrophone.swf"
-                    swf-version="14.0.0"
-                    swf-width="215"
-                    swf-height="138"
-                    swf-bgcolor="#F5F5DC">
+                        ng-if="microphone.flashMode"
+                        swf-id="crossUserMicrophoneSwf"
+                        swf-url="/swf/crossUserMicrophone.swf"
+                        swf-version="14.0.0"
+                        swf-width="215"
+                        swf-height="138"
+                        swf-bgcolor="#F5F5DC">
             </swf-object>
-        </div>
-
+        </md-content>
 
     </md-content>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-animate.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-aria.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-aria.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-animate.min.js"></script>
     <script type="text/javascript" src="/js/application.js"></script>
 </body>
 </html>

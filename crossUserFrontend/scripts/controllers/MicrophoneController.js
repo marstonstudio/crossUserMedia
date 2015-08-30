@@ -1,4 +1,4 @@
- module.exports = function ($log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
+module.exports = function ($log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
     $log.log("MicrophoneController initialized");
 
     var FORMAT_WAV = 'wav';
@@ -123,7 +123,6 @@
     };
 
     function embedLocalBlob(audioBlob) {
-        angular.element(document.querySelector('#sourceButton')).html('play base64 source');
         self.sourceAudioElement.attr('src', URL.createObjectURL(audioBlob));
         self.showSourceAudioButton = true;
     }
@@ -133,14 +132,12 @@
             var audioSet = response.data;
             $log.log('received audioSet inputUrl:' + audioSet.inputUrl + ', outputUrl:' + audioSet.outputUrl);
 
-            self.downloadUrl = audioSet.outputUrl;
             self.outputAudioElement.attr('src', audioSet.outputUrl);
-
-            self.outputButtonElement.html('play processed output');
             self.showOutputAudioButton = true;
 
-            self.downloadButtonElement.html('download ' + self.outputFormat + ' file');
+            self.downloadUrl = audioSet.outputUrl;
             self.showDownloadOutputButton = true;
+
         } else {
             $log.error('response not in expected json form with inputUrl node');
             $log.error(response)
