@@ -19,3 +19,5 @@ In an [email thread with current Flex Mojos maintainer Christopher Dutz](http://
 Note that in order to compile this test case in either IntelliJ or Maven, you must first 'mavenize' the Apache Flex framework including fontkit. See [my instructions](https://github.com/marstonstudio/crossUserMedia/blob/master/README.md) or [official wiki](https://cwiki.apache.org/confluence/display/FLEX/Building+Flex+applications+with+Maven).
 
 Resolution would be for IntelliJ to properly encode *.otf fonts for newer Flex Mojos projects.
+
+Issue tracked with Jetbrains as [IDEA-144541](https://youtrack.jetbrains.com/issue/IDEA-144541)

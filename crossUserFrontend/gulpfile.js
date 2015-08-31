@@ -5,6 +5,7 @@ var concatCss   = require('gulp-concat-css');
 var fontgen     = require('gulp-fontgen');
 var less        = require('gulp-less');
 var minifyCSS   = require('gulp-minify-css');
+var ngAnnotate  = require('gulp-ng-annotate');
 var sourcemaps  = require('gulp-sourcemaps');
 var uglify      = require('gulp-uglify');
 var gutil       = require('gulp-util');
@@ -94,8 +95,9 @@ gulp.task('assembleScripts', ['clean'] , function() {
         .bundle()
         .pipe(source('application.js'))
         .pipe(buffer())
+        .pipe(ngAnnotate())
         .pipe(sourcemaps.init({loadMaps: true}))
-        //.pipe(uglify())
+        .pipe(uglify())
         .on('error', function(err){
             console.log(err.toString());
             this.emit('end');
