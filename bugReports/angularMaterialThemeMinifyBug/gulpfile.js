@@ -40,7 +40,7 @@ gulp.task('assembleScripts', ['clean'] , function() {
         .bundle()
         .pipe(source('application.js'))
         .pipe(buffer())
-        //.pipe(uglify())
+        .pipe(uglify())
         .on('error', function(err){
             console.log(err.toString());
             this.emit('end');
