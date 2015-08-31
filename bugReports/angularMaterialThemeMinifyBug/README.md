@@ -44,3 +44,7 @@ It appears that the recommended way of changing the theme colors for material-an
 This is noted in [other angular documention]()https://docs.angularjs.org/tutorial/step_05)
 
 Is there a recommended way of setting theme colors that is minification friendly?
+
+# FIXED
+
+[Bug report](https://github.com/angular/material/issues/4383) yeilded guidance to use [gulp-ng-annotate](https://www.npmjs.com/package/gulp-ng-annotate).
