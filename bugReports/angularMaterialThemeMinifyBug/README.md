@@ -44,6 +44,3 @@ It appears that the recommended way of changing the theme colors for material-an
 This is noted in [other angular documention]()https://docs.angularjs.org/tutorial/step_05)
 
 Is there a recommended way of setting theme colors that is minification friendly?
-
-It would be nice if this were noted in the Angular Material theme documentation too.
-I'm new to angular and I chased this for awhile before isolating root cause.
