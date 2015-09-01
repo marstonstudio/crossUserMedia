@@ -1,4 +1,4 @@
-module.exports = function($log, $q, Navigator) {
+module.exports = function($rootScope, $log, $q, Navigator) {
 
     // http://typedarray.org/from-microphone-to-wav-to-server/
 
@@ -17,7 +17,7 @@ module.exports = function($log, $q, Navigator) {
     Service.initialize = function() {};
 
     Service.startRecording = function() {
-        $log.log("Start Recording");
+        $rootScope.$emit('statusEvent', 'recording started');
 
         if (Navigator.enabled) {
             Navigator.getNavigator().getUserMedia({audio: true}, startUserMediaRecording, function(e) {
@@ -27,7 +27,7 @@ module.exports = function($log, $q, Navigator) {
     };
 
     Service.stopRecording = function() {
-        $log.log("Stop Recording");
+        $rootScope.$emit('statusEvent', 'recording stopped');
 
         return stopUserMediaRecording();
     };
@@ -79,6 +79,8 @@ module.exports = function($log, $q, Navigator) {
 
     function stopUserMediaRecording() {
         var deferred = $q.defer();
+
+        $rootScope.$emit('statusEvent', 'audio saving');
 
         if (audioInput) {
             audioInput.disconnect();
@@ -133,8 +135,9 @@ module.exports = function($log, $q, Navigator) {
         // our final binary blob
         var audioBlob = new Blob([ view ], { type: 'audio/wav' });
 
-        deferred.resolve(audioBlob);
+        $rootScope.$emit('statusEvent', 'audio saved');
 
+        deferred.resolve(audioBlob);
         return deferred.promise;
     }
 

@@ -14,6 +14,7 @@ var microphoneModule = angular.module('Microphone', ['ngMaterial'])
     })
 
     .controller('MicrophoneController', [
+        '$rootScope',
         '$log',
         'NavigatorFactory',
         'FlashRecordingFactory',
@@ -31,23 +32,26 @@ var microphoneModule = angular.module('Microphone', ['ngMaterial'])
     ])
 
     .factory('NavigatorFactory', [
+        '$rootScope',
         '$log',
         '$q',
-        '$rootScope',
         require('./factories/NavigatorFactory.js')
     ])
     .factory('NativeRecordingFactory', [
+        '$rootScope',
         '$log',
         '$q',
         'NavigatorFactory',
         require('./factories/NativeRecordingFactory.js')
     ])
     .factory('FlashRecordingFactory', [
+        '$rootScope',
         '$log',
         '$q',
         require('./factories/FlashRecordingFactory.js')
     ])
     .factory('UploadFactory', [
+        '$rootScope',
         '$log',
         '$http',
         require('./factories/UploadFactory.js')

@@ -1,4 +1,4 @@
-module.exports = function($log, $http) {
+module.exports = function($rootScope, $log, $http) {
 
     var Service = {};
 

@@ -61,6 +61,7 @@ package {
 
         private function externalStartRecording(useSpeex:Boolean = false):void {
             _textField.text = "clicked start " + (useSpeex ? "with speex" : "with wav");
+            ExternalInterface.call("onFlashStatusMessage", "recording started");
 
             _recorder = new MicRecorder( useSpeex );
             _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
@@ -70,6 +71,8 @@ package {
 
         private function externalStopRecording():void {
             _textField.text = "clicked stop";
+            ExternalInterface.call("onFlashStatusMessage", "recording stopped");
+
             _recorder.stop();
         }
 
@@ -79,6 +82,7 @@ package {
 
         private function onRecordComplete(event:RecordingEvent):void {
             _textField.text = "saving recorded sound.";
+            ExternalInterface.call("onFlashStatusMessage", "audio saving");
 
             var b64:Base64Encoder = new Base64Encoder();
             b64.insertNewLines = false;
@@ -86,6 +90,7 @@ package {
             ExternalInterface.call("onFlashSoundRecorded", b64.toString());
 
             _textField.text = "saved recorded sound.";
+            ExternalInterface.call("onFlashStatusMessage", "audio saved");
         }
 
     }

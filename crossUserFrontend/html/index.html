@@ -29,14 +29,14 @@
 
         <md-content layout="row" layout-align="space-between">
             <md-button id="startButton"
-                       class="md-raised md-accent"
+                       class="md-raised md-accent" flex
                        ng-click="microphone.startRecording();">
                 <md-icon>mic</md-icon>
                 Start Recording
             </md-button>
 
             <md-button id="stopButton"
-                       class="md-raised md-warn"
+                       class="md-raised md-warn" flex
                        ng-click="microphone.stopRecording();">
                 <md-icon>stop</md-icon>
                 Stop Recording
@@ -45,23 +45,29 @@
 
         <md-content layout="column">
 
+            <md-whiteframe class="md-whiteframe-z2" layout="row" layout-margin layout-align="space-between center">
+                <div id="statusBox" flex class="statusDisplay"></div>
+                <div>|</div>
+                <div id="timerBox" flex class="statusDisplay"></div>
+            </md-whiteframe>
+
             <md-button id="sourceButton"
                        class="md-raised md-primary md-hue-2"
-                       ng-disabled="!microphone.showSourceAudioButton"
+                       ng-disabled="!microphone.sourceAudioButtonEnabled"
                        ng-click="microphone.playSource();" >
                 <md-icon>play_circle_filled</md-icon>
                 Play Original WAV</md-button>
 
             <md-button id="outputButton"
                        class="md-raised md-primary md-hue-2"
-                       ng-disabled="!microphone.showOutputAudioButton"
+                       ng-disabled="!microphone.outputAudioButtonEnabled"
                        ng-click="microphone.playOutput();">
                 <md-icon>play_circle_outline</md-icon>
                 Play Encoded MP4</md-button>
 
             <md-button id="downloadButton"
                        class="md-raised md-primary md-hue-1"
-                       ng-disabled="!microphone.showDownloadOutputButton"
+                       ng-disabled="!microphone.downloadOutputButtonEnabled"
                        ng-click="microphone.downloadOutput();">
                 <md-icon>file_download</md-icon>
                 Download File</md-button>

@@ -1,4 +1,4 @@
-module.exports = function ($log, $q) {
+module.exports = function ($rootScope, $log, $q) {
 
     var Service = {};
     var recordingDeferred;
@@ -20,6 +20,10 @@ module.exports = function ($log, $q) {
         window.onFlashSoundRecordingError = function (error) {
             recordingDeferred.reject(error);
         };
+
+        window.onFlashStatusMessage = function(message) {
+            $rootScope.$emit('statusEvent', message);
+        }
 
         initialized = true;
     };
