@@ -46,9 +46,9 @@
         <md-content layout="column">
 
             <md-whiteframe class="md-whiteframe-z2" layout="row" layout-margin layout-align="space-between center">
-                <div id="statusBox" flex class="statusDisplay"></div>
+                <div id="statusBox" flex class="details">{{statusText}}</div>
                 <div>|</div>
-                <div id="timerBox" flex class="statusDisplay"></div>
+                <div id="timerBox" flex class="details">{{timerText}}</div>
             </md-whiteframe>
 
             <md-button id="sourceButton"

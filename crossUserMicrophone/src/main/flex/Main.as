@@ -78,6 +78,7 @@ package {
 
         private function onRecording(event:RecordingEvent):void {
             _textField.text = "recording since : " + event.time + " ms.";
+            ExternalInterface.call("onFlashTimer", event.time / 1000);
         }
 
         private function onRecordComplete(event:RecordingEvent):void {

@@ -15,6 +15,7 @@ var microphoneModule = angular.module('Microphone', ['ngMaterial'])
 
     .controller('MicrophoneController', [
         '$rootScope',
+        '$scope',
         '$log',
         'NavigatorFactory',
         'FlashRecordingFactory',

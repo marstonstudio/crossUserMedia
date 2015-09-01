@@ -1,4 +1,4 @@
-module.exports = function ($rootScope, $log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
+module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
     $log.log("MicrophoneController initialized");
 
     var FORMAT_WAV = 'wav';
@@ -33,8 +33,6 @@ module.exports = function ($rootScope, $log, Navigator, FlashRecording, NativeRe
     this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
     this.downloadOutputButtonEnabled = false;
 
-    this.statusBoxElement = angular.element(document.querySelector('#statusBox'));
-    this.timerBoxElement = angular.element(document.querySelector('#timerBox'));
     this.downloadUrl = '';
 
     var self = this;
@@ -57,8 +55,8 @@ module.exports = function ($rootScope, $log, Navigator, FlashRecording, NativeRe
         self.outputAudioButtonEnabled = false;
         self.downloadOutputButtonEnabled = false;
         self.downloadUrl = '';
-        self.statusBoxElement.html("status");
-        self.timerBoxElement.html("0.0");
+        $scope.statusText = 'status';
+        $scope.timerText = '0.0';
     };
 
     (function init() {
@@ -68,11 +66,16 @@ module.exports = function ($rootScope, $log, Navigator, FlashRecording, NativeRe
 
     $rootScope.$on('statusEvent', function (event, data) {
         console.log(data);
-        self.statusBoxElement.html(data);
+        $scope.statusText = data;
+        $scope.$digest();
     });
 
     $rootScope.$on('timerEvent', function (event, data) {
-        console.log(data); // 'Data to send'
+        console.log(data);
+        if(data && !isNaN(data)) {
+            $scope.timerText = data.toFixed(2);
+            $scope.$digest();
+        }
     });
 
     this.startRecording = function () {

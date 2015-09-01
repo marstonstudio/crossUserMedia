@@ -23,7 +23,11 @@ module.exports = function ($rootScope, $log, $q) {
 
         window.onFlashStatusMessage = function(message) {
             $rootScope.$emit('statusEvent', message);
-        }
+        };
+
+        window.onFlashTimer = function(message) {
+            $rootScope.$emit('timerEvent', message);
+        };
 
         initialized = true;
     };

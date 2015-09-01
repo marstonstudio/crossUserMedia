@@ -64,6 +64,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
 
         recorder.onaudioprocess = function(e) {
             $log.log('recording');
+            $rootScope.$emit('timerEvent', context.currentTime);
             var left = e.inputBuffer.getChannelData(0);
             var right = e.inputBuffer.getChannelData(1);
             // we clone the samples
