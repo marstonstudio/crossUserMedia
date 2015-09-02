@@ -46,8 +46,6 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         // retrieve the current sample rate to be used for WAV packaging
         sampleRate = context.sampleRate;
 
-
-
         // creates an audio node from the microphone incoming stream
         audioInput = context.createMediaStreamSource(audioStream);
 
@@ -57,8 +55,8 @@ module.exports = function($rootScope, $log, $q, Navigator) {
 
         // create an analyzer for volume graph
         analyser = context.createAnalyser();
-        analyser.smoothingTimeConstant = 0.3;
-        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0;
+        analyser.fftSize = 2048;
         audioInput.connect(analyser);
 
         /* From the spec: This value controls how frequently the audioprocess event is
@@ -69,11 +67,12 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         recorder = context.createScriptProcessor(bufferSize, 1, 1);
 
         recorder.onaudioprocess = function(e) {
+
             var array =  new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(array);
             var level = getAverageVolume(array);
-
             $rootScope.$emit('recordingEvent', {"time": e.playbackTime, "level":level});
+
             var mono = e.inputBuffer.getChannelData(0);
             // we clone the samples
             monochannel.push(new Float32Array(mono));
@@ -162,7 +161,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         }
     }
 
-    http://www.smartjava.org/content/exploring-html5-web-audio-visualizing-sound
+    //http://www.smartjava.org/content/exploring-html5-web-audio-visualizing-sound
     function getAverageVolume(array) {
         var values = 0;
         var average;
