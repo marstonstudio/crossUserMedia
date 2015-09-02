@@ -97,7 +97,7 @@ gulp.task('assembleScripts', ['clean'] , function() {
         .pipe(buffer())
         .pipe(ngAnnotate())
         .pipe(sourcemaps.init({loadMaps: true}))
-        .pipe(uglify())
+        //.pipe(uglify())
         .on('error', function(err){
             console.log(err.toString());
             this.emit('end');

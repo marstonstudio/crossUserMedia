@@ -57,6 +57,7 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
         self.downloadUrl = '';
         $scope.statusText = 'status';
         $scope.timerText = '0.0';
+        $scope.microphoneLevel = 0;
     };
 
     (function init() {
@@ -65,15 +66,23 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
     })();
 
     $rootScope.$on('statusEvent', function (event, data) {
-        console.log(data);
         $scope.statusText = data;
-        $scope.$digest();
     });
 
-    $rootScope.$on('timerEvent', function (event, data) {
-        console.log(data);
-        if(data && !isNaN(data)) {
-            $scope.timerText = data.toFixed(2);
+    $rootScope.$on('recordingEvent', function (event, data) {
+
+        if(data) {
+            if(data.time && !isNaN(data.time))
+                $scope.timerText = data.time.toFixed(2);
+
+            if(data.level) {
+                if(isNaN(data.level) || data.level < 0) {
+                    $scope.microphoneLevel = 0;
+                } else {
+                    $scope.microphoneLevel = Math.min(data.level, 100);
+                }
+            }
+
             $scope.$digest();
         }
     });
@@ -84,6 +93,8 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
     };
 
     this.stopRecording = function () {
+        $scope.microphoneLevel = 0;
+
         return getRecordingObject()
             .stopRecording()
             .then(function (audioBlob) {

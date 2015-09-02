@@ -2,8 +2,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
 
     // http://typedarray.org/from-microphone-to-wav-to-server/
 
-    var leftchannel = [];
-    var rightchannel = [];
+    var monochannel = [];
     var recordingLength = 0;
     var volume = null;
     var sampleRate = null;
@@ -11,6 +10,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
     var context = null;
     var recorder = null;
     var audioInput = null;
+    var analyser = null;
 
     var Service = {};
 
@@ -34,7 +34,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
 
     function startUserMediaRecording(stream) {
 
-        leftchannel.length = rightchannel.length = 0;
+        monochannel.length = 0;
         recordingLength = 0;
 
         audioStream = stream;
@@ -46,30 +46,37 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         // retrieve the current sample rate to be used for WAV packaging
         sampleRate = context.sampleRate;
 
-        // creates a gain node
-        volume = context.createGain();
+
 
         // creates an audio node from the microphone incoming stream
         audioInput = context.createMediaStreamSource(audioStream);
 
-        // connect the stream to the gain node
+        // creates a gain node
+        volume = context.createGain();
         audioInput.connect(volume);
+
+        // create an analyzer for volume graph
+        analyser = context.createAnalyser();
+        analyser.smoothingTimeConstant = 0.3;
+        analyser.fftSize = 1024;
+        audioInput.connect(analyser);
 
         /* From the spec: This value controls how frequently the audioprocess event is
          dispatched and how many sample-frames need to be processed each call.
          Lower values for buffer size will result in a lower (better) latency.
          Higher values will be necessary to avoid audio breakup and glitches */
         var bufferSize = 2048;
-        recorder = context.createScriptProcessor(bufferSize, 2, 2);
+        recorder = context.createScriptProcessor(bufferSize, 1, 1);
 
         recorder.onaudioprocess = function(e) {
-            $log.log('recording');
-            $rootScope.$emit('timerEvent', context.currentTime);
-            var left = e.inputBuffer.getChannelData(0);
-            var right = e.inputBuffer.getChannelData(1);
+            var array =  new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(array);
+            var level = getAverageVolume(array);
+
+            $rootScope.$emit('recordingEvent', {"time": e.playbackTime, "level":level});
+            var mono = e.inputBuffer.getChannelData(0);
             // we clone the samples
-            leftchannel.push(new Float32Array(left));
-            rightchannel.push(new Float32Array(right));
+            monochannel.push(new Float32Array(mono));
             recordingLength += bufferSize;
         };
 
@@ -93,13 +100,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             recorder.onaudioprocess = null;
         }
 
-        // we flat the left and right channels down
-        //var leftBuffer = mergeBuffers ( leftchannel, recordingLength );
-        //var rightBuffer = mergeBuffers ( rightchannel, recordingLength );
-        // we interleave both channels together
-        //var outputBuffer = interleave ( leftBuffer, rightBuffer );
-
-        var outputBuffer = mergeBuffers(leftchannel, recordingLength);
+        var outputBuffer = mergeBuffers(monochannel, recordingLength);
         var channelCount = 1;
         var bitsPerSample = 16;
 
@@ -159,6 +160,22 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         for (var i = 0; i < lng; i++) {
             view.setUint8(offset + i, string.charCodeAt(i));
         }
+    }
+
+    http://www.smartjava.org/content/exploring-html5-web-audio-visualizing-sound
+    function getAverageVolume(array) {
+        var values = 0;
+        var average;
+
+        var length = array.length;
+
+        // get all the frequency amplitudes
+        for (var i = 0; i < length; i++) {
+            values += array[i];
+        }
+
+        average = values / length;
+        return average;
     }
 
     return Service;

@@ -70,15 +70,14 @@ package {
         }
 
         private function externalStopRecording():void {
+            _recorder.stop();
             _textField.text = "clicked stop";
             ExternalInterface.call("onFlashStatusMessage", "recording stopped");
-
-            _recorder.stop();
         }
 
         private function onRecording(event:RecordingEvent):void {
             _textField.text = "recording since : " + event.time + " ms.";
-            ExternalInterface.call("onFlashTimer", event.time / 1000);
+            ExternalInterface.call("onFlashRecording", event.time / 1000, _recorder.activityLevel);
         }
 
         private function onRecordComplete(event:RecordingEvent):void {

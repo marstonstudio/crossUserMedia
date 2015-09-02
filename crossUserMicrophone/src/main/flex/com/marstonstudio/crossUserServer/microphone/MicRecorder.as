@@ -125,5 +125,10 @@ import flash.utils.getTimer;
             _gain = value;
             if(_microphone != null) _microphone.gain = _gain;
         }
+
+        public function get activityLevel():Number {
+            if(_microphone != null) return _microphone.activityLevel;
+            return 0;
+        }
     }
 }

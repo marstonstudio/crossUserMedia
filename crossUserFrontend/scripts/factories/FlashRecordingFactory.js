@@ -25,8 +25,8 @@ module.exports = function ($rootScope, $log, $q) {
             $rootScope.$emit('statusEvent', message);
         };
 
-        window.onFlashTimer = function(message) {
-            $rootScope.$emit('timerEvent', message);
+        window.onFlashRecording = function(time, level) {
+            $rootScope.$emit('recordingEvent', {"time":time, "level":level});
         };
 
         initialized = true;

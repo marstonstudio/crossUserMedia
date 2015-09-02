@@ -45,10 +45,13 @@
 
         <md-content layout="column">
 
-            <md-whiteframe class="md-whiteframe-z2" layout="row" layout-margin layout-align="space-between center">
-                <div id="statusBox" flex class="details">{{statusText}}</div>
-                <div>|</div>
-                <div id="timerBox" flex class="details">{{timerText}}</div>
+            <md-whiteframe class="md-whiteframe-z3" layout="row" layout-margin layout-wrap layout="center center">
+                <div id="statusBox" flex="45" class="details">{{statusText}}</div>
+                <div id="timerBox" flex="45" class="details">{{timerText}}</div>
+
+                <md-progress-linear md-mode="determinate" class="md-accent" value="{{microphoneLevel}}" flex="95" layout="center start"></md-progress-linear>
+
+                <div flex="95"> </div>
             </md-whiteframe>
 
             <md-button id="sourceButton"
@@ -71,6 +74,7 @@
                        ng-click="microphone.downloadOutput();">
                 <md-icon>file_download</md-icon>
                 Download File</md-button>
+
         </md-content>
 
         <md-content>
