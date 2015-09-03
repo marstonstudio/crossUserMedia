@@ -92,8 +92,11 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         if (audioInput) {
             audioInput.disconnect();
         }
-        if (audioStream) {
-            audioStream.stop();
+        if (audioStream && audioStream.active) {
+            var audioTracks = audioStream.getAudioTracks();
+            for(var key in audioTracks) {
+                audioTracks[key].stop();
+            }
         }
         if (recorder) {
             recorder.onaudioprocess = null;
