@@ -31,7 +31,7 @@ package com.marstonstudio.crossUserServer.sprites {
          * @param width
          * @return
          */
-        public function init(fontName:String, fontCFF:Boolean, fontSize:Number, width:Number):* {
+        public function init(fontName:String, fontColor:uint, fontCFF:Boolean, fontSize:Number, width:Number):* {
 
             _width = width;
 
@@ -41,6 +41,7 @@ package com.marstonstudio.crossUserServer.sprites {
 
             _fontFormat = new ElementFormat(fontDescription);
             _fontFormat.fontSize = fontSize;
+            _fontFormat.color = fontColor;
 
             _textBlock = new TextBlock();
         }

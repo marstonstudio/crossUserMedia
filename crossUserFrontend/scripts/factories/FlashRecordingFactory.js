@@ -29,8 +29,16 @@ module.exports = function ($rootScope, $log, $q) {
             $rootScope.$emit('recordingEvent', {"time":time, "level":level});
         };
 
+        window.onFlashDisplayChange = function(value) {
+            $rootScope.$emit('flashDisplayChange', value);
+        }
+
         initialized = true;
     };
+
+    Service.showSettings = function () {
+        document.getElementById('crossUserMicrophoneSwf').showSettings();
+    }
 
     Service.startRecording = function () {
         document.getElementById('crossUserMicrophoneSwf').startRecording(false); // false == wav || true == ogg but can be converted to a string parameter

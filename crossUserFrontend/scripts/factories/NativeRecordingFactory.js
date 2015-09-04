@@ -16,6 +16,10 @@ module.exports = function($rootScope, $log, $q, Navigator) {
 
     Service.initialize = function() {};
 
+    Service.showSettings = function () {
+        $log.error('showSettings unimplemented for NativeRecordingFactory');
+    }
+
     Service.startRecording = function() {
         $rootScope.$emit('statusEvent', 'recording started');
 

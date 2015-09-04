@@ -82,16 +82,16 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
         }
     });
 
+    //TODO: use 2way binding
+    $rootScope.$on('flashDisplayChange', function (event, data) {
+        self.showFlash = data;
+    });
+
     this.toggleShowFlash = function() {
         self.showFlash = !self.showFlash;
-        //self.flashContainerElement.css('visibility', self.showFlash ? 'visible' : 'hidden');
-/*
         if(self.showFlash) {
-            self.flashContainerElement.removeClass('hideFlashContainer').addClass('showFlashContainer');
-        } else {
-            self.flashContainerElement.removeClass('showFlashContainer').addClass('hideFlashContainer');
+            FlashRecording.showSettings();
         }
-*/
     }
 
     this.startRecording = function () {
