@@ -2,5 +2,21 @@
 
 .details{text-align:center;}
 
-.visibleFlash{visibility: visible;}
-.hiddenFlash{visibility: hidden;}
+#flashContainer {
+  z-index:1000;
+  position: absolute;
+  top:auto;
+  background-color:rgba(0, 0, 0, 0.5);
+}
+
+.showFlash{
+  left:0px;
+  width:100%;
+  height:100%;
+}
+
+.hideFlash{
+  left:-10000px;
+  width:1px;
+  height:1px;
+}

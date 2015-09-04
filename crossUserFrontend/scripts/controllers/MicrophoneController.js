@@ -25,6 +25,8 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
     this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
     this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
+
+    this.flashContainerElement = angular.element(document.querySelector('#flashContainer'));
     this.showFlash = false;
 
     var self = this;
@@ -37,6 +39,7 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
         self.statusText = 'status';
         self.timerText = '0.0';
         self.microphoneLevel = 0;
+        self.flashContainerElement.css('visibility', 'hidden');
     };
 
     var getRecordingObject = function () {
@@ -81,6 +84,14 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
 
     this.toggleShowFlash = function() {
         self.showFlash = !self.showFlash;
+        //self.flashContainerElement.css('visibility', self.showFlash ? 'visible' : 'hidden');
+/*
+        if(self.showFlash) {
+            self.flashContainerElement.removeClass('hideFlashContainer').addClass('showFlashContainer');
+        } else {
+            self.flashContainerElement.removeClass('showFlashContainer').addClass('hideFlashContainer');
+        }
+*/
     }
 
     this.startRecording = function () {

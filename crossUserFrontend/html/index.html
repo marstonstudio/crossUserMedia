@@ -10,9 +10,21 @@
 </head>
 <body layout="column" ng-app="Microphone" ng-controller="MicrophoneController as microphone">
 
+    <md-content id="flashContainer" ng-if="microphone.useFlash"
+                ng-class="{'showFlash':microphone.showFlash, 'hideFlash':!microphone.showFlash}">
+        <swf-object
+                swf-id="crossUserMicrophoneSwf"
+                swf-url="/swf/crossUserMicrophone.swf"
+                swf-version="14.0.0"
+                swf-width="215"
+                swf-height="138"
+                swf-bgcolor="#F5F5DC"
+                swf-wmode="window"
+                ng-if="microphone.useFlash">
+        </swf-object>
+    </md-content>
 
-
-    <md-toolbar layout="row" layout-align="left center" class="md-toolbar-tools" md-scroll-shrink="true" >
+    <md-toolbar layout="row" layout-align="left center" class="md-toolbar-tools" md-scroll-shrink="true">
 
         <md-button class="md-icon-button" aria-label="settings" ng-if="microphone.useFlash" ng-click="microphone.toggleShowFlash()">
             <md-tooltip>microphone permissions</md-tooltip>
@@ -83,26 +95,13 @@
 
         </md-content>
 
-        <md-content ng-if="microphone.useFlash">
-            <swf-object
-                    swf-id="crossUserMicrophoneSwf"
-                    swf-url="/swf/crossUserMicrophone.swf"
-                    swf-version="14.0.0"
-                    swf-width="215"
-                    swf-height="138"
-                    swf-bgcolor="#F5F5DC"
-                    swf-wmode="window"
-                    swf-visible="{{microphone.showFlash}}"
-                    ng-if="microphone.useFlash">
-            </swf-object>
-        </md-content>
-
-
     </md-content>
+
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-aria.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-animate.min.js"></script>
     <script type="text/javascript" src="/js/application.js"></script>
+
 </body>
 </html>

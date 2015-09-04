@@ -10,8 +10,11 @@ package {
     import flash.display.StageScaleMode;
     import flash.events.Event;
     import flash.external.ExternalInterface;
+import flash.system.Security;
+import flash.system.SecurityPanel;
+import flash.system.System;
 
-    import mx.utils.Base64Encoder;
+import mx.utils.Base64Encoder;
 
     public class Main extends Sprite {
 
@@ -57,6 +60,8 @@ package {
             ExternalInterface.marshallExceptions = true;
             ExternalInterface.addCallback("startRecording", externalStartRecording);
             ExternalInterface.addCallback("stopRecording", externalStopRecording);
+
+            Security.showSettings(SecurityPanel.PRIVACY);
         }
 
         private function externalStartRecording(useSpeex:Boolean = false):void {
