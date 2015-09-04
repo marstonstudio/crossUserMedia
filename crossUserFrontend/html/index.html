@@ -10,24 +10,26 @@
 </head>
 <body layout="column" ng-app="Microphone" ng-controller="MicrophoneController as microphone">
 
-    <md-toolbar layout="row" layout-align="space-between left" class="md-toolbar-tools" md-scroll-shrink="true" >
 
-            <md-button class="md-icon-button" aria-label="settings">
-                <md-tooltip>menu</md-tooltip>
-                <md-icon>menu</md-icon>
-            </md-button>
 
-            <h2>Proof of Concept for Cross Browser Compatible Audio Recorder</h2>
+    <md-toolbar layout="row" layout-align="left center" class="md-toolbar-tools" md-scroll-shrink="true" >
 
-            <md-button class="md-icon-button" aria-label="source code on github" ng-href="https://github.com/marstonstudio/crossUserMedia" target="_blank">
-                <md-tooltip>github source</md-tooltip>
-                <md-icon md-svg-src="/img/icons/github.svg"></md-icon>
-            </md-button>
+        <md-button class="md-icon-button" aria-label="settings" ng-if="microphone.useFlash" ng-click="microphone.toggleShowFlash()">
+            <md-tooltip>microphone permissions</md-tooltip>
+            <md-icon>settings</md-icon>
+        </md-button>
+
+        <h2>Cross Browser Compatible Audio Recorder</h2>
+
+        <md-button flex="10" class="md-icon-button" aria-label="source code on github" ng-href="https://github.com/marstonstudio/crossUserMedia" target="_blank">
+            <md-tooltip>github source</md-tooltip>
+            <md-icon md-svg-src="/img/icons/github.svg"></md-icon>
+        </md-button>
 
     </md-toolbar>
     <md-content layout="column" class="buttonBox">
 
-        <md-content layout="row" layout-align="space-between">
+        <md-content layout="row" layout-align="space-between center">
             <md-button id="startButton"
                        class="md-raised md-accent" flex
                        ng-click="microphone.startRecording();">
@@ -45,13 +47,17 @@
 
         <md-content layout="column">
 
-            <md-whiteframe class="md-whiteframe-z3" layout="row" layout-margin layout-wrap layout="center center">
-                <div id="statusBox" flex="45" class="details">{{statusText}}</div>
-                <div id="timerBox" flex="45" class="details">{{timerText}}</div>
+            <md-whiteframe class="md-whiteframe-z3" layout="row" layout-margin layout-wrap layout-align="center center">
+                <div id="statusBox" flex="45" class="details">{{microphone.statusText}}</div>
+                <div id="timerBox" flex="45" class="details">{{microphone.timerText}}</div>
 
-                <md-progress-linear md-mode="determinate" class="md-accent" value="{{microphoneLevel}}" flex="95" layout="center start"></md-progress-linear>
+                <md-progress-linear md-mode="determinate" class="md-accent" value="{{microphone.volumeLevel}}" flex="95"></md-progress-linear>
 
                 <div flex="95"> </div>
+
+                <Audio id="outputAudio"></Audio>
+                <Audio id="sourceAudio"></Audio>
+
             </md-whiteframe>
 
             <md-button id="sourceButton"
@@ -77,19 +83,20 @@
 
         </md-content>
 
-        <md-content>
-            <Audio id="outputAudio"></Audio>
-            <Audio id="sourceAudio"></Audio>
+        <md-content ng-if="microphone.useFlash">
             <swf-object
-                        ng-if="microphone.flashMode"
-                        swf-id="crossUserMicrophoneSwf"
-                        swf-url="/swf/crossUserMicrophone.swf"
-                        swf-version="14.0.0"
-                        swf-width="215"
-                        swf-height="138"
-                        swf-bgcolor="#F5F5DC">
+                    swf-id="crossUserMicrophoneSwf"
+                    swf-url="/swf/crossUserMicrophone.swf"
+                    swf-version="14.0.0"
+                    swf-width="215"
+                    swf-height="138"
+                    swf-bgcolor="#F5F5DC"
+                    swf-wmode="window"
+                    swf-visible="{{microphone.showFlash}}"
+                    ng-if="microphone.useFlash">
             </swf-object>
         </md-content>
+
 
     </md-content>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>

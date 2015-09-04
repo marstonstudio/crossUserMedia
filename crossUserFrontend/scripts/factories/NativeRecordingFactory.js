@@ -33,7 +33,6 @@ module.exports = function($rootScope, $log, $q, Navigator) {
     };
 
     function startUserMediaRecording(stream) {
-
         monochannel.length = 0;
         recordingLength = 0;
 
@@ -54,6 +53,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         audioInput.connect(volume);
 
         // create an analyzer for volume graph
+        //http://www.smartjava.org/content/exploring-html5-web-audio-visualizing-sound
         analyser = context.createAnalyser();
         analyser.smoothingTimeConstant = 0;
         analyser.fftSize = 2048;
@@ -71,6 +71,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             var array =  new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(array);
             var level = getAverageVolume(array);
+            //$log.log('onaudioprocess time:' + e.playbackTime + ", level:" + level);
             $rootScope.$emit('recordingEvent', {"time": e.playbackTime, "level":level});
 
             var mono = e.inputBuffer.getChannelData(0);
@@ -164,7 +165,6 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         }
     }
 
-    //http://www.smartjava.org/content/exploring-html5-web-audio-visualizing-sound
     function getAverageVolume(array) {
         var values = 0;
         var average;

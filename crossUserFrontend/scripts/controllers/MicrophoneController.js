@@ -22,42 +22,34 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
         this.outputFormat = format;
     };
 
-    this.flashMode = false;
-
     this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
-    this.sourceAudioButtonEnabled = false;
-
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
-    this.outputAudioButtonEnabled = false;
-
     this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
-    this.downloadOutputButtonEnabled = false;
-
-    this.downloadUrl = '';
+    this.showFlash = false;
 
     var self = this;
-
-    var getRecordingObject = function () {
-        var recordingObject;
-
-        if (Navigator.enabled) {
-            recordingObject = NativeRecording;
-            self.flashMode = false;
-        } else {
-            recordingObject = FlashRecording;
-            self.flashMode = true;
-        }
-        return recordingObject;
-    };
 
     var resetState = function() {
         self.sourceAudioButtonEnabled = false;
         self.outputAudioButtonEnabled = false;
         self.downloadOutputButtonEnabled = false;
         self.downloadUrl = '';
-        $scope.statusText = 'status';
-        $scope.timerText = '0.0';
-        $scope.microphoneLevel = 0;
+        self.statusText = 'status';
+        self.timerText = '0.0';
+        self.microphoneLevel = 0;
+    };
+
+    var getRecordingObject = function () {
+        var recordingObject;
+
+        if (Navigator.enabled) {
+            recordingObject = NativeRecording;
+            self.useFlash = false;
+        } else {
+            recordingObject = FlashRecording;
+            self.useFlash = true;
+        }
+        return recordingObject;
     };
 
     (function init() {
@@ -66,20 +58,20 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
     })();
 
     $rootScope.$on('statusEvent', function (event, data) {
-        $scope.statusText = data;
+        self.statusText = data;
     });
 
     $rootScope.$on('recordingEvent', function (event, data) {
 
         if(data) {
             if(data.time && !isNaN(data.time))
-                $scope.timerText = data.time.toFixed(2);
+                self.timerText = data.time.toFixed(2);
 
             if(data.level) {
                 if(isNaN(data.level) || data.level < 0) {
-                    $scope.microphoneLevel = 0;
+                    self.volumeLevel = 0;
                 } else {
-                    $scope.microphoneLevel = Math.min(data.level, 100);
+                    self.volumeLevel = Math.min(data.level, 100);
                 }
             }
 
@@ -87,13 +79,17 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
         }
     });
 
+    this.toggleShowFlash = function() {
+        self.showFlash = !self.showFlash;
+    }
+
     this.startRecording = function () {
         resetState();
         getRecordingObject().startRecording();
     };
 
     this.stopRecording = function () {
-        $scope.microphoneLevel = 0;
+        self.volumeLevel = 0;
 
         return getRecordingObject()
             .stopRecording()

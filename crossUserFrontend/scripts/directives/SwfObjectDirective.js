@@ -1,27 +1,31 @@
 var SwfObject  = require('jakobmattsson-swfobject');
 
 // https://github.com/jeef3/angular-swfobject
-module.exports = function (
-    $log,
-    $window,
-    $timeout,
-    $interval) {
+module.exports = function ($log, $window, $timeout, $interval) {
 
     return {
         restrict: 'EAC',
         template: '<div id="{{id}}" ng-transclude></div>',
         transclude: true,
         scope: {
+            isSwfVisible:'@swfVisible',
             vars: '=?swfVars',
             expressInstallSwfurl:'=?xiSwfUrlStr',
             swfLoad: '&'
         },
-
         link: function link(scope, element, attrs) {
 
-            scope.id = attrs.swfId ||
-                    // Random hash looking thing
-                'swf-' + Math.floor(Math.random() * 1000000000000).toString(16);
+            scope.id = attrs.swfId;
+
+            if('swfVisible' in attrs) {
+                if(attrs.swfVisible === "false") {
+                    SwfObject.switchOffAutoHideShow();
+                }
+
+                scope.$watch('isSwfVisible', function(newvalue, oldvalue){
+                    element.css('visibility', (newvalue === "true") ? 'visible' : 'hidden');
+                });
+            }
 
             var attributes = {
                 id:scope.id,

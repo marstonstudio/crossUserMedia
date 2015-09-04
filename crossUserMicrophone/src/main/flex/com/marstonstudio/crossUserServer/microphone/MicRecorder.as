@@ -2,6 +2,7 @@ package com.marstonstudio.crossUserServer.microphone {
 
 import com.marstonstudio.crossUserServer.encoder.*;
 import com.marstonstudio.crossUserServer.events.RecordingEvent;
+import com.marstonstudio.crossUserServer.util.Console;
 
 import flash.events.EventDispatcher;
 import flash.events.SampleDataEvent;
@@ -70,8 +71,9 @@ import flash.utils.getTimer;
          * The first time the record() method is called the settings manager may pop-up to request access to the Microphone.
          */        
         public function record():void {
-            if ( _microphone == null )
+            if ( _microphone == null ) {
                 _microphone = Microphone.getMicrophone();
+            }
 
             _difference = getTimer();
 
