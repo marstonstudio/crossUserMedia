@@ -61,5 +61,9 @@ package com.marstonstudio.crossUserServer.sprites {
             _textLine.x = _fontFormat.fontSize / 4;
             _textLine.y = _fontFormat.fontSize;
         }
+
+        public function get textWidth():Number {
+            return _textLine.textWidth;
+        }
     }
 }

@@ -26,20 +26,17 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
     this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
 
-    this.flashContainerElement = angular.element(document.querySelector('#flashContainer'));
-    this.showFlash = false;
-
     var self = this;
 
     var resetState = function() {
         self.sourceAudioButtonEnabled = false;
         self.outputAudioButtonEnabled = false;
         self.downloadOutputButtonEnabled = false;
-        self.downloadUrl = '';
-        self.statusText = 'status';
-        self.timerText = '0.0';
-        self.microphoneLevel = 0;
-        self.flashContainerElement.css('visibility', 'hidden');
+        $scope.downloadUrl = '';
+        $scope.microphoneStatus = 'status';
+        $scope.microphoneTime = '0.0';
+        $scope.microphoneLevel = 0;
+        $scope.microphoneFlashVisible = false;
     };
 
     var getRecordingObject = function () {
@@ -47,10 +44,10 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
 
         if (Navigator.enabled) {
             recordingObject = NativeRecording;
-            self.useFlash = false;
+            $scope.microphoneFlashEnabled = false;
         } else {
             recordingObject = FlashRecording;
-            self.useFlash = true;
+            $scope.microphoneFlashEnabled = true;
         }
         return recordingObject;
     };
@@ -61,36 +58,40 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
     })();
 
     $rootScope.$on('statusEvent', function (event, data) {
-        self.statusText = data;
+        $scope.microphoneStatus = data;
     });
 
     $rootScope.$on('recordingEvent', function (event, data) {
 
         if(data) {
             if(data.time && !isNaN(data.time))
-                self.timerText = data.time.toFixed(2);
+                $scope.microphoneTime = data.time.toFixed(2);
 
             if(data.level) {
                 if(isNaN(data.level) || data.level < 0) {
-                    self.volumeLevel = 0;
+                    $scope.microphoneLevel = 0;
                 } else {
-                    self.volumeLevel = Math.min(data.level, 100);
+                    $scope.microphoneLevel = Math.min(data.level, 100);
                 }
             }
 
-            $scope.$digest();
+            if(!$scope.$$phase) {
+                $scope.$digest();
+            }
         }
     });
 
-    //TODO: use 2way binding
-    $rootScope.$on('flashDisplayChange', function (event, data) {
-        self.showFlash = data;
+    $rootScope.$on('flashVisibilityChange', function (event, data) {
+        self.setFlashVisible(data);
     });
 
-    this.toggleShowFlash = function() {
-        self.showFlash = !self.showFlash;
-        if(self.showFlash) {
-            FlashRecording.showSettings();
+    this.setFlashVisible = function(data) {
+        $scope.microphoneFlashVisible = data;
+        if($scope.microphoneFlashVisible) {
+            FlashRecording.setFlashVisible(true);
+        }
+        if(!$scope.$$phase) {
+            $scope.$digest();
         }
     }
 
@@ -100,7 +101,7 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
     };
 
     this.stopRecording = function () {
-        self.volumeLevel = 0;
+        $scope.microphoneLevel = 0;
 
         return getRecordingObject()
             .stopRecording()
@@ -123,11 +124,11 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
     // http://pixelscommander.com/en/javascript/javascript-file-download-ignore-content-type/
     this.downloadOutput = function () {
 
-        if (!self.downloadUrl) {
+        if (!$scope.downloadUrl) {
             return;
         }
 
-        var outputUrl = self.downloadUrl;
+        var outputUrl = $scope.downloadUrl;
 
         $log.log("Downloading " + outputUrl);
         //If in Chrome or Safari - download via virtual link click
@@ -173,7 +174,7 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
             self.outputAudioElement.attr('src', audioSet.outputUrl);
             self.outputAudioButtonEnabled = true;
 
-            self.downloadUrl = audioSet.outputUrl;
+            $scope.downloadUrl = audioSet.outputUrl;
             self.downloadOutputButtonEnabled = true;
 
         } else {

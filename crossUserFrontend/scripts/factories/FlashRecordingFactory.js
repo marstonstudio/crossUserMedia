@@ -29,15 +29,15 @@ module.exports = function ($rootScope, $log, $q) {
             $rootScope.$emit('recordingEvent', {"time":time, "level":level});
         };
 
-        window.onFlashDisplayChange = function(value) {
-            $rootScope.$emit('flashDisplayChange', value);
+        window.onFlashVisibilityChange = function(value) {
+            $rootScope.$emit('flashVisibilityChange', value);
         }
 
         initialized = true;
     };
 
-    Service.showSettings = function () {
-        document.getElementById('crossUserMicrophoneSwf').showSettings();
+    Service.setFlashVisible = function (data) {
+        document.getElementById('crossUserMicrophoneSwf').setFlashVisible(data);
     }
 
     Service.startRecording = function () {

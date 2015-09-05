@@ -10,9 +10,11 @@
 </head>
 <body layout="column" ng-app="Microphone" ng-controller="MicrophoneController as microphone">
 
-    <md-content id="flashContainer" ng-if="microphone.useFlash"
-                ng-class="{'showFlash':microphone.showFlash, 'hideFlash':!microphone.showFlash}">
+    <md-content id="flashContainer"
+                ng-if="microphoneFlashEnabled"
+                ng-style="{'visibility': microphoneFlashVisible ? 'visible' : 'hidden'}">
         <swf-object
+                ng-if="microphoneFlashEnabled"
                 swf-id="crossUserMicrophoneSwf"
                 swf-url="/swf/crossUserMicrophone.swf"
                 swf-version="14.0.0"
@@ -20,13 +22,13 @@
                 swf-height="100%"
                 swf-bgcolor="#FFFFFF"
                 swf-wmode="transparent"
-                ng-if="microphone.useFlash">
+                swf-visible="{{microphoneFlashVisible}}">
         </swf-object>
     </md-content>
 
     <md-toolbar layout="row" layout-align="left center" class="md-toolbar-tools" md-scroll-shrink="true">
 
-        <md-button class="md-icon-button" aria-label="settings" ng-if="microphone.useFlash" ng-click="microphone.toggleShowFlash()">
+        <md-button class="md-icon-button" aria-label="settings" ng-if="microphoneFlashEnabled" ng-click="microphone.setFlashVisible(true)">
             <md-tooltip>microphone permissions</md-tooltip>
             <md-icon>settings</md-icon>
         </md-button>
@@ -60,10 +62,10 @@
         <md-content layout="column">
 
             <md-whiteframe class="md-whiteframe-z3" layout="row" layout-margin layout-wrap layout-align="center center">
-                <div id="statusBox" flex="45" class="details">{{microphone.statusText}}</div>
-                <div id="timerBox" flex="45" class="details">{{microphone.timerText}}</div>
+                <div id="statusBox" flex="45" class="details">{{microphoneStatus}}</div>
+                <div id="timerBox" flex="45" class="details">{{microphoneTime}}</div>
 
-                <md-progress-linear md-mode="determinate" class="md-accent" value="{{microphone.volumeLevel}}" flex="95"></md-progress-linear>
+                <md-progress-linear md-mode="determinate" class="md-accent" value="{{microphoneLevel}}" flex="95"></md-progress-linear>
 
                 <div flex="95"> </div>
 

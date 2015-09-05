@@ -5,31 +5,39 @@ package {
     import com.marstonstudio.crossUserServer.sprites.CFFTextField;
     import com.marstonstudio.crossUserServer.util.Console;
 
-import flash.display.BitmapData;
+    import flash.display.BitmapData;
 
-import flash.display.Sprite;
-    import flash.display.StageAlign;
-    import flash.display.StageScaleMode;
-    import flash.events.Event;
-import flash.events.FocusEvent;
-import flash.events.MouseEvent;
-import flash.external.ExternalInterface;
-import flash.system.Security;
-import flash.system.SecurityPanel;
-import flash.system.System;
+    import flash.display.Sprite;
+import flash.display.StageAlign;
+import flash.display.StageScaleMode;
+import flash.events.Event;
+    import flash.events.FocusEvent;
+    import flash.events.MouseEvent;
+    import flash.external.ExternalInterface;
+    import flash.system.Security;
+    import flash.system.SecurityPanel;
 
-import mx.utils.Base64Encoder;
+    import mx.utils.Base64Encoder;
 
+    [SWF(width="430", height="276", frameRate="24", backgroundColor="#FFFFFF")]
     public class Main extends Sprite {
 
         private var _recorder:MicRecorder;
 
         private var _textField:CFFTextField;
 
+        private var _background:Sprite;
+
+        private const _backgroundWidth:int = 430;
+        private const _backgroundHeight:int = 276;
+
         /*
-        IntelliJ 14.1 unable to embed CFF Fonts which are supported by flexmojos 7.1.0
-        to prevent build error must add a compiler option to in IntelliJ overriding value set in pom.xml
-        File->Project Structure->Modules->crossUserMicrophone->Compiler Options->Additional compiler options->"-define+=CONFIG::cffFont,false"
+         IntelliJ 14.1 unable to embed CFF Fonts which are supported by flexmojos 7.1.0
+         to prevent build error must add a compiler option to in IntelliJ overriding value set in pom.xml
+         File->Project Structure->Modules->crossUserMicrophone->Compiler Options->Additional compiler options->"-define+=CONFIG::cffFont,false"
+
+         http://apache-flex-users.2333346.n4.nabble.com/Flex-Mojos-Fonts-and-Theme-Questions-tc10999.html
+         https://youtrack.jetbrains.com/issue/IDEA-144541
         */
         CONFIG::cffFont {
             [Embed(source="../../../../assets/fonts/SourceSansPro-Regular.otf",
@@ -41,70 +49,84 @@ import mx.utils.Base64Encoder;
             private var recorderFontOTFEmbed:Class;
         }
 
-        [SWF(width="215", height="138", frameRate="24")]
         public function Main() {
-            Console.log("Flash Microphone buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
-            Console.logCapabilities();
+            Console.log("FLASH::Main buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
 
             this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
 
         private function onAddedToStage(event:Event):void {
+
+            _background = new Sprite();
+            _background.buttonMode = true;
+            _background.graphics.lineStyle(3,0x212121);
+            _background.graphics.beginFill(0xFFFFFF);
+            _background.graphics.drawRoundRect(0, 0, _backgroundWidth, _backgroundHeight, 12);
+            _background.graphics.endFill();
+            addChild(_background);
+
+            _textField = new CFFTextField();
+            _textField.mouseEnabled = false;
+            _textField.init(CONFIG::cffFont ? "SourceSansPro" : "Arial", 0x424242, CONFIG::cffFont, 16, _backgroundWidth);
+            _background.addChild(_textField);
+            _textField.text = "Please enable microphone access in privacy settings.";
+            _textField.y = 32;
+
             stage.align = StageAlign.TOP_LEFT;
             stage.scaleMode = StageScaleMode.NO_SCALE;
-
-            var fontName:String = CONFIG::cffFont ? "SourceSansPro" : "Arial";
-            _textField = new CFFTextField();
-            _textField.init(fontName, 0xFFFFFF, CONFIG::cffFont, 16, 215);
-            addChild(_textField);
-            _textField.text = "flash microphone settings";
+            stage.addEventListener(Event.RESIZE, onStageResize);
+            stage.dispatchEvent(new Event(Event.RESIZE));
+            stage.addEventListener(MouseEvent.CLICK, onStageClick);
 
             ExternalInterface.marshallExceptions = true;
-            ExternalInterface.addCallback("showSettings", externalShowSettings);
+            ExternalInterface.addCallback("setFlashVisible", setFlashVisible);
             ExternalInterface.addCallback("startRecording", externalStartRecording);
             ExternalInterface.addCallback("stopRecording", externalStopRecording);
 
             Security.showSettings(SecurityPanel.PRIVACY);
         }
 
+        private function onStageResize(event:Event):void {
+            Console.log("FLASH::onStageResize stageWidth:" + stage.stageWidth + ", stageHeight:" + stage.stageHeight);
+            _background.x = (stage.stageWidth - _background.width) / 2;
+            _background.y = (stage.stageHeight - _background.height) / 2;
+        }
+
+        private function onStageClick(event:MouseEvent):void {
+            Console.log("FLASH::onStageClick");
+            setFlashVisible(false);
+        }
+
+        private function setFlashVisible(value:Boolean):void {
+            Console.log("FLASH::setFlashVisible " + value);
+
+            if(value) {
+                _textField.text = "Please enable microphone access in privacy settings.";
+                _textField.x = (_backgroundWidth - _textField.textWidth) / 2;
+                Security.showSettings(SecurityPanel.PRIVACY);
+                stage.addEventListener(Event.ENTER_FRAME, onCheckSettingsOpen);
+            } else {
+                _textField.text = "This window will close in a moment.";
+                _textField.x = (_backgroundWidth - _textField.textWidth) / 2;
+                stage.removeEventListener(Event.ENTER_FRAME, onCheckSettingsOpen);
+                ExternalInterface.call("onFlashVisibilityChange", false);
+            }
+        }
+
         //http://stackoverflow.com/questions/5315076/securitypanel-close-event
         //http://stackoverflow.com/questions/6945055/flash-security-settings-panel-listening-for-close-event
-        private function externalShowSettings():void {
-            var sprite:Sprite = new Sprite();
-            stage.focus = sprite;
-            sprite.addEventListener( FocusEvent.FOCUS_OUT, onFocus );
-            sprite.addEventListener( FocusEvent.FOCUS_IN, onFocus );
+        private function onCheckSettingsOpen(event:Event):void {
+            //Console.log("FLASH::onCheckSettingsOpen");
 
-            Security.showSettings(SecurityPanel.PRIVACY);
-            //stage.addEventListener(Event.ENTER_FRAME, onFrameEnter);
-            //stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
-        }
-
-        private function onFocus( event:FocusEvent ):void {
-            event.target.removeEventListener( event.type, onFocus );
-            if (event.type == FocusEvent.FOCUS_IN) {
-                stage.focus = null;
-                ExternalInterface.call("onFlashDisplayChange", false);
-            }
-        }
-
-        private function onMouseMove(event:MouseEvent):void {
-            stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
-            ExternalInterface.call("onFlashDisplayChange", false);
-        }
-
-        private function onFrameEnter(event:Event):void {
-            var detector:BitmapData;
-            detector = new BitmapData(1, 1);
+            var detector:BitmapData = new BitmapData(1, 1);
             try {
                 detector.draw(stage);
-                Console.log("Flash settings detected closed");
-                stage.removeEventListener(Event.ENTER_FRAME, onFrameEnter);
-                ExternalInterface.call("onFlashDisplayChange", false);
+                setFlashVisible(false);
             } catch(error:Error) {
+            } finally {
+                detector.dispose();
+                detector = null;
             }
-            detector.dispose();
-            detector = null;
         }
 
         private function externalStartRecording(useSpeex:Boolean = false):void {
