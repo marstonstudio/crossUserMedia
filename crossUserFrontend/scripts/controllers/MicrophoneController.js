@@ -24,15 +24,12 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
 
     this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
-    this.downloadButtonElement = angular.element(document.querySelector('#downloadButton'));
 
     var self = this;
 
     var resetState = function() {
-        self.sourceAudioButtonEnabled = false;
-        self.outputAudioButtonEnabled = false;
-        self.downloadOutputButtonEnabled = false;
-        $scope.downloadUrl = '';
+        $scope.microphoneSourceAudioReady = false;
+        $scope.microphoneOutputAudioReady = false;
         $scope.microphoneStatus = 'status';
         $scope.microphoneTime = '0.0';
         $scope.microphoneLevel = 0;
@@ -75,9 +72,7 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
                 }
             }
 
-            if(!$scope.$$phase) {
-                $scope.$digest();
-            }
+            refresh();
         }
     });
 
@@ -90,9 +85,7 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
         if($scope.microphoneFlashVisible) {
             FlashRecording.setFlashVisible(true);
         }
-        if(!$scope.$$phase) {
-            $scope.$digest();
-        }
+        refresh();
     }
 
     this.startRecording = function () {
@@ -121,49 +114,9 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
         document.getElementById('outputAudio').play();
     };
 
-    // http://pixelscommander.com/en/javascript/javascript-file-download-ignore-content-type/
-    this.downloadOutput = function () {
-
-        if (!$scope.downloadUrl) {
-            return;
-        }
-
-        var outputUrl = $scope.downloadUrl;
-
-        $log.log("Downloading " + outputUrl);
-        //If in Chrome or Safari - download via virtual link click
-        if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1 ||
-            navigator.userAgent.toLowerCase().indexOf('safari') > -1
-        ) {
-            //Creating new link node.
-            var link = document.createElement('a');
-            link.href = outputUrl;
-
-            if (link.download !== undefined) {
-                //Set HTML5 download attribute. This will prevent file from opening if supported.
-                var fileName = outputUrl.substring(outputUrl.lastIndexOf('/') + 1, outputUrl.length);
-                link.download = fileName;
-            }
-
-            //Dispatching click event.
-            if (document.createEvent) {
-                var e = document.createEvent('MouseEvents');
-                e.initEvent('click', true, true);
-                link.dispatchEvent(e);
-                return true;
-            }
-        }
-
-        // Force file download (whether supported by server).
-        var query = '?download';
-
-        window.open(outputUrl + query, "_blank");
-
-    };
-
     function embedLocalBlob(audioBlob) {
         self.sourceAudioElement.attr('src', URL.createObjectURL(audioBlob));
-        self.sourceAudioButtonEnabled = true;
+        $scope.microphoneSourceAudioReady = true;
     }
 
     function displayProcessedOutput(response) {
@@ -172,14 +125,17 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
             $log.log('received audioSet inputUrl:' + audioSet.inputUrl + ', outputUrl:' + audioSet.outputUrl);
 
             self.outputAudioElement.attr('src', audioSet.outputUrl);
-            self.outputAudioButtonEnabled = true;
-
-            $scope.downloadUrl = audioSet.outputUrl;
-            self.downloadOutputButtonEnabled = true;
+            $scope.microphoneOutputAudioReady = true;
 
         } else {
             $log.error('response not in expected json form with inputUrl node');
             $log.error(response)
+        }
+    }
+
+    function refresh() {
+        if(!$scope.$phase) {
+            $scope.$digest();
         }
     }
 

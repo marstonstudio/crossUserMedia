@@ -8,10 +8,9 @@ package {
     import flash.display.BitmapData;
 
     import flash.display.Sprite;
-import flash.display.StageAlign;
-import flash.display.StageScaleMode;
-import flash.events.Event;
-    import flash.events.FocusEvent;
+    import flash.display.StageAlign;
+    import flash.display.StageScaleMode;
+    import flash.events.Event;
     import flash.events.MouseEvent;
     import flash.external.ExternalInterface;
     import flash.system.Security;
@@ -30,6 +29,7 @@ import flash.events.Event;
 
         private const _backgroundWidth:int = 430;
         private const _backgroundHeight:int = 276;
+        private const _backgroundLine:int = 6;
 
         /*
          IntelliJ 14.1 unable to embed CFF Fonts which are supported by flexmojos 7.1.0
@@ -61,7 +61,7 @@ import flash.events.Event;
             _background.buttonMode = true;
             _background.graphics.lineStyle(3,0x212121);
             _background.graphics.beginFill(0xFFFFFF);
-            _background.graphics.drawRoundRect(0, 0, _backgroundWidth, _backgroundHeight, 12);
+            _background.graphics.drawRoundRect(0, 0, _backgroundWidth - _backgroundLine/2, _backgroundHeight - _backgroundLine/2, _backgroundLine*2);
             _background.graphics.endFill();
             addChild(_background);
 
@@ -87,19 +87,16 @@ import flash.events.Event;
         }
 
         private function onStageResize(event:Event):void {
-            Console.log("FLASH::onStageResize stageWidth:" + stage.stageWidth + ", stageHeight:" + stage.stageHeight);
+            //Console.log("FLASH::onStageResize stageWidth:" + stage.stageWidth + ", stageHeight:" + stage.stageHeight);
             _background.x = (stage.stageWidth - _background.width) / 2;
             _background.y = (stage.stageHeight - _background.height) / 2;
         }
 
         private function onStageClick(event:MouseEvent):void {
-            Console.log("FLASH::onStageClick");
             setFlashVisible(false);
         }
 
         private function setFlashVisible(value:Boolean):void {
-            Console.log("FLASH::setFlashVisible " + value);
-
             if(value) {
                 _textField.text = "Please enable microphone access in privacy settings.";
                 _textField.x = (_backgroundWidth - _textField.textWidth) / 2;
@@ -116,8 +113,6 @@ import flash.events.Event;
         //http://stackoverflow.com/questions/5315076/securitypanel-close-event
         //http://stackoverflow.com/questions/6945055/flash-security-settings-panel-listening-for-close-event
         private function onCheckSettingsOpen(event:Event):void {
-            //Console.log("FLASH::onCheckSettingsOpen");
-
             var detector:BitmapData = new BitmapData(1, 1);
             try {
                 detector.draw(stage);

@@ -34,7 +34,8 @@ module.exports = function ($log, $window, $timeout, $interval) {
 
             var params = {
                 bgcolor: attrs.swfBgcolor || "#FFFFFF",
-                wmode: attrs.swfWmode || "window"
+                wmode: attrs.swfWmode || "window",
+                allowscriptaccess: "always"
             };
 
             $timeout(function () {

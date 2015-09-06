@@ -12,7 +12,7 @@
 
     <md-content id="flashContainer"
                 ng-if="microphoneFlashEnabled"
-                ng-style="{'visibility': microphoneFlashVisible ? 'visible' : 'hidden'}">
+                ng-class="microphoneFlashVisible ? 'flashContainerVisible' : 'flashContainerHidden'">
         <swf-object
                 ng-if="microphoneFlashEnabled"
                 swf-id="crossUserMicrophoneSwf"
@@ -21,8 +21,7 @@
                 swf-width="100%"
                 swf-height="100%"
                 swf-bgcolor="#FFFFFF"
-                swf-wmode="transparent"
-                swf-visible="{{microphoneFlashVisible}}">
+                swf-wmode="transparent">
         </swf-object>
     </md-content>
 
@@ -75,29 +74,26 @@
             </md-whiteframe>
 
             <md-button id="sourceButton"
-                       class="md-raised md-primary md-hue-2"
-                       ng-disabled="!microphone.sourceAudioButtonEnabled"
+                       class="md-raised md-primary md-hue-1"
+                       ng-disabled="!microphoneSourceAudioReady"
                        ng-click="microphone.playSource();" >
                 <md-icon>play_circle_filled</md-icon>
                 Play Original WAV</md-button>
 
             <md-button id="outputButton"
-                       class="md-raised md-primary md-hue-2"
-                       ng-disabled="!microphone.outputAudioButtonEnabled"
+                       class="md-raised md-primary md-hue-3"
+                       ng-disabled="!microphoneOutputAudioReady"
                        ng-click="microphone.playOutput();">
                 <md-icon>play_circle_outline</md-icon>
                 Play Encoded MP4</md-button>
 
-            <md-button id="downloadButton"
-                       class="md-raised md-primary md-hue-1"
-                       ng-disabled="!microphone.downloadOutputButtonEnabled"
-                       ng-click="microphone.downloadOutput();">
-                <md-icon>file_download</md-icon>
-                Download File</md-button>
-
         </md-content>
 
+
+
     </md-content>
+
+
 
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.js"></script>

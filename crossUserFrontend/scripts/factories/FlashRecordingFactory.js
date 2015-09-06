@@ -11,8 +11,6 @@ module.exports = function ($rootScope, $log, $q) {
 
         //functions globally accessible for flash ExternalInterface
         window.onFlashSoundRecorded = function (audioBase64) {
-            $log.log("onFlashSoundRecorded length:" + audioBase64.length);
-
             var audioBlob = b64toBlob(audioBase64, 'audio/wav');
             recordingDeferred.resolve(audioBlob);
         };
@@ -37,19 +35,22 @@ module.exports = function ($rootScope, $log, $q) {
     };
 
     Service.setFlashVisible = function (data) {
-        document.getElementById('crossUserMicrophoneSwf').setFlashVisible(data);
+        getFlashObject().setFlashVisible(data);
     }
 
     Service.startRecording = function () {
-        document.getElementById('crossUserMicrophoneSwf').startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
+        getFlashObject().startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
     };
 
     Service.stopRecording = function () {
         recordingDeferred = $q.defer();
-        document.getElementById('crossUserMicrophoneSwf').stopRecording();
-
+        getFlashObject().stopRecording();
         return recordingDeferred.promise;
     };
+
+    function getFlashObject() {
+        return document.getElementById('crossUserMicrophoneSwf');
+    }
 
     // http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
     function b64toBlob(b64Data, contentType, sliceSize) {
