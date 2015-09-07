@@ -1,4 +1,5 @@
 {
+  "browserify": true,
   "camelcase": true,
   "curly": true,
   "eqeqeq": true,
@@ -16,13 +17,12 @@
   "unused": "vars",
   "trailing": true,
   "globals": {
-    "after"      : false,
-    "afterEach"  : false,
-    "before"     : false,
-    "beforeEach" : false,
-    "context"    : false,
-    "describe"   : false,
-    "it"         : false,
-    "window"     : false
+    "angular"   : true,
+    "atob"      : false,
+    "Blob"      : false,
+    "document"  : false,
+    "FormData"  : false,
+    "URL"       : false,
+    "window"    : false
   }
 }

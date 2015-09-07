@@ -1,9 +1,9 @@
 var angular = require('angular');
-var angularMaterial = require('angular-material');
-var angularAria = require('angular-aria');
-var angularAnimate = require('angular-animate');
+require('angular-material');
+require('angular-aria');
+require('angular-animate');
 
-var microphoneModule = angular.module('Microphone', ['ngMaterial'])
+angular.module('Microphone', ['ngMaterial'])
 
     .config(function($mdThemingProvider) {
         $mdThemingProvider.theme('default')
