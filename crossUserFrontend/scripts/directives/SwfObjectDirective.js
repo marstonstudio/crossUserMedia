@@ -18,12 +18,12 @@ module.exports = function ($log, $window, $timeout, $interval) {
             scope.id = attrs.swfId;
 
             if('swfVisible' in attrs) {
-                if(attrs.swfVisible === "false") {
+                if(attrs.swfVisible === 'false') {
                     SwfObject.switchOffAutoHideShow();
                 }
 
                 scope.$watch('isSwfVisible', function(newvalue, oldvalue){
-                    element.css('visibility', (newvalue === "true") ? 'visible' : 'hidden');
+                    element.css('visibility', (newvalue === 'true') ? 'visible' : 'hidden');
                 });
             }
 
@@ -33,9 +33,9 @@ module.exports = function ($log, $window, $timeout, $interval) {
             };
 
             var params = {
-                bgcolor: attrs.swfBgcolor || "#FFFFFF",
-                wmode: attrs.swfWmode || "window",
-                allowscriptaccess: "always"
+                bgcolor: attrs.swfBgcolor || '#FFFFFF',
+                wmode: attrs.swfWmode || 'window',
+                allowscriptaccess: 'always'
             };
 
             $timeout(function () {
@@ -56,7 +56,7 @@ module.exports = function ($log, $window, $timeout, $interval) {
                 //This timeout ensures we don't try to access PercentLoaded too soon
                 $timeout(function () {
                     //Ensure Flash Player's PercentLoaded method is available and returns a value
-                    if (typeof evt.ref.PercentLoaded !== "undefined" && evt.ref.PercentLoaded()) {
+                    if (typeof evt.ref.PercentLoaded !== 'undefined' && evt.ref.PercentLoaded()) {
                         //Set up a timer to periodically check value of PercentLoaded
                         var loadCheckInterval = $interval(function () {
                             //Once value == 100 (fully loaded) we can do whatever we want
@@ -74,7 +74,7 @@ module.exports = function ($log, $window, $timeout, $interval) {
 
             // https://code.google.com/p/swfobject/wiki/api
             function embedHandler(evt) {
-                if (scope.swfLoad && typeof(scope.swfLoad) === "function") {
+                if (scope.swfLoad && typeof(scope.swfLoad) === 'function') {
                     // if failure no reason to go and check if flash is 100% loaded
                     if (!evt.success || !evt.ref) {
                         scope.swfLoad({evt: evt});
@@ -86,4 +86,4 @@ module.exports = function ($log, $window, $timeout, $interval) {
             }
         }
     };
-}
+};

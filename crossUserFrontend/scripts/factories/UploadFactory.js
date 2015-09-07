@@ -5,9 +5,9 @@ module.exports = function($rootScope, $log, $http) {
     Service.send = function(audioBlob, inputFormat, outputFormat) {
 
         var formData = new FormData();
-        formData.append("payload", audioBlob);
-        formData.append("inputFormat", inputFormat);
-        formData.append("outputFormat", outputFormat);
+        formData.append('payload', audioBlob);
+        formData.append('inputFormat', inputFormat);
+        formData.append('outputFormat', outputFormat);
 
         //bogus way of setting Content-Type='multipart/form-data'
         //https://uncorkedstudios.com/blog/multipartformdata-file-upload-with-angularjs

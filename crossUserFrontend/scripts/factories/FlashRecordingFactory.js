@@ -24,19 +24,19 @@ module.exports = function ($rootScope, $log, $q) {
         };
 
         window.onFlashRecording = function(time, level) {
-            $rootScope.$emit('recordingEvent', {"time":time, "level":level});
+            $rootScope.$emit('recordingEvent', {'time':time, 'level':level});
         };
 
         window.onFlashVisibilityChange = function(value) {
             $rootScope.$emit('flashVisibilityChange', value);
-        }
+        };
 
         initialized = true;
     };
 
     Service.setFlashVisible = function (data) {
         getFlashObject().setFlashVisible(data);
-    }
+    };
 
     Service.startRecording = function () {
         getFlashObject().startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
@@ -77,4 +77,4 @@ module.exports = function ($rootScope, $log, $q) {
     }
 
     return Service;
-}
+};

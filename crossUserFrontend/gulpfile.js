@@ -3,6 +3,7 @@ var del         = require('del');
 var gulp        = require('gulp');
 var concatCss   = require('gulp-concat-css');
 var fontgen     = require('gulp-fontgen');
+var jshint      = require('gulp-jshint');
 var less        = require('gulp-less');
 var minifyCSS   = require('gulp-minify-css');
 var ngAnnotate  = require('gulp-ng-annotate');
@@ -18,7 +19,6 @@ var assetDir = '../assets';
 var fontPath = '/css/fonts'
 var webappDir = '../crossUserServer/src/main/webapp';
 var targetDir = '../crossUserServer/target/crossUserServer';
-
 
 gulp.task('default', [
     'clean',
@@ -97,9 +97,9 @@ gulp.task('assembleScripts', ['clean'] , function() {
         .pipe(buffer())
         .pipe(ngAnnotate())
         .pipe(sourcemaps.init({loadMaps: true}))
-        //.pipe(uglify())
+        .pipe(uglify())
         .on('error', function(err){
-            console.log(err.toString());
+            console.error(err.toString());
             this.emit('end');
         })
         .pipe(sourcemaps.write('./'))
@@ -115,3 +115,9 @@ gulp.task('deploy', ['copy'], function() {
     return gulp.src(distDir + '/**/*')
         .pipe(gulp.dest(targetDir));
 });
+
+gulp.task('jshint', function(){
+    gulp.src('scripts/**/*.js')
+        .pipe(jshint())
+        .pipe(jshint.reporter('default', { verbose: true }))
+})

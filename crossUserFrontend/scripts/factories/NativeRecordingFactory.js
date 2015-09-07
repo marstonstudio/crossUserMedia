@@ -18,7 +18,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
 
     Service.showSettings = function () {
         $log.error('showSettings unimplemented for NativeRecordingFactory');
-    }
+    };
 
     Service.startRecording = function() {
         $rootScope.$emit('statusEvent', 'recording started');
@@ -76,7 +76,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             analyser.getByteFrequencyData(array);
             var level = getAverageVolume(array);
             //$log.log('onaudioprocess time:' + e.playbackTime + ", level:" + level);
-            $rootScope.$emit('recordingEvent', {"time": e.playbackTime, "level":level});
+            $rootScope.$emit('recordingEvent', {'time': e.playbackTime, 'level':level});
 
             var mono = e.inputBuffer.getChannelData(0);
             // we clone the samples
@@ -99,8 +99,10 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         }
         if (audioStream && audioStream.active) {
             var audioTracks = audioStream.getAudioTracks();
-            for(var key in audioTracks) {
-                audioTracks[key].stop();
+            if(audioTracks) {
+                for (var i = 0; i < audioTracks.length; i++) {
+                    audioTracks[i].stop();
+                }
             }
         }
         if (recorder) {
@@ -136,8 +138,8 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         var lng = outputBuffer.length;
         var index = 44;
         var volume = 1;
-        for (var i = 0; i < lng; i++) {
-            view.setInt16(index, outputBuffer[i] * (0x7FFF * volume), true);
+        for (var j = 0; j < lng; j++) {
+            view.setInt16(index, outputBuffer[j] * (0x7FFF * volume), true);
             index += 2;
         }
 
@@ -185,4 +187,4 @@ module.exports = function($rootScope, $log, $q, Navigator) {
     }
 
     return Service;
-}
+};
