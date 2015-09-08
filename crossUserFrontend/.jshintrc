@@ -22,7 +22,6 @@
     "Blob"      : false,
     "document"  : false,
     "FormData"  : false,
-    "URL"       : false,
-    "window"    : false
+    "URL"       : false
   }
 }

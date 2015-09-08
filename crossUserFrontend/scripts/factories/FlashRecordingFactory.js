@@ -1,4 +1,4 @@
-module.exports = function ($rootScope, $log, $q) {
+module.exports = function ($rootScope, $log, $window, $q) {
 
     var Service = {};
     var recordingDeferred;
@@ -10,24 +10,24 @@ module.exports = function ($rootScope, $log, $q) {
         }
 
         //functions globally accessible for flash ExternalInterface
-        window.onFlashSoundRecorded = function (audioBase64) {
+        $window.onFlashSoundRecorded = function (audioBase64) {
             var audioBlob = b64toBlob(audioBase64, 'audio/wav');
             recordingDeferred.resolve(audioBlob);
         };
 
-        window.onFlashSoundRecordingError = function (error) {
+        $window.onFlashSoundRecordingError = function (error) {
             recordingDeferred.reject(error);
         };
 
-        window.onFlashStatusMessage = function(message) {
+        $window.onFlashStatusMessage = function(message) {
             $rootScope.$emit('statusEvent', message);
         };
 
-        window.onFlashRecording = function(time, level) {
+        $window.onFlashRecording = function(time, level) {
             $rootScope.$emit('recordingEvent', {'time':time, 'level':level});
         };
 
-        window.onFlashVisibilityChange = function(value) {
+        $window.onFlashVisibilityChange = function(value) {
             $rootScope.$emit('flashVisibilityChange', value);
         };
 

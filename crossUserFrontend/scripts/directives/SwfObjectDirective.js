@@ -1,4 +1,4 @@
-var SwfObject  = require('jakobmattsson-swfobject');
+var swfEmbedder  = require('jakobmattsson-swfobject');
 
 // https://github.com/jeef3/angular-swfobject
 module.exports = function ($log, $window, $timeout, $interval) {
@@ -19,7 +19,7 @@ module.exports = function ($log, $window, $timeout, $interval) {
 
             if('swfVisible' in attrs) {
                 if(attrs.swfVisible === 'false') {
-                    SwfObject.switchOffAutoHideShow();
+                    swfEmbedder.switchOffAutoHideShow();
                 }
 
                 scope.$watch('isSwfVisible', function(newvalue, oldvalue){
@@ -39,7 +39,7 @@ module.exports = function ($log, $window, $timeout, $interval) {
             };
 
             $timeout(function () {
-                SwfObject.embedSWF(attrs.swfUrl,
+                swfEmbedder.embedSWF(attrs.swfUrl,
                     scope.id,
                     attrs.swfWidth || 800,
                     attrs.swfHeight || 600,

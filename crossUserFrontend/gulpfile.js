@@ -1,20 +1,19 @@
-var browserify  = require('browserify');
-var del         = require('del');
-var gulp        = require('gulp');
-var concatCss   = require('gulp-concat-css');
-var fontgen     = require('gulp-fontgen');
-var jshint      = require('gulp-jshint');
-var less        = require('gulp-less');
-var minifyCSS   = require('gulp-minify-css');
-var ngAnnotate  = require('gulp-ng-annotate');
-var sourcemaps  = require('gulp-sourcemaps');
-var uglify      = require('gulp-uglify');
-var gutil       = require('gulp-util');
-var buffer      = require('vinyl-buffer');
-var source      = require('vinyl-source-stream');
-var transform   = require('vinyl-transform');
+var browserify      = require('browserify');
+var del             = require('del');
+var gulp            = require('gulp');
+var concatCss       = require('gulp-concat-css');
+var fontgen         = require('gulp-fontgen');
+var jshint          = require('gulp-jshint');
+var less            = require('gulp-less');
+var minifyCSS       = require('gulp-minify-css');
+var ngAnnotate      = require('gulp-ng-annotate');
+var sourcemaps      = require('gulp-sourcemaps');
+var uglify          = require('gulp-uglify');
+var gutil           = require('gulp-util');
+var vinylBuffer     = require('vinyl-buffer');
+var vinylSource     = require('vinyl-source-stream');
+var vinylTransform  = require('vinyl-transform');
 
-var distDir =   'dist';
 var assetDir = '../assets';
 var fontPath = '/css/fonts'
 var webappDir = '../crossUserServer/src/main/webapp';
@@ -32,7 +31,11 @@ gulp.task('default', [
 
 gulp.task('clean', function(callback) {
     del([
-            distDir + '/**/*',
+            'dist/**/*',
+            '!dist/css',
+            '!dist/css/fonts',
+            '!dist/css/fonts.css',
+            '!dist/css/fonts/*',
             webappDir + '/css/*',
             webappDir + '/js/*',
             webappDir + '/*.html',
@@ -44,15 +47,15 @@ gulp.task('clean', function(callback) {
 
 gulp.task('assembleStyles', [
     'compileLess',
-    'generateFonts',
-    'concatenateFonts'
+    //'generateFonts',
+    //'concatenateFonts'
 ]);
 
 gulp.task('compileLess', ['clean'] , function() {
     return gulp.src('styles/**/*.less')
         .pipe(less())
         .pipe(minifyCSS())
-        .pipe(gulp.dest(distDir + '/css'));
+        .pipe(gulp.dest('dist/css'));
 });
 
 gulp.task('generateFonts', ['clean'] , function() {
@@ -60,7 +63,7 @@ gulp.task('generateFonts', ['clean'] , function() {
     // brew install fontforge ttf2eot batik ttfautohint
     return gulp.src(assetDir + '/fonts/*.otf')
         .pipe(fontgen({
-            dest: distDir + fontPath,
+            dest: 'dist' + fontPath,
             css_fontpath: fontPath
         }))
         .on('error', function(err){
@@ -70,22 +73,28 @@ gulp.task('generateFonts', ['clean'] , function() {
 });
 
 gulp.task('concatenateFonts', ['generateFonts'] , function() {
-    return gulp.src(distDir + fontPath + '/*.css')
+    return gulp.src('dist' + fontPath + '/*.css')
         .pipe(concatCss('fonts.css'))
-        .pipe(gulp.dest(distDir + '/css'));
+        .pipe(gulp.dest('dist/css'));
 });
 
 gulp.task('assembleImages', ['clean'], function() {
     return gulp.src(assetDir + '/images/**/*')
-        .pipe(gulp.dest(distDir + '/img'));
+        .pipe(gulp.dest('dist/img'));
 })
 
 gulp.task('assembleHtml', ['clean'], function() {
     return gulp.src('html/**/*.html')
-        .pipe(gulp.dest(distDir));
+        .pipe(gulp.dest('dist'));
 });
 
-gulp.task('assembleScripts', ['clean'] , function() {
+gulp.task('analyzeScripts', function(){
+    return gulp.src('scripts/**/*.js')
+        .pipe(jshint())
+        .pipe(jshint.reporter('default', { verbose: true }))
+});
+
+gulp.task('assembleScripts', ['clean', 'analyzeScripts'] , function() {
     var browserified = browserify({
         entries: './scripts/Main.js',
         debug: true
@@ -93,31 +102,26 @@ gulp.task('assembleScripts', ['clean'] , function() {
 
     return browserified
         .bundle()
-        .pipe(source('application.js'))
-        .pipe(buffer())
+        .pipe(vinylSource('application.js'))
+        .pipe(vinylBuffer())
         .pipe(ngAnnotate())
         .pipe(sourcemaps.init({loadMaps: true}))
-        .pipe(uglify())
+        //.pipe(uglify())
         .on('error', function(err){
             console.error(err.toString());
             this.emit('end');
         })
         .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(distDir + '/js/'));
+        .pipe(gulp.dest('dist/js/'));
 });
 
 gulp.task('copy', ['assembleHtml', 'assembleImages','assembleScripts', 'assembleStyles'], function() {
-    return gulp.src(distDir + '/**/*')
+    return gulp.src('dist/**/*')
         .pipe(gulp.dest(webappDir));
 });
 
 gulp.task('deploy', ['copy'], function() {
-    return gulp.src(distDir + '/**/*')
+    return gulp.src('dist/**/*')
         .pipe(gulp.dest(targetDir));
 });
 
-gulp.task('jshint', function(){
-    gulp.src('scripts/**/*.js')
-        .pipe(jshint())
-        .pipe(jshint.reporter('default', { verbose: true }))
-})

@@ -75,6 +75,7 @@
 
             <md-button id="sourceButton"
                        class="md-raised md-primary md-hue-1"
+                       ng-if="microphoneSourceAudioEnabled"
                        ng-disabled="!microphoneSourceAudioReady"
                        ng-click="microphone.playSource();" >
                 <md-icon>play_circle_filled</md-icon>
@@ -89,11 +90,7 @@
 
         </md-content>
 
-
-
     </md-content>
-
-
 
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.js"></script>

@@ -1,31 +1,12 @@
-module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, NativeRecording, UploadRecording) {
+module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRecording, NativeRecording, UploadRecording) {
     $log.log('MicrophoneController initialized');
-
-    var FORMAT_WAV = 'wav';
-    var FORMAT_OGG = 'ogg';
-    var FORMAT_MP4 = 'mp4';
-
-    var DEFAULT_INPUT_FORMAT = FORMAT_WAV;
-    var DEFAULT_OUTPUT_FORMAT = FORMAT_MP4;
-
-    this.supportedInputFormats = [FORMAT_WAV, FORMAT_OGG];
-    this.supportedOutputFormats = [FORMAT_MP4];
-
-    this.inputFormat = DEFAULT_INPUT_FORMAT;
-    this.outputFormat = DEFAULT_OUTPUT_FORMAT;
-
-    this.setInputFormat = function (format) {
-        this.inputFormat = format;
-    };
-
-    this.setOutputFormat = function (format) {
-        this.outputFormat = format;
-    };
 
     this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
 
     var self = this;
+
+    $scope.microphoneSourceAudioEnabled = !bowser.msie;
 
     var resetState = function() {
         $scope.microphoneSourceAudioReady = false;
@@ -102,7 +83,7 @@ module.exports = function ($rootScope, $scope, $log, Navigator, FlashRecording, 
             .then(function (audioBlob) {
                 embedLocalBlob(audioBlob);
                 return UploadRecording
-                    .send(audioBlob, self.inputFormat, self.outputFormat)
+                    .send(audioBlob, 'wav', 'mp4')
                     .then(displayProcessedOutput, function(response) {if(response && response.data) {$log.error(response.data);}});
             }, function(reason) {$log.error(reason);});
     };

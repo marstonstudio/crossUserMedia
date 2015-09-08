@@ -1,7 +1,5 @@
 var angular = require('angular');
 require('angular-material');
-require('angular-aria');
-require('angular-animate');
 
 angular.module('Microphone', ['ngMaterial'])
 
@@ -13,10 +11,13 @@ angular.module('Microphone', ['ngMaterial'])
             .backgroundPalette('grey');
     })
 
+    .value('bowser', require('bowser'))
+
     .controller('MicrophoneController', [
         '$rootScope',
         '$scope',
         '$log',
+        'bowser',
         'NavigatorFactory',
         'FlashRecordingFactory',
         'NativeRecordingFactory',
@@ -48,6 +49,7 @@ angular.module('Microphone', ['ngMaterial'])
     .factory('FlashRecordingFactory', [
         '$rootScope',
         '$log',
+        '$window',
         '$q',
         require('./factories/FlashRecordingFactory.js')
     ])
