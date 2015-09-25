@@ -1,0 +1,17 @@
+*.lo
+*.o
+config.h
+config.log
+config.status
+libtool
+Makefile
+stamp-h1
+common/mp4v2/.deps/
+common/mp4v2/libmp4v2.a
+common/mp4v2/mpeg4ip_config.h
+frontend/.deps/
+frontend/.libs/
+frontend/faac
+libfaac/.deps/
+libfaac/.libs/
+libfaac/libfaac.la
