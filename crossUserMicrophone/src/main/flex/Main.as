@@ -124,10 +124,10 @@ package {
             }
         }
 
-        private function externalStartRecording(useSpeex:Boolean = false):void {
+        private function externalStartRecording():void {
             ExternalInterface.call("onFlashStatusMessage", "recording started");
 
-            _recorder = new MicRecorder( useSpeex );
+            _recorder = new MicRecorder();
             _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
             _recorder.addEventListener(RecordingEvent.COMPLETE, onRecordComplete);
             _recorder.record();

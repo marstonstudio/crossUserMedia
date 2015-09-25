@@ -59,12 +59,9 @@ import flash.utils.getTimer;
         private var _difference:uint;
         private var _microphone:Microphone;
         private var _buffer:ByteArray = new ByteArray();
-        private var _useSpeex:Boolean;
         private var _encoder:AbstractEncoder;
 
-        public function MicRecorder(useSpeex:Boolean) {
-            this._useSpeex = useSpeex;
-        }
+        public function MicRecorder() {}
 
         /**
          * Starts recording from the default or specified microphone.
@@ -77,11 +74,7 @@ import flash.utils.getTimer;
 
             _difference = getTimer();
 
-            if(_useSpeex) {
-                _encoder = new SpeexEncoder();
-            } else {
-                _encoder = new WavEncoder();
-            }
+            _encoder = new WavEncoder();
 
             _microphone.setSilenceLevel(_silenceLevel, _timeOut);
             _microphone.rate = _encoder.microphoneRate;
