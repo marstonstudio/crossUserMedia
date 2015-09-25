@@ -1,4 +1,16 @@
-icons
+# Frontend Angular Application #
 
-https://www.google.com/design/icons/
-https://material.angularjs.org/latest/#/api/material.components.icon/directive/mdIcon
+The frontend application is built using [Gulp](http://gulpjs.com), [Browserify](http://browserify.org), [AngularJS](https://angularjs.org), and [Angular Material](https://material.angularjs.org).
+
+## Requirements ##
+Font tools must be installed in order for the `gulp-fontgen` plugin to work.
+
+### Mac OS.X
+* [Install homebrew](http://brew.sh)
+* `brew install fontforge ttf2eot batik ttfautohint`
+
+### Linux
+* TODO
+
+### Windows
+* TODO

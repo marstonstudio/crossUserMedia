@@ -1,6 +1,6 @@
 # Apache Flex Maven Dependencies #
 
-The Flash ActionScript widget can be compiled using Maven 3.1 or higher, but the Apache Flex SDK artifacts need to be 'mavenized' and installed into a maven repository.
+The Flash ActionScript widget can be compiled using Maven 3.3 or higher, but the Apache Flex SDK artifacts need to be 'mavenized' and installed into a maven repository.
 
 The [Apache Flex Wiki](https://cwiki.apache.org/confluence/display/FLEX/Building+Flex+applications+with+Maven) has detailed instructions on how to do this for Flex 14.1 and flexmojos-maven-plugin 7.1.0-SNAPSHOT.
 
