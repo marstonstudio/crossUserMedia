@@ -39,7 +39,7 @@ module.exports = function ($rootScope, $log, $window, $q) {
     };
 
     Service.startRecording = function () {
-        getFlashObject().startRecording(false); // false == wav || true == ogg but can be converted to a string parameter
+        getFlashObject().startRecording();
     };
 
     Service.stopRecording = function () {
