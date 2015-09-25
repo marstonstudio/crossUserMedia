@@ -24,7 +24,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         $rootScope.$emit('statusEvent', 'recording started');
 
         if (Navigator.enabled) {
-            Navigator.getNavigator().getUserMedia({audio: true}, startUserMediaRecording, function(e) {
+            Navigator.getNavigator().getUserMedia({audio: true, video: false}, startUserMediaRecording, function(e) {
                 $log.error(e.message);
             });
         }
@@ -89,6 +89,8 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         recorder.connect(context.destination);
     }
 
+    // https://blogs.windows.com/msedgedev/2015/05/13/announcing-media-capture-functionality-in-microsoft-edge/
+    // https://github.com/MicrosoftEdge/Demos/blob/master/webaudiotuner/scripts/demo.js
     function stopUserMediaRecording() {
         var deferred = $q.defer();
 

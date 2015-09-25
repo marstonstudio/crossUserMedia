@@ -6,8 +6,7 @@ module.exports = function() {
         navigator.getUserMedia =
             navigator.getUserMedia ||
             navigator.webkitGetUserMedia ||
-            navigator.mozGetUserMedia ||
-            navigator.msGetUserMedia;
+            navigator.mozGetUserMedia;
     }
 
     window.navigator.getUserMedia = navigator.getUserMedia;

@@ -9,7 +9,7 @@
     <name>crossUserMedia Parent</name>
 
     <prerequisites>
-        <maven>3.1.1</maven>
+        <maven>3.3.0</maven>
     </prerequisites>
 
     <modules>
@@ -26,27 +26,5 @@
     <scm>
         <developerConnection>scm:git:https://github.com/marstonstudio/crossUserMedia.git</developerConnection>
     </scm>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.11</version>
-            </dependency>
-            <dependency>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-                <version>1.2.16</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <!--repositories>
-        <repository>
-            <id>tomp2p.net</id>
-            <url>http://tomp2p.net/dev/mvn/</url>
-        </repository>
-    </repositories-->
 
 </project>
