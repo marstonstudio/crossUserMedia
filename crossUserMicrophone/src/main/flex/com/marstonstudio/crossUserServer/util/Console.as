@@ -10,7 +10,7 @@ package com.marstonstudio.crossUserServer.util {
         }
 
         public static function logCapabilities():void {
-            log(Capabilities.version + " " + Capabilities.playerType + " isDebugger:" + Capabilities.isDebugger);
+            log("FLASH::" + Capabilities.version + " " + Capabilities.playerType + " isDebugger:" + Capabilities.isDebugger);
         }
 
     }

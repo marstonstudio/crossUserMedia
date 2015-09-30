@@ -12,9 +12,11 @@ package {
     import flash.display.StageScaleMode;
     import flash.events.Event;
     import flash.events.MouseEvent;
+    import flash.events.TimerEvent;
     import flash.external.ExternalInterface;
     import flash.system.Security;
     import flash.system.SecurityPanel;
+    import flash.utils.Timer;
 
     import mx.utils.Base64Encoder;
 
@@ -26,6 +28,9 @@ package {
         private var _textField:CFFTextField;
 
         private var _background:Sprite;
+
+        private var _microphonePermissionConfirmed:Boolean;
+        private var _microphonePermissionTimer:Timer;
 
         private const _backgroundWidth:int = 430;
         private const _backgroundHeight:int = 276;
@@ -83,6 +88,10 @@ package {
             ExternalInterface.addCallback("startRecording", externalStartRecording);
             ExternalInterface.addCallback("stopRecording", externalStopRecording);
 
+            _microphonePermissionConfirmed = false;
+            _microphonePermissionTimer = new Timer(1000, 1);
+            _microphonePermissionTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onMicrophonePermissionTimerComplete);
+
             Security.showSettings(SecurityPanel.PRIVACY);
         }
 
@@ -102,6 +111,7 @@ package {
                 _textField.x = (_backgroundWidth - _textField.textWidth) / 2;
                 Security.showSettings(SecurityPanel.PRIVACY);
                 stage.addEventListener(Event.ENTER_FRAME, onCheckSettingsOpen);
+                ExternalInterface.call("onFlashVisibilityChange", true);
             } else {
                 _textField.text = "This window will close in a moment.";
                 _textField.x = (_backgroundWidth - _textField.textWidth) / 2;
@@ -125,21 +135,41 @@ package {
         }
 
         private function externalStartRecording():void {
+            //Console.log("FLASH::Main::externalStartRecording");
             ExternalInterface.call("onFlashStatusMessage", "recording started");
+
+            if(!_microphonePermissionConfirmed) {
+                _microphonePermissionTimer.reset();
+                _microphonePermissionTimer.start();
+            }
 
             _recorder = new MicRecorder();
             _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
             _recorder.addEventListener(RecordingEvent.COMPLETE, onRecordComplete);
             _recorder.record();
+
         }
 
         private function externalStopRecording():void {
+            //Console.log("FLASH::Main::externalStopRecording");
             _recorder.stop();
             ExternalInterface.call("onFlashStatusMessage", "recording stopped");
         }
 
         private function onRecording(event:RecordingEvent):void {
+            //Console.log("FLASH::Main::onRecording");
+
+            if(!_microphonePermissionConfirmed) {
+                _microphonePermissionConfirmed = true;
+                _microphonePermissionTimer.stop();
+            }
+
             ExternalInterface.call("onFlashRecording", event.time / 1000, _recorder.activityLevel);
+        }
+
+        private function onMicrophonePermissionTimerComplete(event:TimerEvent):void {
+            //Console.log("FLASH::Main::onMicrophonePermissionTimerComplete");
+            setFlashVisible(true);
         }
 
         private function onRecordComplete(event:RecordingEvent):void {
