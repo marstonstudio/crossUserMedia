@@ -1,6 +1,6 @@
-module.exports = function() {
+module.exports = function($window) {
     var Service = {};
-    var navigator = window.navigator;
+    var navigator = $window.navigator;
 
     if (!navigator.getUserMedia) {
         navigator.getUserMedia =
@@ -9,12 +9,12 @@ module.exports = function() {
             navigator.mozGetUserMedia;
     }
 
-    window.navigator.getUserMedia = navigator.getUserMedia;
+    $window.navigator.getUserMedia = navigator.getUserMedia;
 
     Service.enabled = typeof navigator.getUserMedia === 'function';
 
     Service.getNavigator = function() {
-        return window.navigator;
+        return $window.navigator;
     };
 
     return Service;

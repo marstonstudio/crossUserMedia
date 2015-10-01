@@ -1,7 +1,5 @@
-var swfEmbedder  = require('jakobmattsson-swfobject');
-
 // https://github.com/jeef3/angular-swfobject
-module.exports = function ($log, $window, $timeout, $interval) {
+module.exports = function ($log, $window, $timeout, $interval, swfEmbedder) {
 
     return {
         restrict: 'EAC',
@@ -16,8 +14,9 @@ module.exports = function ($log, $window, $timeout, $interval) {
         link: function link(scope, element, attrs) {
 
             scope.id = attrs.swfId;
+            scope.swfVersion = attrs.swfVersion;
 
-            if('swfVisible' in attrs) {
+            if(attrs.hasOwnProperty('swfVisible') && attrs.swfVisible !== undefined) {
                 if(attrs.swfVisible === 'false') {
                     swfEmbedder.switchOffAutoHideShow();
                 }
@@ -38,18 +37,20 @@ module.exports = function ($log, $window, $timeout, $interval) {
                 allowscriptaccess: 'always'
             };
 
-            $timeout(function () {
-                swfEmbedder.embedSWF(attrs.swfUrl,
-                    scope.id,
-                    attrs.swfWidth || 800,
-                    attrs.swfHeight || 600,
-                    attrs.swfVersion || '10',
-                    scope.expressInstallSwfurl,
-                    scope.vars,
-                    params,
-                    attributes,
-                    embedHandler);
-            }, 0);
+            if(swfEmbedder.hasFlashPlayerVersion(scope.swfVersion)) {
+                $timeout(function () {
+                    swfEmbedder.embedSWF(attrs.swfUrl,
+                        scope.id,
+                        attrs.swfWidth || 800,
+                        attrs.swfHeight || 600,
+                        attrs.swfVersion || '10',
+                        scope.expressInstallSwfurl,
+                        scope.vars,
+                        params,
+                        attributes,
+                        embedHandler);
+                }, 0);
+            }
 
             // http://learnswfobject.com/advanced-topics/executing-javascript-when-the-swf-has-finished-loading/
             function swfLoadEvent(evt, fn) {
@@ -84,6 +85,7 @@ module.exports = function ($log, $window, $timeout, $interval) {
                 }
 
             }
+
         }
     };
 };

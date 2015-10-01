@@ -1,9 +1,11 @@
-module.exports = function ($rootScope, $log, $window, $q) {
+module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
 
     var Service = {};
     var recordingDeferred;
 
     var initialized = false;
+    var hasFlashInstalled = false;
+
     Service.initialize = function () {
         if (initialized) {
             return;
@@ -31,20 +33,27 @@ module.exports = function ($rootScope, $log, $window, $q) {
             $rootScope.$emit('flashVisibilityChange', value);
         };
 
+        hasFlashInstalled = swfEmbedder.getFlashPlayerVersion().major > 0;
         initialized = true;
     };
 
     Service.setFlashVisible = function (data) {
-        getFlashObject().setFlashVisible(data);
+        if(hasFlashInstalled) {
+            getFlashObject().setFlashVisible(data);
+        }
     };
 
     Service.startRecording = function () {
-        getFlashObject().startRecording();
+        if(hasFlashInstalled) {
+            getFlashObject().startRecording();
+        }
     };
 
     Service.stopRecording = function () {
         recordingDeferred = $q.defer();
-        getFlashObject().stopRecording();
+        if(hasFlashInstalled) {
+            getFlashObject().stopRecording();
+        }
         return recordingDeferred.promise;
     };
 

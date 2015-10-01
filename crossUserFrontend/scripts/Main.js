@@ -12,6 +12,7 @@ angular.module('Microphone', ['ngMaterial'])
     })
 
     .value('bowser', require('bowser'))
+    .value('swfEmbedder', require('jakobmattsson-swfobject'))
 
     .controller('MicrophoneController', [
         '$rootScope',
@@ -30,13 +31,12 @@ angular.module('Microphone', ['ngMaterial'])
         '$window',
         '$timeout',
         '$interval',
+        'swfEmbedder',
         require('./directives/SwfObjectDirective.js')
     ])
 
     .factory('NavigatorFactory', [
-        '$rootScope',
-        '$log',
-        '$q',
+        '$window',
         require('./factories/NavigatorFactory.js')
     ])
     .factory('NativeRecordingFactory', [
@@ -51,6 +51,7 @@ angular.module('Microphone', ['ngMaterial'])
         '$log',
         '$window',
         '$q',
+        'swfEmbedder',
         require('./factories/FlashRecordingFactory.js')
     ])
     .factory('UploadFactory', [

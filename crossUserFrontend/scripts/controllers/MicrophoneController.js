@@ -116,7 +116,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
     }
 
     function refresh() {
-        if(!$scope.$phase) {
+        if ($scope.$root.$$phase !== '$apply' && $scope.$root.$$phase !== '$digest') {
             $scope.$digest();
         }
     }

@@ -31,6 +31,7 @@ package {
 
         private var _microphonePermissionConfirmed:Boolean;
         private var _microphonePermissionTimer:Timer;
+        private const _microphonePermissionDelay:Number = 3000;
 
         private const _backgroundWidth:int = 430;
         private const _backgroundHeight:int = 276;
@@ -89,7 +90,7 @@ package {
             ExternalInterface.addCallback("stopRecording", externalStopRecording);
 
             _microphonePermissionConfirmed = false;
-            _microphonePermissionTimer = new Timer(1000, 1);
+            _microphonePermissionTimer = new Timer(_microphonePermissionDelay, 1);
             _microphonePermissionTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onMicrophonePermissionTimerComplete);
 
             Security.showSettings(SecurityPanel.PRIVACY);
