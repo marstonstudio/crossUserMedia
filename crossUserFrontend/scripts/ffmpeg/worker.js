@@ -1,6 +1,6 @@
 // Simple ffmpeg web worker based on (https://github.com/bgrins/videoconverter.js/blob/master/demo/worker.js)
 
-importScripts('js/ffmpeg.js');
+importScripts('ffmpeg.js');
 
 function print(text) {
     postMessage({

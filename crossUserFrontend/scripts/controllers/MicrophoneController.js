@@ -1,4 +1,4 @@
-module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRecording, NativeRecording, UploadRecording) {
+module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRecording, NativeRecording, Encoder, UploadRecording) {
     $log.log('MicrophoneController initialized');
 
     this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
@@ -80,10 +80,11 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
         return getRecordingObject()
             .stopRecording()
-            .then(function (audioBlob) {
-                embedLocalBlob(audioBlob);
+            .then(function (wavBlob) {
+                embedLocalBlob(wavBlob);
+                var mp4Blob = Encoder.encodeWavToMp4(wavBlob);
                 return UploadRecording
-                    .send(audioBlob, 'wav', 'mp4')
+                    .send(mp4Blob, 'wav', 'wav')
                     .then(displayProcessedOutput, function(response) {if(response && response.data) {$log.error(response.data);}});
             }, function(reason) {$log.error(reason);});
     };
