@@ -324,6 +324,7 @@ const AVCodecTag ff_codec_bmp_tags[] = {
     { AV_CODEC_ID_JPEG2000,     MKTAG('L', 'J', '2', 'C') },
     { AV_CODEC_ID_JPEG2000,     MKTAG('L', 'J', '2', 'K') },
     { AV_CODEC_ID_JPEG2000,     MKTAG('I', 'P', 'J', '2') },
+    { AV_CODEC_ID_JPEG2000,     MKTAG('A', 'V', 'j', '2') }, /* Avid jpeg2000 */
     { AV_CODEC_ID_VMNC,         MKTAG('V', 'M', 'n', 'c') },
     { AV_CODEC_ID_TARGA,        MKTAG('t', 'g', 'a', ' ') },
     { AV_CODEC_ID_PNG,          MKTAG('M', 'P', 'N', 'G') },
@@ -372,6 +373,10 @@ const AVCodecTag ff_codec_bmp_tags[] = {
     { AV_CODEC_ID_HQX,          MKTAG('C', 'H', 'Q', 'X') },
     { AV_CODEC_ID_TDSC,         MKTAG('T', 'D', 'S', 'C') },
     { AV_CODEC_ID_HQ_HQA,       MKTAG('C', 'U', 'V', 'C') },
+    { AV_CODEC_ID_RV40,         MKTAG('R', 'V', '4', '0') },
+    { AV_CODEC_ID_SCREENPRESSO, MKTAG('S', 'P', 'V', '1') },
+    { AV_CODEC_ID_RSCC,         MKTAG('R', 'S', 'C', 'C') },
+    { AV_CODEC_ID_RSCC,         MKTAG('I', 'S', 'C', 'C') },
     { AV_CODEC_ID_NONE,         0 }
 };
 
@@ -419,6 +424,8 @@ const AVCodecTag ff_codec_wav_tags[] = {
     { AV_CODEC_ID_WMAV2,           0x0161 },
     { AV_CODEC_ID_WMAPRO,          0x0162 },
     { AV_CODEC_ID_WMALOSSLESS,     0x0163 },
+    { AV_CODEC_ID_XMA1,            0x0165 },
+    { AV_CODEC_ID_XMA2,            0x0166 },
     { AV_CODEC_ID_ADPCM_CT,        0x0200 },
     { AV_CODEC_ID_ATRAC3,          0x0270 },
     { AV_CODEC_ID_ADPCM_G722,      0x028F },

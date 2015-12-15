@@ -197,6 +197,7 @@ typedef struct HLSContext {
     char *cookies;                       ///< holds HTTP cookie values set in either the initial response or as an AVOption to the HTTP protocol context
     char *headers;                       ///< holds HTTP headers set as an AVOption to the HTTP protocol context
     AVDictionary *avio_opts;
+    int strict_std_compliance;
 } HLSContext;
 
 static int read_chomp_line(AVIOContext *s, char *buf, int maxlen)
@@ -242,7 +243,7 @@ static void free_playlist_list(HLSContext *c)
         av_dict_free(&pls->id3_initial);
         ff_id3v2_free_extra_meta(&pls->id3_deferred_extra);
         av_freep(&pls->init_sec_buf);
-        av_free_packet(&pls->pkt);
+        av_packet_unref(&pls->pkt);
         av_freep(&pls->pb.buffer);
         if (pls->input)
             ffurl_close(pls->input);
@@ -473,8 +474,9 @@ static struct rendition *new_rendition(HLSContext *c, struct rendition_info *inf
         return NULL;
 
     /* TODO: handle subtitles (each segment has to parsed separately) */
-    if (type == AVMEDIA_TYPE_SUBTITLE)
-        return NULL;
+    if (c->strict_std_compliance > FF_COMPLIANCE_EXPERIMENTAL)
+        if (type == AVMEDIA_TYPE_SUBTITLE)
+            return NULL;
 
     rend = av_mallocz(sizeof(struct rendition));
     if (!rend)
@@ -574,19 +576,6 @@ static int ensure_playlist(HLSContext *c, struct playlist **pls, const char *url
         return AVERROR(ENOMEM);
     *pls = c->playlists[c->n_playlists - 1];
     return 0;
-}
-
-static int open_in(HLSContext *c, AVIOContext **in, const char *url)
-{
-    AVDictionary *tmp = NULL;
-    int ret;
-
-    av_dict_copy(&tmp, c->avio_opts, 0);
-
-    ret = avio_open2(in, url, AVIO_FLAG_READ, c->interrupt_callback, &tmp);
-
-    av_dict_free(&tmp);
-    return ret;
 }
 
 static int url_connect(struct playlist *pls, AVDictionary *opts, AVDictionary *opts2)
@@ -1483,7 +1472,7 @@ static int save_avio_options(AVFormatContext *s)
     int ret = 0;
 
     while (*opt) {
-        if (av_opt_get(s->pb, *opt, AV_OPT_SEARCH_CHILDREN, &buf) >= 0) {
+        if (av_opt_get(s->pb, *opt, AV_OPT_SEARCH_CHILDREN | AV_OPT_ALLOW_NULL, &buf) >= 0) {
             ret = av_dict_set(&c->avio_opts, *opt, buf,
                               AV_DICT_DONT_STRDUP_VAL);
             if (ret < 0)
@@ -1502,6 +1491,7 @@ static int hls_read_header(AVFormatContext *s)
     int ret = 0, i, j, stream_offset = 0;
 
     c->interrupt_callback = &s->interrupt_callback;
+    c->strict_std_compliance = s->strict_std_compliance;
 
     c->first_packet = 1;
     c->first_timestamp = AV_NOPTS_VALUE;
@@ -1678,7 +1668,7 @@ static int hls_read_header(AVFormatContext *s)
             for (k = 0; k < pls->ctx->nb_streams; k++) {
                 struct AVStream *st = s->streams[pls->stream_offset + k];
 
-                ff_program_add_stream_index(s, i, pls->stream_offset + k);
+                av_program_add_stream_index(s, i, pls->stream_offset + k);
 
                 /* Set variant_bitrate for streams unique to this variant */
                 if (!is_shared && v->bandwidth)
@@ -1834,7 +1824,7 @@ static int hls_read_packet(AVFormatContext *s, AVPacket *pkt)
                         break;
                     }
                 }
-                av_free_packet(&pls->pkt);
+                av_packet_unref(&pls->pkt);
                 reset_packet(&pls->pkt);
             }
         }
@@ -1936,7 +1926,7 @@ static int hls_read_seek(AVFormatContext *s, int stream_index,
             ffurl_close(pls->input);
             pls->input = NULL;
         }
-        av_free_packet(&pls->pkt);
+        av_packet_unref(&pls->pkt);
         reset_packet(&pls->pkt);
         pls->pb.eof_reached = 0;
         /* Clear any buffered data */

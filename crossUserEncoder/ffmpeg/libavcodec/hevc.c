@@ -2401,6 +2401,8 @@ static int hls_decode_entry_wpp(AVCodecContext *avctxt, void *input_ctb_row, int
 
         if (more_data < 0) {
             s->tab_slice_address[ctb_addr_rs] = -1;
+            avpriv_atomic_int_set(&s1->wpp_err,  1);
+            ff_thread_report_progress2(s->avctx, ctb_row ,thread, SHIFT_CTB_WPP);
             return more_data;
         }
 
@@ -2521,7 +2523,7 @@ static int hls_slice_data_wpp(HEVCContext *s, const HEVCNAL *nal)
     }
 
     if (s->ps.pps->entropy_coding_sync_enabled_flag)
-        s->avctx->execute2(s->avctx, (void *) hls_decode_entry_wpp, arg, ret, s->sh.num_entry_point_offsets + 1);
+        s->avctx->execute2(s->avctx, hls_decode_entry_wpp, arg, ret, s->sh.num_entry_point_offsets + 1);
 
     for (i = 0; i <= s->sh.num_entry_point_offsets; i++)
         res += ret[i];
@@ -2575,6 +2577,17 @@ static int set_side_data(HEVCContext *s)
         av_display_rotation_set((int32_t *)rotation->data, angle);
         av_display_matrix_flip((int32_t *)rotation->data,
                                s->sei_hflip, s->sei_vflip);
+    }
+
+    if (s->a53_caption) {
+        AVFrameSideData* sd = av_frame_new_side_data(out,
+                                                     AV_FRAME_DATA_A53_CC,
+                                                     s->a53_caption_size);
+        if (sd)
+            memcpy(sd->data, s->a53_caption, s->a53_caption_size);
+        av_freep(&s->a53_caption);
+        s->a53_caption_size = 0;
+        s->avctx->properties |= FF_CODEC_PROPERTY_CLOSED_CAPTIONS;
     }
 
     return 0;
@@ -2836,7 +2849,7 @@ static int verify_md5(HEVCContext *s, AVFrame *frame)
     if (!desc)
         return AVERROR(EINVAL);
 
-    pixel_shift = desc->comp[0].depth_minus1 > 7;
+    pixel_shift = desc->comp[0].depth > 8;
 
     av_log(s->avctx, AV_LOG_DEBUG, "Verifying checksum for frame with POC %d: ",
            s->poc);
@@ -3245,8 +3258,6 @@ static av_cold int hevc_decode_init(AVCodecContext *avctx)
     HEVCContext *s = avctx->priv_data;
     int ret;
 
-    ff_init_cabac_states();
-
     avctx->internal->allocate_progress = 1;
 
     ret = hevc_init_context(avctx);
@@ -3313,9 +3324,9 @@ static const AVProfile profiles[] = {
 
 static const AVOption options[] = {
     { "apply_defdispwin", "Apply default display window from VUI", OFFSET(apply_defdispwin),
-        AV_OPT_TYPE_INT, {.i64 = 0}, 0, 1, PAR },
+        AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, PAR },
     { "strict-displaywin", "stricly apply default display window size", OFFSET(apply_defdispwin),
-        AV_OPT_TYPE_INT, {.i64 = 0}, 0, 1, PAR },
+        AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, PAR },
     { NULL },
 };
 

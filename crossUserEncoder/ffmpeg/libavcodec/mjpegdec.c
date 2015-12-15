@@ -282,7 +282,7 @@ int ff_mjpeg_decode_sof(MJpegDecodeContext *s)
     }
 
     if (s->avctx->bits_per_raw_sample != bits) {
-        av_log(s->avctx, AV_LOG_INFO, "Changeing bps to %d\n", bits);
+        av_log(s->avctx, AV_LOG_INFO, "Changing bps to %d\n", bits);
         s->avctx->bits_per_raw_sample = bits;
         init_idct(s->avctx);
     }
@@ -2060,6 +2060,22 @@ int ff_mjpeg_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
             return AVERROR(ENOSYS);
         }
 
+        if (avctx->skip_frame == AVDISCARD_ALL) {
+            switch(start_code) {
+            case SOF0:
+            case SOF1:
+            case SOF2:
+            case SOF3:
+            case SOF48:
+            case SOI:
+            case SOS:
+            case EOI:
+                break;
+            default:
+                goto skip;
+            }
+        }
+
         switch (start_code) {
         case SOI:
             s->restart_interval = 0;
@@ -2125,6 +2141,10 @@ eoi_parser:
                 if (s->bottom_field == !s->interlace_polarity)
                     break;
             }
+            if (avctx->skip_frame == AVDISCARD_ALL) {
+                s->got_picture = 0;
+                goto the_end_no_picture;
+            }
             if ((ret = av_frame_ref(frame, s->picture_ptr)) < 0)
                 return ret;
             *got_frame = 1;
@@ -2148,6 +2168,9 @@ eoi_parser:
             goto the_end;
         case SOS:
             s->cur_scan++;
+            if (avctx->skip_frame == AVDISCARD_ALL)
+                break;
+
             if ((ret = ff_mjpeg_decode_sos(s, NULL, 0, NULL)) < 0 &&
                 (avctx->err_recognition & AV_EF_EXPLODE))
                 goto fail;
@@ -2170,6 +2193,7 @@ eoi_parser:
             break;
         }
 
+skip:
         /* eof process start code */
         buf_ptr += (get_bits_count(&s->gb) + 7) / 8;
         av_log(avctx, AV_LOG_DEBUG,
@@ -2187,7 +2211,7 @@ fail:
     return ret;
 the_end:
 
-    is16bit = av_pix_fmt_desc_get(s->avctx->pix_fmt)->comp[0].step_minus1;
+    is16bit = av_pix_fmt_desc_get(s->avctx->pix_fmt)->comp[0].step > 1;
 
     if (AV_RB32(s->upscale_h)) {
         int p;
@@ -2366,6 +2390,7 @@ the_end:
     av_dict_copy(avpriv_frame_get_metadatap(data), s->exif_metadata, 0);
     av_dict_free(&s->exif_metadata);
 
+the_end_no_picture:
     av_log(avctx, AV_LOG_DEBUG, "decode frame unused %"PTRDIFF_SPECIFIER" bytes\n",
            buf_end - buf_ptr);
 //  return buf_end - buf_ptr;
@@ -2415,7 +2440,7 @@ static void decode_flush(AVCodecContext *avctx)
 #define VD AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_DECODING_PARAM
 static const AVOption options[] = {
     { "extern_huff", "Use external huffman table.",
-      OFFSET(extern_huff), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 1, VD },
+      OFFSET(extern_huff), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, VD },
     { NULL },
 };
 
@@ -2439,7 +2464,8 @@ AVCodec ff_mjpeg_decoder = {
     .capabilities   = AV_CODEC_CAP_DR1,
     .max_lowres     = 3,
     .priv_class     = &mjpegdec_class,
-    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE |
+                      FF_CODEC_CAP_SKIP_FRAME_FILL_PARAM,
 };
 #endif
 #if CONFIG_THP_DECODER

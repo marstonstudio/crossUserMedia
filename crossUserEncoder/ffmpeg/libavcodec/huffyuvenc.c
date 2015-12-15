@@ -60,12 +60,12 @@ static inline int sub_left_prediction(HYuvContext *s, uint8_t *dst,
             }
             return left;
         } else {
-            for (i = 0; i < 16; i++) {
+            for (i = 0; i < 32; i++) {
                 const int temp = src[i];
                 dst[i] = temp - left;
                 left   = temp;
             }
-            s->hencdsp.diff_bytes(dst + 16, src + 16, src + 15, w - 16);
+            s->hencdsp.diff_bytes(dst + 32, src + 32, src + 31, w - 32);
             return src[w-1];
         }
     } else {
@@ -238,7 +238,7 @@ FF_DISABLE_DEPRECATION_WARNINGS
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 
-    s->bps = desc->comp[0].depth_minus1 + 1;
+    s->bps = desc->comp[0].depth;
     s->yuv = !(desc->flags & AV_PIX_FMT_FLAG_RGB) && desc->nb_components >= 2;
     s->chroma = desc->nb_components > 2;
     s->alpha = !!(desc->flags & AV_PIX_FMT_FLAG_ALPHA);
@@ -1045,7 +1045,7 @@ static av_cold int encode_end(AVCodecContext *avctx)
 
 static const AVOption options[] = {
     { "non_deterministic", "Allow multithreading for e.g. context=1 at the expense of determinism",
-      offsetof(HYuvContext, non_determ), AV_OPT_TYPE_INT, { .i64 = 1 },
+      offsetof(HYuvContext, non_determ), AV_OPT_TYPE_BOOL, { .i64 = 1 },
       0, 1, AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM },
     { NULL },
 };

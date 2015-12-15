@@ -18,7 +18,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
+ */
+
+/*
  * signal_standard, color_siting, store_user_comments and klv_fill_key version
  * fixes sponsored by NOA GmbH
  */
@@ -2075,7 +2077,7 @@ static int mxf_write_header(AVFormatContext *s)
             sc->color_siting = 0xFF;
 
             if (pix_desc) {
-                sc->component_depth     = pix_desc->comp[0].depth_minus1 + 1;
+                sc->component_depth     = pix_desc->comp[0].depth;
                 sc->h_chroma_sub_sample = 1 << pix_desc->log2_chroma_w;
             }
             switch (ff_choose_chroma_location(s, st)) {
@@ -2608,7 +2610,7 @@ static int mxf_interleave_get_packet(AVFormatContext *s, AVPacket *out, AVPacket
 
                 if(s->streams[pktl->pkt.stream_index]->last_in_packet_buffer == pktl)
                     s->streams[pktl->pkt.stream_index]->last_in_packet_buffer= NULL;
-                av_free_packet(&pktl->pkt);
+                av_packet_unref(&pktl->pkt);
                 av_freep(&pktl);
                 pktl = next;
             }
@@ -2676,7 +2678,7 @@ static int mxf_interleave(AVFormatContext *s, AVPacket *out, AVPacket *pkt, int 
 static const AVOption mxf_options[] = {
     MXF_COMMON_OPTIONS
     { "store_user_comments", "",
-      offsetof(MXFContext, store_user_comments), AV_OPT_TYPE_INT, {.i64 = 1}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MXFContext, store_user_comments), AV_OPT_TYPE_BOOL, {.i64 = 1}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
     { NULL },
 };
 
@@ -2692,7 +2694,7 @@ static const AVOption d10_options[] = {
       offsetof(MXFContext, channel_count), AV_OPT_TYPE_INT, {.i64 = -1}, -1, 8, AV_OPT_FLAG_ENCODING_PARAM},
     MXF_COMMON_OPTIONS
     { "store_user_comments", "",
-      offsetof(MXFContext, store_user_comments), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
+      offsetof(MXFContext, store_user_comments), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
     { NULL },
 };
 

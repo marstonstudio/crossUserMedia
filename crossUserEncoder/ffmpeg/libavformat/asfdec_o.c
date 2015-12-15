@@ -444,7 +444,7 @@ static int asf_read_picture(AVFormatContext *s, int len)
 
 fail:
     av_freep(&desc);
-    av_free_packet(&pkt);
+    av_packet_unref(&pkt);
     return ret;
 }
 
@@ -1128,7 +1128,7 @@ static void reset_packet(ASFPacket *asf_pkt)
     asf_pkt->flags     = 0;
     asf_pkt->dts       = 0;
     asf_pkt->duration  = 0;
-    av_free_packet(&asf_pkt->avpkt);
+    av_packet_unref(&asf_pkt->avpkt);
     av_init_packet(&asf_pkt->avpkt);
 }
 
@@ -1276,8 +1276,16 @@ static int asf_read_payload(AVFormatContext *s, AVPacket *pkt)
                 break;
             }
         }
-        if (!asf_pkt)
-            return AVERROR_INVALIDDATA;
+        if (!asf_pkt) {
+            if (asf->packet_offset + asf->packet_size <= asf->data_offset + asf->data_size) {
+                avio_seek(pb, asf->packet_offset + asf->packet_size, SEEK_SET);
+                av_log(s, AV_LOG_WARNING, "Skipping the stream with the invalid stream index %d.\n",
+                       asf->stream_index);
+                return AVERROR(EAGAIN);
+            } else
+                return AVERROR_INVALIDDATA;
+        }
+
         if (stream_num >> 7)
             asf_pkt->flags |= AV_PKT_FLAG_KEY;
         READ_LEN(asf->prop_flags & ASF_PL_MASK_MEDIA_OBJECT_NUMBER_LENGTH_FIELD_SIZE,
@@ -1395,7 +1403,7 @@ static int asf_deinterleave(AVFormatContext *s, ASFPacket *asf_pkt, int st_num)
         if (p > asf_pkt->avpkt.data + asf_pkt->data_size)
             break;
     }
-    av_free_packet(&asf_pkt->avpkt);
+    av_packet_unref(&asf_pkt->avpkt);
     asf_pkt->avpkt = pkt;
 
     return 0;
@@ -1418,8 +1426,14 @@ static int asf_read_packet(AVFormatContext *s, AVPacket *pkt)
             else
                 asf->state = READ_MULTI;
         }
-        if ((ret = asf_read_payload(s, pkt)) < 0)
+        ret = asf_read_payload(s, pkt);
+        if (ret == AVERROR(EAGAIN)) {
+            asf->state = PARSE_PACKET_HEADER;
+            continue;
+        }
+        else if (ret < 0)
             return ret;
+
         switch (asf->state) {
         case READ_SINGLE:
             if (!asf->sub_left)
@@ -1428,7 +1442,9 @@ static int asf_read_packet(AVFormatContext *s, AVPacket *pkt)
         case READ_MULTI_SUB:
             if (!asf->sub_left && !asf->nb_mult_left) {
                 asf->state = PARSE_PACKET_HEADER;
-                if (!asf->return_subpayload)
+                if (!asf->return_subpayload &&
+                    (avio_tell(pb) <= asf->packet_offset +
+                     asf->packet_size - asf->pad_len))
                     avio_skip(pb, asf->pad_len); // skip padding
                 if (asf->packet_offset + asf->packet_size > avio_tell(pb))
                     avio_seek(pb, asf->packet_offset + asf->packet_size, SEEK_SET);
@@ -1438,9 +1454,10 @@ static int asf_read_packet(AVFormatContext *s, AVPacket *pkt)
         case READ_MULTI:
             if (!asf->nb_mult_left) {
                 asf->state = PARSE_PACKET_HEADER;
-                if (!asf->return_subpayload) {
+                if (!asf->return_subpayload &&
+                    (avio_tell(pb) <= asf->packet_offset +
+                     asf->packet_size - asf->pad_len))
                     avio_skip(pb, asf->pad_len); // skip padding
-                }
                 if (asf->packet_offset + asf->packet_size > avio_tell(pb))
                     avio_seek(pb, asf->packet_offset + asf->packet_size, SEEK_SET);
             }
@@ -1482,7 +1499,7 @@ static int asf_read_close(AVFormatContext *s)
     for (i = 0; i < ASF_MAX_STREAMS; i++) {
         av_dict_free(&asf->asf_sd[i].asf_met);
         if (i < asf->nb_streams) {
-            av_free_packet(&asf->asf_st[i]->pkt.avpkt);
+            av_packet_unref(&asf->asf_st[i]->pkt.avpkt);
             av_freep(&asf->asf_st[i]);
         }
     }
@@ -1518,7 +1535,7 @@ static void reset_packet_state(AVFormatContext *s)
         pkt->flags     = 0;
         pkt->dts       = 0;
         pkt->duration  = 0;
-        av_free_packet(&pkt->avpkt);
+        av_packet_unref(&pkt->avpkt);
         av_init_packet(&pkt->avpkt);
     }
 }
@@ -1585,11 +1602,11 @@ static int64_t asf_read_timestamp(AVFormatContext *s, int stream_index,
         }
         if (st_found)
             break;
-        av_free_packet(&pkt);
+        av_packet_unref(&pkt);
     }
     *pos = pkt_pos;
 
-    av_free_packet(&pkt);
+    av_packet_unref(&pkt);
     return dts;
 }
 
