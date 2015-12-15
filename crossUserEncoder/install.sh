@@ -4,4 +4,8 @@ rm -Rf out
 mkdir out
 cd ffmpeg
 ./configure  --prefix=../out
-make
+make && make install
+make clean
+
+
+
