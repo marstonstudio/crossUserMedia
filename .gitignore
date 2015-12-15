@@ -3,7 +3,7 @@
 *.iml
 target/
 fonts.ser
-crossUserEncoder/samples
+crossUserEncoderInspiration
 crossUserFrontend/dist
 crossUserFrontend/node
 crossUserFrontend/node_modules
