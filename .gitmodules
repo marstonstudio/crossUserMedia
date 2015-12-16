@@ -1,0 +1,3 @@
+[submodule "crossUserEncoder/ffmpeg"]
+	path = crossUserEncoder/ffmpeg
+	url = git://source.ffmpeg.org/ffmpeg.git
