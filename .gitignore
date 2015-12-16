@@ -3,6 +3,7 @@
 *.iml
 target/
 fonts.ser
+crossUserEncoder/dist
 crossUserEncoder/ffmpeg/.config
 crossUserEncoder/ffmpeg/.version
 crossUserEncoder/ffmpeg/config.asm
@@ -21,7 +22,7 @@ crossUserEncoder/ffmpeg/libavutil/ffversion.h
 crossUserEncoder/ffmpeg/libavutil/libavutil.pc
 crossUserEncoder/ffmpeg/libswresample/libswresample.pc
 crossUserEncoder/ffmpeg/libswscale/libswscale.pc
-crossUserEncoder/out
+crossUserEncoder/output.m4a
 crossUserEncoderInspiration
 crossUserFrontend/dist
 crossUserFrontend/node
