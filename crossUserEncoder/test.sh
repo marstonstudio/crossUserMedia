@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-rm output.aac
-dist/bin/ffmpeg -i input.wav -b:a 32k output.aac
+rm output.mp4
+dist/bin/ffmpeg -i input.wav -b:a 32k output.mp4

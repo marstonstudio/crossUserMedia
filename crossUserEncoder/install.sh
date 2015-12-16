@@ -13,7 +13,7 @@ make clean
     --disable-encoders --enable-encoder=aac \
     --disable-decoders --enable-decoder=pcm_s16le \
     --disable-hwaccels \
-    --disable-muxers --enable-muxer=adts \
+    --disable-muxers --enable-muxer=mp4 \
     --disable-demuxers --enable-demuxer=wav \
     --disable-parsers \
     --disable-bsfs \
