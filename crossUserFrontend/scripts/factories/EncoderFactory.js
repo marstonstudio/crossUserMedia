@@ -1,4 +1,4 @@
-module.exports = function ($log, ffmpeg) {
+module.exports = function ($log, aacencoder) {
 
     var Service = {};
 

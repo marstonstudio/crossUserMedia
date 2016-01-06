@@ -1,0 +1,7 @@
+build.sh
+dist/ffmpeg.bc
+dist/post.js
+dist/pre.js
+ffmpeg/
+src/
+test/

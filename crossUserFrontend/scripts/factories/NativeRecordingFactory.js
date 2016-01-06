@@ -111,46 +111,58 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             recorder.onaudioprocess = null;
         }
 
-        var outputBuffer = mergeBuffers(monochannel, recordingLength);
+        var pcmBuffer = mergeBuffers(monochannel, recordingLength);
         var channelCount = 1;
         var bitsPerSample = 16;
 
         // we create our wav file
-        var buffer = new ArrayBuffer(44 + outputBuffer.length * 2);
-        var view = new DataView(buffer);
+        var wavBuffer = new ArrayBuffer(44 + pcmBuffer.length * 2);
+        var wavView = new DataView(wavBuffer);
 
         // RIFF chunk descriptor
-        writeUTFBytes(view, 0, 'RIFF');
-        view.setUint32(4, 44 + outputBuffer.length * 2, true);
-        writeUTFBytes(view, 8, 'WAVE');
+        writeUTFBytes(wavView, 0, 'RIFF');
+        wavView.setUint32(4, 44 + pcmBuffer.length * 2, true);
+        writeUTFBytes(wavView, 8, 'WAVE');
         // FMT sub-chunk
-        writeUTFBytes(view, 12, 'fmt ');
-        view.setUint32(16, 16, true);
-        view.setUint16(20, 1, true);
-        view.setUint16(22, channelCount, true);
-        view.setUint32(24, sampleRate, true);
-        view.setUint32(28, sampleRate * channelCount * bitsPerSample / 8, true);
-        view.setUint16(32, channelCount * bitsPerSample / 8, true);
-        view.setUint16(34, bitsPerSample, true);
+        writeUTFBytes(wavView, 12, 'fmt ');
+        wavView.setUint32(16, 16, true);
+        wavView.setUint16(20, 1, true);
+        wavView.setUint16(22, channelCount, true);
+        wavView.setUint32(24, sampleRate, true);
+        wavView.setUint32(28, sampleRate * channelCount * bitsPerSample / 8, true);
+        wavView.setUint16(32, channelCount * bitsPerSample / 8, true);
+        wavView.setUint16(34, bitsPerSample, true);
         // data sub-chunk
-        writeUTFBytes(view, 36, 'data');
-        view.setUint32(40, outputBuffer.length * 2, true);
+        writeUTFBytes(wavView, 36, 'data');
+        wavView.setUint32(40, pcmBuffer.length * 2, true);
 
         // write the PCM samples
-        var lng = outputBuffer.length;
+        var lng = pcmBuffer.length;
         var index = 44;
         var volume = 1;
         for (var j = 0; j < lng; j++) {
-            view.setInt16(index, outputBuffer[j] * (0x7FFF * volume), true);
+            wavView.setInt16(index, pcmBuffer[j] * (0x7FFF * volume), true);
             index += 2;
         }
 
         // our final binary blob
-        var audioBlob = new Blob([ view ], { type: 'audio/wav' });
+        var wavBlob = new Blob([ wavView ], { type: 'audio/wav' });
+
+        /*
+        var encodedResult = aacencoder({
+            MEMFS: [{name: "input.wav", data: wavBuffer}],
+            arguments: ["-i", "input.wav", "-b:a", "32k", "-strict", "-2", "output.mp4"],
+            // Ignore stdin read requests.
+            stdin: function() {},
+        });
+        // Write output.mp4 to disk.
+        var output = encodedResult.MEMFS[0];
+        fs.writeFileSync(output.name, Buffer(output.data));
+        */
 
         $rootScope.$emit('statusEvent', 'audio saved');
 
-        deferred.resolve(audioBlob);
+        deferred.resolve(wavBlob);
         return deferred.promise;
     }
 

@@ -13,7 +13,8 @@ angular.module('Microphone', ['ngMaterial'])
 
     .value('bowser', require('bowser'))
     .value('swfEmbedder', require('jakobmattsson-swfobject'))
-    .value('ffmpeg', require('ffmpeg'))
+    .value('aacencoder', require('aacencoder'))
+    //.value('fs', require('fs'))
 
     .controller('MicrophoneController', [
         '$rootScope',
@@ -56,11 +57,11 @@ angular.module('Microphone', ['ngMaterial'])
         'swfEmbedder',
         require('./factories/FlashRecordingFactory.js')
     ])
-    .factory('EncoderFactory', [
-        '$log',
-        'ffmpeg',
-        require('./factories/EncoderFactory.js')
-    ])
+//    .factory('EncoderFactory', [
+//        '$log',
+//        'aacencoder',
+//        require('./factories/EncoderFactory.js')
+//    ])
     .factory('UploadFactory', [
         '$rootScope',
         '$log',

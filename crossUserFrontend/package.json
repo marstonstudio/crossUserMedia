@@ -16,8 +16,7 @@
     "angular": "global:angular",
     "angular-animate": "global:angular-animate",
     "angular-aria": "global:angular-aria",
-    "angular-material": "global:angular-material",
-    "ffmpeg": "global:ffmpeg"
+    "angular-material": "global:angular-material"
   },
   "dependencies": {
     "angular": "^1.4.4",

@@ -1,0 +1,26 @@
+{
+  "name": "aacencoder",
+  "version": "2.8.4-a",
+  "description": "Port of FFmpeg with Emscripten optimized to only support WAV->AAC conversion",
+  "main": "./dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marstonstudio/crossUserMedia.git"
+  },
+  "author": "Jonathan Marston",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/marstonstudio/crossUserMedia/issues"
+  },
+  "homepage": "https://github.com/marstonstudio/crossUserMedia/blob/master/README.md",
+  "scripts": {
+    "test": "./node_modules/.bin/jasmine"
+  },
+  "publishConfig": {
+    "registry": "http://admin.babelcentral.com:10080/content/repositories/npm-internal/"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jasmine": "^2.4.1"
+  }
+}
