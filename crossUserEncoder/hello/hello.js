@@ -9,7 +9,9 @@ function AACEncoder(bitrate, inputName, inputData) {
 
     Module['arguments'] = [
         '-version'
-    ];
+    ]
+
+
 
     Module['preRun'] = function() {
         console.log('preRun');

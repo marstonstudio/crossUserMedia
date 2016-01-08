@@ -71,6 +71,7 @@ cp ffmpeg/ffmpeg dist/ffmpeg.bc
 sed -e '\/\*EMSCRIPTENBODY\*\//,$d' src/interface.js > dist/pre.js
 sed -e '1,\/\*EMSCRIPTENBODY\*\//d' src/interface.js > dist/post.js
 
-emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 dist/ffmpeg.bc -o dist/index.js --pre-js dist/pre.js --post-js dist/post.js
+#emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 dist/ffmpeg.bc -o dist/index.js --pre-js dist/pre.js --post-js dist/post.js
+emcc dist/ffmpeg.bc -o dist/index.js --pre-js dist/pre.js --post-js dist/post.js
 
 #npm publish --repository http://admin.babelcentral.com:10080/content/repositories/npm-internal/
