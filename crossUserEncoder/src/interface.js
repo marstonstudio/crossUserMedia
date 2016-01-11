@@ -1,10 +1,18 @@
-function AACEncoder(bitrate, inputName, inputData) {
+function FfmpegAAC(inputData, bitrate) {
 
-    var _encodedOutput;
-    var _bitrate = bitrate;
+    //TODO: WARNING: empkg-config not found, library detection may fail.
+    //TODO: ./configure: line 4695: emnm: command not found
+
+    //TODO: switch to web worker
+    //TODO: npm centric build.sh
+    //TODO: use device to stream PCM data instead of batch file
+
     var _inputData = inputData;
-    var _inputName = '/data/' + inputName;
-    var _outputName = '/data/output.mp4';
+    var _bitrate = bitrate;
+
+    var _fileName = (0|Math.random()*9e6).toString(36);
+    var _inputName = _fileName + '.wav';
+    var _outputName = _fileName + '.mp4';
 
     var Module = {};
 
@@ -13,8 +21,6 @@ function AACEncoder(bitrate, inputName, inputData) {
     Module['printErr'] = function(text) { console.error('stderr: ' + text); };
 
     Module['preRun'] = function() {
-        FS.mkdir('/data');
-
         var inputFile = FS.open(_inputName, "w+");
         FS.write(inputFile, _inputData, 0, _inputData.length);
         FS.close(inputFile);
@@ -29,12 +35,18 @@ function AACEncoder(bitrate, inputName, inputData) {
     ];
 
     Module['postRun'] = function() {
-        console.log('postRun');
+        var outputLength = FS.stat(_outputName).size;
+        var outputFile = FS.open(_outputName, "r");
+        var outputData = new Uint8Array(outputLength);
+        FS.read(outputFile, outputData, 0, outputLength, 0);
+        FS.close(outputFile);
+
+        Module['return'] = outputData;
     }
 
     /*EMSCRIPTENBODY*/
 
-    return _encodedOutput;
+    return Module['return'];
 }
 
-module.exports = AACEncoder;
+module.exports = FfmpegAAC;

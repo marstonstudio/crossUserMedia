@@ -1,5 +1,5 @@
 {
-  "name": "aacencoder",
+  "name": "ffmpegaac",
   "version": "2.8.4-a",
   "description": "Port of FFmpeg with Emscripten optimized to only support WAV->AAC conversion",
   "main": "./dist/index.js",

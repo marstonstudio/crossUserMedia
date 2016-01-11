@@ -7,7 +7,7 @@ crossUserEncoder/dist
 crossUserEncoder/node
 crossUserEncoder/node_modules
 crossUserEncoder/npm-debug.log
-crossUserEncoder/output.*
+crossUserEncoder/spec/output.mp4
 crossUserFrontend/dist
 crossUserFrontend/node
 crossUserFrontend/node_modules
