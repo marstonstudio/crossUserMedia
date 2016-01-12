@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-rm -Rf dist
-mkdir dist
+rm -Rf tmp
+mkdir tmp
 
 cd ffmpeg
 emmake make clean
 
 emconfigure ./configure \
-    --prefix=../dist \
+    --prefix=../tmp \
 \
     --disable-runtime-cpudetect \
 \
@@ -66,12 +66,13 @@ emconfigure ./configure \
 emmake make
 
 cd ..
-cp ffmpeg/ffmpeg dist/ffmpeg.bc
+cp ffmpeg/ffmpeg tmp/ffmpeg.bc
 
-sed -e '\/\*EMSCRIPTENBODY\*\//,$d' src/interface.js > dist/pre.js
-sed -e '1,\/\*EMSCRIPTENBODY\*\//d' src/interface.js > dist/post.js
+sed -e '\/\*EMSCRIPTENBODY\*\//,$d' src/interface.js > tmp/pre.js
+sed -e '1,\/\*EMSCRIPTENBODY\*\//d' src/interface.js > tmp/post.js
 
-#emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 dist/ffmpeg.bc -o dist/index.js --pre-js dist/pre.js --post-js dist/post.js
-emcc dist/ffmpeg.bc -o dist/index.js --pre-js dist/pre.js --post-js dist/post.js
+emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 tmp/ffmpeg.bc -o index.js --pre-js tmp/pre.js --post-js tmp/post.js
+
+npm test
 
 #npm publish --repository http://admin.babelcentral.com:10080/content/repositories/npm-internal/

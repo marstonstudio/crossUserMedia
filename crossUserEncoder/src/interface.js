@@ -7,6 +7,9 @@ function FfmpegAAC(inputData, bitrate) {
     //TODO: npm centric build.sh
     //TODO: use device to stream PCM data instead of batch file
 
+    //TODO: add asserts on input that we get a valid bitrate and Uint8Array
+    //TODO: add documentation
+
     var _inputData = inputData;
     var _bitrate = bitrate;
 

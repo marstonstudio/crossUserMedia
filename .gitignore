@@ -3,11 +3,13 @@
 *.iml
 target/
 fonts.ser
-crossUserEncoder/dist
 crossUserEncoder/node
 crossUserEncoder/node_modules
 crossUserEncoder/npm-debug.log
 crossUserEncoder/spec/output.mp4
+crossUserEncoder/tmp
+crossUserEncoder/index.js
+crossUserEncoder/index.js.mem
 crossUserFrontend/dist
 crossUserFrontend/node
 crossUserFrontend/node_modules
