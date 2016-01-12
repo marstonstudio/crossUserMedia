@@ -74,5 +74,4 @@ sed -e '1,\/\*EMSCRIPTENBODY\*\//d' src/interface.js > tmp/post.js
 emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 tmp/ffmpeg.bc -o index.js --pre-js tmp/pre.js --post-js tmp/post.js
 
 npm test
-
-#npm publish --repository http://admin.babelcentral.com:10080/content/repositories/npm-internal/
+npm publish
