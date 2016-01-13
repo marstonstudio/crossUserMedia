@@ -147,19 +147,6 @@ module.exports = function($rootScope, $log, $q, Navigator) {
 
         // our final binary blob
         var wavBlob = new Blob([ wavView ], { type: 'audio/wav' });
-
-        /*
-        var encodedResult = aacencoder({
-            MEMFS: [{name: "input.wav", data: wavBuffer}],
-            arguments: ["-i", "input.wav", "-b:a", "32k", "-strict", "-2", "output.mp4"],
-            // Ignore stdin read requests.
-            stdin: function() {},
-        });
-        // Write output.mp4 to disk.
-        var output = encodedResult.MEMFS[0];
-        fs.writeFileSync(output.name, Buffer(output.data));
-        */
-
         $rootScope.$emit('statusEvent', 'audio saved');
 
         deferred.resolve(wavBlob);

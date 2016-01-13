@@ -41,11 +41,6 @@ angular.module('Microphone', ['ngMaterial'])
         '$window',
         require('./factories/NavigatorFactory.js')
     ])
-    .factory('EncoderFactory', [
-        '$log',
-        'ffmpegaac',
-        require('./factories/EncoderFactory.js')
-    ])
     .factory('NativeRecordingFactory', [
         '$rootScope',
         '$log',
@@ -61,6 +56,11 @@ angular.module('Microphone', ['ngMaterial'])
         '$q',
         'swfEmbedder',
         require('./factories/FlashRecordingFactory.js')
+    ])
+    .factory('EncoderFactory', [
+        '$log',
+        'ffmpegaac',
+        require('./factories/EncoderFactory.js')
     ])
     .factory('UploadFactory', [
         '$rootScope',
