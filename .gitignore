@@ -8,8 +8,8 @@ crossUserEncoder/node_modules
 crossUserEncoder/npm-debug.log
 crossUserEncoder/spec/output.mp4
 crossUserEncoder/tmp
-crossUserEncoder/index.js
-crossUserEncoder/index.js.mem
+crossUserEncoder/ffmpegaac.js
+crossUserEncoder/ffmpegaac.js.mem
 crossUserFrontend/dist
 crossUserFrontend/node
 crossUserFrontend/node_modules

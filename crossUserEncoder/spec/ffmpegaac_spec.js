@@ -5,7 +5,7 @@ describe("FfmpegAAC", function() {
     //using js.mem optimization requires that js and js.mem files be present in the test execution directory
     //smelly and fragile, but limitation of emscripten output
     //see https://github.com/kripken/emscripten/issues/2537
-    var FfmpegAAC = require('../index.js');
+    var FfmpegAAC = require('../ffmpegaac.js');
 
     it("test encoded output file smaller than input file", function() {
 

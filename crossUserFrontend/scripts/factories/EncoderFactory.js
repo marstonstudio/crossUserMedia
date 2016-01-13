@@ -2,10 +2,12 @@ module.exports = function ($log, ffmpegaac) {
 
     var Service = {};
 
-    Service.encodeWavToMp4 = function(wavBlob) {
-        $log.info('wavBlob size:' + wavBlob.size);
+    Service.encodeWavToMp4 = function(wavBuffer) {
+        //$log.info('wavBuffer size:' + wavBuffer.size);
 
-        return wavBlob;
+        var mp4Buffer = new ffmpegaac(wavBuffer, '32k');
+
+        return mp4Buffer;
     };
 
     return Service;

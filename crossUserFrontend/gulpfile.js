@@ -94,7 +94,12 @@ gulp.task('analyzeScripts', function(){
         .pipe(jshint.reporter('default', { verbose: true }))
 });
 
-gulp.task('assembleScripts', ['clean', 'analyzeScripts'] , function() {
+gulp.task('copyFfmpegAac', ['clean'], function(){
+    return gulp.src('node_modules/ffmpegaac/ffmpegaac.js*')
+        .pipe(gulp.dest('dist/js/'));
+})
+
+gulp.task('assembleScripts', ['clean', 'analyzeScripts', 'copyFfmpegAac'] , function() {
     var browserified = browserify({
         entries: './scripts/Main.js',
         debug: true

@@ -21,6 +21,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
     };
 
     Service.startRecording = function() {
+        $log.debug('NativeRecordingFactory.startRecording');
         $rootScope.$emit('statusEvent', 'recording started');
 
         if (Navigator.enabled) {
@@ -146,10 +147,11 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         }
 
         // our final binary blob
-        var wavBlob = new Blob([ wavView ], { type: 'audio/wav' });
+        // var wavBlob = new Blob([ wavView ], { type: 'audio/wav' });
         $rootScope.$emit('statusEvent', 'audio saved');
 
-        deferred.resolve(wavBlob);
+        //deferred.resolve(wavBlob);
+        deferred.resolve(wavView.buffer);
         return deferred.promise;
     }
 

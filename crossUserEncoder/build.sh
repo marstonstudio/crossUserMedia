@@ -71,7 +71,17 @@ cp ffmpeg/ffmpeg tmp/ffmpeg.bc
 sed -e '\/\*EMSCRIPTENBODY\*\//,$d' src/interface.js > tmp/pre.js
 sed -e '1,\/\*EMSCRIPTENBODY\*\//d' src/interface.js > tmp/post.js
 
-emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 tmp/ffmpeg.bc -o index.js --pre-js tmp/pre.js --post-js tmp/post.js
+emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 tmp/ffmpeg.bc -o ffmpegaac.js --pre-js tmp/pre.js --post-js tmp/post.js
+#emcc tmp/ffmpeg.bc -o ffmpegaac.js --pre-js tmp/pre.js --post-js tmp/post.js
 
 npm test
-npm publish
+
+#bogus
+LOCAL_INSTALL_TARGET=../crossUserFrontend/node_modules/ffmpegaac
+rm -Rf $LOCAL_INSTALL_TARGET
+mkdir $LOCAL_INSTALL_TARGET
+cp ./.npmignore $LOCAL_INSTALL_TARGET
+cp ./ffmpegaac.js $LOCAL_INSTALL_TARGET
+cp ./ffmpegaac.js.mem $LOCAL_INSTALL_TARGET
+cp ./package.json $LOCAL_INSTALL_TARGET
+cp ./README.md $LOCAL_INSTALL_TARGET

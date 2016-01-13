@@ -80,11 +80,18 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
         return getRecordingObject()
             .stopRecording()
-            .then(function (wavBlob) {
+            .then(function (wavBuffer) {
+                var wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+                console.log('wavBlob.size: ' + wavBlob.size);
+
+                var mp4Buffer = Encoder.encodeWavToMp4(wavBuffer);
+                var mp4Blob = new Blob([mp4Buffer], { type: 'audio/mp4' });
+                $log.debug('mp4Blob.size: ' + mp4Blob.size);
+
                 embedLocalBlob(wavBlob);
-                var mp4Blob = Encoder.encodeWavToMp4(wavBlob);
+
                 return UploadRecording
-                    .send(mp4Blob, 'wav', 'wav')
+                    .send(wavBlob, 'wav', 'wav')
                     .then(displayProcessedOutput, function(response) {if(response && response.data) {$log.error(response.data);}});
             }, function(reason) {$log.error(reason);});
     };

@@ -24,6 +24,8 @@ function FfmpegAAC(inputData, bitrate) {
     Module['printErr'] = function(text) { console.error('stderr: ' + text); };
 
     Module['preRun'] = function() {
+        console.log('ffmpegaac postRun input data length: ' + _inputData.length);
+
         var inputFile = FS.open(_inputName, "w+");
         FS.write(inputFile, _inputData, 0, _inputData.length);
         FS.close(inputFile);
@@ -39,6 +41,8 @@ function FfmpegAAC(inputData, bitrate) {
 
     Module['postRun'] = function() {
         var outputLength = FS.stat(_outputName).size;
+        console.log('ffmpegaac postRun output data length: ' + outputLength);
+
         var outputFile = FS.open(_outputName, "r");
         var outputData = new Uint8Array(outputLength);
         FS.read(outputFile, outputData, 0, outputLength, 0);

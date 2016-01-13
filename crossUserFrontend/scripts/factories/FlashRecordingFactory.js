@@ -13,8 +13,8 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
 
         //functions globally accessible for flash ExternalInterface
         $window.onFlashSoundRecorded = function (audioBase64) {
-            var audioBlob = b64toBlob(audioBase64, 'audio/wav');
-            recordingDeferred.resolve(audioBlob);
+            var wavBuffer = b64toBuffer(audioBase64, 'audio/wav');
+            recordingDeferred.resolve(wavBuffer);
         };
 
         $window.onFlashSoundRecordingError = function (error) {
@@ -44,6 +44,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
     };
 
     Service.startRecording = function () {
+        $log.debug('FlashRecordingFactory.startRecording');
         if(hasFlashInstalled) {
             getFlashObject().startRecording();
         }
@@ -62,27 +63,15 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
     }
 
     // http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
-    function b64toBlob(b64Data, contentType, sliceSize) {
-        contentType = contentType || '';
-        sliceSize = sliceSize || 512;
+    function b64toBuffer(base64Data) {
 
-        var byteCharacters = atob(b64Data);
-        var byteArrays = [];
-
-        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-            var slice = byteCharacters.slice(offset, offset + sliceSize);
-
-            var byteNumbers = new Array(slice.length);
-            for (var i = 0; i < slice.length; i++) {
-                byteNumbers[i] = slice.charCodeAt(i);
-            }
-
-            var byteArray = new Uint8Array(byteNumbers);
-
-            byteArrays.push(byteArray);
+        var byteCharacters = atob(base64Data);
+        var byteNumbers = new Array(byteCharacters.length);
+        for (var i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
 
-        return new Blob(byteArrays, {type: contentType});
+        return new Uint8Array(byteNumbers);
     }
 
     return Service;
