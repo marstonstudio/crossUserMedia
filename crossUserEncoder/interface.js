@@ -1,4 +1,4 @@
-function FfmpegAAC(inputData, bitrate) {
+var ffmpegaac = function(inputData, bitrate) {
 
     //TODO: WARNING: empkg-config not found, library detection may fail.
     //TODO: ./configure: line 4695: emnm: command not found
@@ -19,12 +19,12 @@ function FfmpegAAC(inputData, bitrate) {
 
     var Module = {};
 
-    Module['print'] = function(text) { console.log('stdout: ' + text); };
+    Module['print'] = function(text) { console.log(text); };
 
-    Module['printErr'] = function(text) { console.error('stderr: ' + text); };
+    Module['printErr'] = function(text) { console.log(text); };
 
     Module['preRun'] = function() {
-        console.log('ffmpegaac postRun input data length: ' + _inputData.length);
+        console.log('ffmpegaac preRun input data length: ' + _inputData.length);
 
         var inputFile = FS.open(_inputName, "w+");
         FS.write(inputFile, _inputData, 0, _inputData.length);
@@ -51,9 +51,16 @@ function FfmpegAAC(inputData, bitrate) {
         Module['return'] = outputData;
     }
 
+    //hack, necessary so memory optimizer can be found in browser
+    if(typeof window === "object") {
+        Module["memoryInitializerPrefixURL"] = "/js/";
+    }
+
     /*EMSCRIPTENBODY*/
 
     return Module['return'];
 }
 
-module.exports = FfmpegAAC;
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ffmpegaac;
+}

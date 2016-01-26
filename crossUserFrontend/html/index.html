@@ -84,14 +84,14 @@
                        ng-disabled="!microphoneSourceAudioReady"
                        ng-click="microphone.playSource();" >
                 <md-icon>play_circle_filled</md-icon>
-                Play Original WAV</md-button>
+                Play Original MP4</md-button>
 
             <md-button id="outputButton"
                        class="md-raised md-primary md-hue-3"
                        ng-disabled="!microphoneOutputAudioReady"
                        ng-click="microphone.playOutput();">
                 <md-icon>play_circle_outline</md-icon>
-                Play Encoded MP4</md-button>
+                Play Decoded WAV</md-button>
 
         </md-content>
 
@@ -102,8 +102,18 @@
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-aria.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-animate.min.js"></script>
     <script type="text/javascript" src="/js/ffmpegaac.js"></script>
-    <script type="text/javascript" src="/js/ffmpegaac.js.mem"></script>
     <script type="text/javascript" src="/js/application.js"></script>
+
+<script type="application/javascript">
+    var encoder = new Worker('/js/encoder.js');
+    encoder.onmessage = function(e) {
+        console.log('outside page: ' + e.data);
+    }
+    encoder.onerror = function(e) {
+        console.error('outside page: ' + e.message);
+    }
+    encoder.postMessage('hello');
+</script>
 
 </body>
 </html>

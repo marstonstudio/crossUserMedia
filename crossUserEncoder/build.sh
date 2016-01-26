@@ -40,6 +40,7 @@ emconfigure ./configure \
     --disable-bsfs \
     --disable-protocols \
     --enable-protocol=file \
+    --enable-protocol=pipe \
     --disable-indevs \
     --disable-outdevs \
     --disable-filters \
@@ -68,15 +69,13 @@ emmake make
 cd ..
 cp ffmpeg/ffmpeg tmp/ffmpeg.bc
 
-sed -e '\/\*EMSCRIPTENBODY\*\//,$d' src/interface.js > tmp/pre.js
-sed -e '1,\/\*EMSCRIPTENBODY\*\//d' src/interface.js > tmp/post.js
+sed -e '\/\*EMSCRIPTENBODY\*\//,$d' wrapper.js > tmp/pre.js
+sed -e '1,\/\*EMSCRIPTENBODY\*\//d' wrapper.js > tmp/post.js
 
-emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 tmp/ffmpeg.bc -o ffmpegaac.js --pre-js tmp/pre.js --post-js tmp/post.js
-#emcc tmp/ffmpeg.bc -o ffmpegaac.js --pre-js tmp/pre.js --post-js tmp/post.js
+emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 tmp/ffmpeg.bc --pre-js tmp/pre.js --post-js tmp/post.js -o ffmpegaac.js
 
 npm test
 
-#bogus
 LOCAL_INSTALL_TARGET=../crossUserFrontend/node_modules/ffmpegaac
 rm -Rf $LOCAL_INSTALL_TARGET
 mkdir $LOCAL_INSTALL_TARGET

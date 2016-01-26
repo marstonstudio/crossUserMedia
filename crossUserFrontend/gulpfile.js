@@ -95,7 +95,7 @@ gulp.task('analyzeScripts', function(){
 });
 
 gulp.task('copyFfmpegAac', ['clean'], function(){
-    return gulp.src('node_modules/ffmpegaac/ffmpegaac.js*')
+    return gulp.src('node_modules/ffmpegaac/*.js*')
         .pipe(gulp.dest('dist/js/'));
 })
 

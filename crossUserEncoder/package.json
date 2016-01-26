@@ -21,6 +21,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "jasmine": "^2.4.1"
+    "jasmine": "^2.4.1",
+    "webworker-threads": "^0.6.2"
   }
 }

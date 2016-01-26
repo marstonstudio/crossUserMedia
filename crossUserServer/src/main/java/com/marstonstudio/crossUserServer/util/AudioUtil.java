@@ -95,8 +95,8 @@ public class AudioUtil {
                     .getStream(event.getStreamIndex())
                     .getStreamCoder();
 
-            streamCoder.setChannels(channelCount);
-            streamCoder.setSampleRate(sampleRate);
+            //streamCoder.setChannels(channelCount);
+            //streamCoder.setSampleRate(sampleRate);
 
             super.onAddStream(event);
         }
