@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+: '
 rm -Rf tmp
 mkdir tmp
 
@@ -69,12 +70,13 @@ emmake make
 cd ..
 cp ffmpeg/ffmpeg tmp/ffmpeg.bc
 
+'
 sed -e '\/\*EMSCRIPTENBODY\*\//,$d' wrapper.js > tmp/pre.js
 sed -e '1,\/\*EMSCRIPTENBODY\*\//d' wrapper.js > tmp/post.js
 
 emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 tmp/ffmpeg.bc --pre-js tmp/pre.js --post-js tmp/post.js -o ffmpegaac.js
 
-npm test
+#npm test
 
 LOCAL_INSTALL_TARGET=../crossUserFrontend/node_modules/ffmpegaac
 rm -Rf $LOCAL_INSTALL_TARGET

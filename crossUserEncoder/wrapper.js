@@ -1,33 +1,35 @@
-var ffmpegaac = function(inputData, bitrate) {
+var Module = {};
+
+Module['print'] = function(text) { console.log(text); };
+
+Module['printErr'] = function(text) { console.log(text); };
+
+this.onmessage = function(e) {
 
     //TODO: WARNING: empkg-config not found, library detection may fail.
     //TODO: ./configure: line 4695: emnm: command not found
 
-    //TODO: switch to web worker
     //TODO: npm centric build.sh
     //TODO: use device to stream PCM data instead of batch file
+    //TODO: use worker specific filesystem
+    //TODO: can we just use ArrayBuffer instead of Uint8Array ?
 
     //TODO: add asserts on input that we get a valid bitrate and Uint8Array
     //TODO: add documentation
 
-    var _inputData = inputData;
-    var _bitrate = bitrate;
+    var _bitrate = e.data.bitrate;
+    var _pcm = new Uint8Array(e.data.pcm);
+    console.log('ffmpegaac onmessage bitrate:' + _bitrate + ', pcm.byteLength:' + e.data.pcm.byteLength)
 
     var _fileName = (0|Math.random()*9e6).toString(36);
     var _inputName = _fileName + '.wav';
     var _outputName = _fileName + '.mp4';
 
-    var Module = {};
-
-    Module['print'] = function(text) { console.log(text); };
-
-    Module['printErr'] = function(text) { console.log(text); };
-
     Module['preRun'] = function() {
-        console.log('ffmpegaac preRun input data length: ' + _inputData.length);
+        console.log('ffmpegaac preRun input data length: ' + _pcm.length);
 
         var inputFile = FS.open(_inputName, "w+");
-        FS.write(inputFile, _inputData, 0, _inputData.length);
+        FS.write(inputFile, _pcm, 0, _pcm.length);
         FS.close(inputFile);
     };
 
@@ -48,19 +50,17 @@ var ffmpegaac = function(inputData, bitrate) {
         FS.read(outputFile, outputData, 0, outputLength, 0);
         FS.close(outputFile);
 
-        Module['return'] = outputData;
+        self.postMessage(outputData.buffer);
     }
 
     //hack, necessary so memory optimizer can be found in browser
     if(typeof window === "object") {
         Module["memoryInitializerPrefixURL"] = "/js/";
     }
-
-    /*EMSCRIPTENBODY*/
-
-    return Module['return'];
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ffmpegaac;
+this.onerror = function(e) {
+    console.error('EncoderFactory worker error: ' + e.message);
 }
+
+/*EMSCRIPTENBODY*/

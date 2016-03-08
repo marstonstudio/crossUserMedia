@@ -41,29 +41,33 @@ module.exports = function ($log, $q) {
         initialized = true;
     };
 
-    Service.encodeBufferToBlob = function(wavBuffer) {
+    Service.encodeBufferToBlob = function(pcmBuffer) {
 
-        $log.info('EncoderFactory wavBuffer.byteLength:' + wavBuffer.byteLength);
+        $log.info('EncoderFactory pcmBuffer.byteLength:' + pcmBuffer.byteLength);
 
         var deferred = $q.defer();
 
-        var encoder = new Worker('/js/encoder.js');
+        //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker
+        //https://github.com/substack/webworkify
+        var encoder = new Worker('/js/ffmpegaac.js');
         encoder.onmessage = function(e) {
-            $log.info('EncoderFactory worker listener result');
+            $log.info('EncoderFactory listener result');
 
             var encodedBuffer = e.data;
-            var encodedBlob = new Blob([encodedBuffer], { type: 'audio/wav' });
-
-            deferred.resolve(encodedBlob);
+            if(encodedBuffer) {
+                deferred.resolve(new Blob([encodedBuffer], { type: 'audio/mp4' }));
+            } else {
+                deferred.reject('EncoderFactory no data received');
+            }
         };
         encoder.onerror = function(e) {
-            $log.error('EncoderFactory worker listener error: ' + e.message);
+            $log.error('EncoderFactory listener error: ' + e.message);
         };
 
         if(supportTransferableObjects) {
-            encoder.postMessage({'bitrate':'32k', 'buffer':wavBuffer}, [wavBuffer]);
+            encoder.postMessage({'bitrate':'32k', 'pcm':pcmBuffer}, [pcmBuffer]);
         } else {
-            encoder.postMessage({'bitrate':'32k', 'buffer':wavBuffer});
+            encoder.postMessage({'bitrate':'32k', 'pcm':pcmBuffer});
         }
 
         return deferred.promise;

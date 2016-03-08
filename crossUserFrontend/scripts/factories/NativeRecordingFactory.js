@@ -21,7 +21,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
     };
 
     Service.startRecording = function() {
-        $log.debug('NativeRecordingFactory.startRecording');
+        $log.debug('NativeRecordingFactory startRecording');
         $rootScope.$emit('statusEvent', 'recording started');
 
         if (Navigator.enabled) {

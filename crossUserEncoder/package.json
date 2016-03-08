@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/marstonstudio/crossUserMedia/blob/master/README.md",
   "scripts": {
-    "test": "gulp test"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "publishConfig": {
     "registry": "http://admin.babelcentral.com:10080/content/repositories/npm-internal/"
