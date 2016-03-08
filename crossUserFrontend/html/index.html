@@ -101,19 +101,7 @@
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angular_material/0.10.1/angular-material.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-aria.min.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-animate.min.js"></script>
-    <script type="text/javascript" src="/js/ffmpegaac.js"></script>
     <script type="text/javascript" src="/js/application.js"></script>
-
-<script type="application/javascript">
-    var encoder = new Worker('/js/encoder.js');
-    encoder.onmessage = function(e) {
-        console.log('outside page: ' + e.data);
-    }
-    encoder.onerror = function(e) {
-        console.error('outside page: ' + e.message);
-    }
-    encoder.postMessage('hello');
-</script>
 
 </body>
 </html>

@@ -146,11 +146,8 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             index += 2;
         }
 
-        // our final binary blob
-        // var wavBlob = new Blob([ wavView ], { type: 'audio/wav' });
         $rootScope.$emit('statusEvent', 'audio saved');
 
-        //deferred.resolve(wavBlob);
         deferred.resolve(wavView.buffer);
         return deferred.promise;
     }

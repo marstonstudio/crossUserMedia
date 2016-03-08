@@ -94,8 +94,15 @@ gulp.task('analyzeScripts', function(){
         .pipe(jshint.reporter('default', { verbose: true }))
 });
 
+/*
 gulp.task('copyFfmpegAac', ['clean'], function(){
     return gulp.src('node_modules/ffmpegaac/*.js*')
+        .pipe(gulp.dest('dist/js/'));
+})
+*/
+
+gulp.task('copyFfmpegAac', ['clean'], function(){
+    return gulp.src('encoder.js')
         .pipe(gulp.dest('dist/js/'));
 })
 

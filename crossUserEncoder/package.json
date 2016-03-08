@@ -14,14 +14,16 @@
   },
   "homepage": "https://github.com/marstonstudio/crossUserMedia/blob/master/README.md",
   "scripts": {
-    "test": "./node_modules/.bin/jasmine"
+    "test": "gulp test"
   },
   "publishConfig": {
     "registry": "http://admin.babelcentral.com:10080/content/repositories/npm-internal/"
   },
   "dependencies": {},
   "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-jasmine": "^2.3.0",
     "jasmine": "^2.4.1",
-    "webworker-threads": "^0.6.2"
+    "webworker-threads": "^0.7.1"
   }
 }

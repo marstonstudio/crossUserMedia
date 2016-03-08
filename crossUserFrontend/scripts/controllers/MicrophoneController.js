@@ -6,6 +6,8 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
     var self = this;
 
+    Encoder.initialize();
+
     $scope.microphoneSourceAudioEnabled = !bowser.msie;
 
     var resetState = function() {
@@ -82,15 +84,19 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
             .stopRecording()
             .then(function (wavBuffer) {
 
-                var mp4Buffer = Encoder.encodeWavToMp4(wavBuffer);
-                var mp4Blob = new Blob([mp4Buffer], { type: 'audio/mp4' });
-                $log.debug('mp4Blob.size: ' + mp4Blob.size);
+                return Encoder
+                    .encodeBufferToBlob(wavBuffer)
+                    .then(function(encodedBlob){
 
-                embedLocalBlob(mp4Blob);
+                        $log.debug('encodedBlob.size: ' + encodedBlob.size);
+                        embedLocalBlob(encodedBlob);
 
-                //return UploadRecording
-                //    .send(mp4Blob, 'mp4', 'wav')
-                //    .then(displayProcessedOutput, function(response) {if(response && response.data) {$log.error(response.data);}});
+                        return UploadRecording
+                            .send(encodedBlob, 'wav', 'wav')
+                            .then(displayProcessedOutput, function(response) {if(response && response.data) {$log.error(response.data);}});
+
+                    }, function(reason) {$log.error(reason);});
+
             }, function(reason) {$log.error(reason);});
     };
 

@@ -71,7 +71,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
 
-        return new Uint8Array(byteNumbers);
+        return new Uint8Array(byteNumbers).buffer;
     }
 
     return Service;
