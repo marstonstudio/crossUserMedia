@@ -26,7 +26,7 @@
     "angular-material": "^0.10.1",
     "bowser": "^1.0.0",
     "jakobmattsson-swfobject": "^2.2.0",
-    "ffmpegaac": "^2.8.4"
+    "ffmpegaac": "^3.0.0"
   },
   "devDependencies": {
     "browserify": "^11.0.1",

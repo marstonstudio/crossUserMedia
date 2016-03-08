@@ -5,7 +5,6 @@ module.exports = function ($log, $q) {
     var initialized = false;
     var supportTransferableObjects = true;
 
-
     Service.initialize = function () {
         if (initialized) {
             return;
@@ -22,15 +21,15 @@ module.exports = function ($log, $q) {
         var uint8Array = new Uint8Array(2);
         uint8Array[0] = 42;
         var arrayBuffer = uint8Array.buffer;
-        $log.info('prior arrayBuffer.byteLength: ' + arrayBuffer.byteLength);
+        $log.log('prior arrayBuffer.byteLength: ' + arrayBuffer.byteLength);
 
         worker.onmessage = function(e) {
-            $log.info('callback ' + e.data + ' arrayBuffer.byteLength:' + arrayBuffer.byteLength);
+            $log.log('callback ' + e.data + ' arrayBuffer.byteLength:' + arrayBuffer.byteLength);
             if(arrayBuffer.byteLength) {
                 $log.warn('transferable objects not supported');
                 supportTransferableObjects = false;
             } else {
-                $log.info('transferable objects supported');
+                $log.log('transferable objects supported');
                 supportTransferableObjects = true;
             }
             worker.terminate();
@@ -43,7 +42,7 @@ module.exports = function ($log, $q) {
 
     Service.encodeBufferToBlob = function(pcmBuffer) {
 
-        $log.info('EncoderFactory pcmBuffer.byteLength:' + pcmBuffer.byteLength);
+        $log.log('EncoderFactory pcmBuffer.byteLength:' + pcmBuffer.byteLength);
 
         var deferred = $q.defer();
 
@@ -51,7 +50,7 @@ module.exports = function ($log, $q) {
         //https://github.com/substack/webworkify
         var encoder = new Worker('/js/ffmpegaac.js');
         encoder.onmessage = function(e) {
-            $log.info('EncoderFactory listener result');
+            $log.log('EncoderFactory listener result');
 
             var encodedBuffer = e.data;
             if(encodedBuffer) {

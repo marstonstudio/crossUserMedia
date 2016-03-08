@@ -9,6 +9,7 @@ crossUserEncoder/npm-debug.log
 crossUserEncoder/spec/output.mp4
 crossUserEncoder/tmp
 crossUserEncoder/ffmpegaac.js
+/crossUserServer/src/main/webapp/js/ffmpegaac.js.mem
 crossUserEncoder/ffmpegaac.js.mem
 crossUserFrontend/dist
 crossUserFrontend/node

@@ -6,16 +6,17 @@ Module['printErr'] = function(text) { console.log(text); };
 
 this.onmessage = function(e) {
 
+    //TODO: ./configure: line 4920: emnm: command not found
     //TODO: WARNING: empkg-config not found, library detection may fail.
-    //TODO: ./configure: line 4695: emnm: command not found
 
     //TODO: npm centric build.sh
     //TODO: use device to stream PCM data instead of batch file
     //TODO: use worker specific filesystem
-    //TODO: can we just use ArrayBuffer instead of Uint8Array ?
+    //TODO: can we just use ArrayBuffer instead of Uint8Array conversion?
 
-    //TODO: add asserts on input that we get a valid bitrate and Uint8Array
+    //TODO: add asserts on input that we get a valid bitrate and ArrayBuffer
     //TODO: add documentation
+    //TODO: just use a pre.js ?
 
     var _bitrate = e.data.bitrate;
     var _pcm = new Uint8Array(e.data.pcm);
@@ -36,7 +37,6 @@ this.onmessage = function(e) {
     Module['arguments'] = [
         '-i', _inputName,
         '-b:a', _bitrate,
-        '-strict', '-2',
         '-nostdin',
         _outputName
     ];

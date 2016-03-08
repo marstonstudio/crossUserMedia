@@ -44,7 +44,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
     };
 
     Service.startRecording = function () {
-        $log.debug('FlashRecordingFactory.startRecording');
+        $log.log('FlashRecordingFactory startRecording');
         if(hasFlashInstalled) {
             getFlashObject().startRecording();
         }

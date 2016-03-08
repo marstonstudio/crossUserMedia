@@ -88,7 +88,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
                     .encodeBufferToBlob(wavBuffer)
                     .then(function(encodedBlob){
 
-                        $log.debug('MicrophoneController encodedBlob.size: ' + encodedBlob.size);
+                        $log.log('MicrophoneController encodedBlob.size:' + encodedBlob.size);
                         embedLocalBlob(encodedBlob);
 
                         return UploadRecording

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-: '
 rm -Rf tmp
 mkdir tmp
 
@@ -70,7 +69,6 @@ emmake make
 cd ..
 cp ffmpeg/ffmpeg tmp/ffmpeg.bc
 
-'
 sed -e '\/\*EMSCRIPTENBODY\*\//,$d' wrapper.js > tmp/pre.js
 sed -e '1,\/\*EMSCRIPTENBODY\*\//d' wrapper.js > tmp/post.js
 
