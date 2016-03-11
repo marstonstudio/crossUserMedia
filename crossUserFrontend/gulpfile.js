@@ -39,7 +39,10 @@ gulp.task('clean', function(callback) {
             webappDir + '/css/*',
             webappDir + '/js/*',
             webappDir + '/*.html',
-            !webappDir + '/*/.gitignore'
+            !webappDir + '/*/.gitignore',
+            targetDir + '/css/*',
+            targetDir + '/js/*',
+            targetDir + '/*.html'
         ]
         , {force: true}
         , callback);
@@ -126,7 +129,7 @@ gulp.task('copy', ['assembleHtml', 'assembleImages','assembleScripts', 'assemble
 });
 
 gulp.task('deploy', ['copy'], function() {
-    return gulp.src('dist/**/*')
+    return gulp.src(['dist/**/*'])
         .pipe(gulp.dest(targetDir));
 });
 

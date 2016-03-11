@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-rm -Rf tmp
-mkdir tmp
+rm -Rf dist
+mkdir dist
 
 cd ffmpeg
 emmake make clean
@@ -30,12 +30,12 @@ emconfigure ./configure \
     --disable-encoders \
     --enable-encoder=aac \
     --disable-decoders \
-    --enable-decoder=pcm_s16le \
+    --enable-decoder=pcm_f32le \
     --disable-hwaccels \
     --disable-muxers \
     --enable-muxer=mp4 \
     --disable-demuxers \
-    --enable-demuxer=wav \
+    --enable-demuxer=pcm_f32le \
     --disable-parsers \
     --disable-bsfs \
     --disable-protocols \
@@ -67,12 +67,14 @@ emconfigure ./configure \
 emmake make
 
 cd ..
-cp ffmpeg/ffmpeg tmp/ffmpeg.bc
+cp ffmpeg/ffmpeg dist/ffmpeg.bc
 
-sed -e '\/\*EMSCRIPTENBODY\*\//,$d' wrapper.js > tmp/pre.js
-sed -e '1,\/\*EMSCRIPTENBODY\*\//d' wrapper.js > tmp/post.js
 
-emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 tmp/ffmpeg.bc --pre-js tmp/pre.js --post-js tmp/post.js -o ffmpegaac.js
+sed -e '\/\*EMSCRIPTENBODY\*\//,$d' wrapper.js > dist/pre.js
+sed -e '1,\/\*EMSCRIPTENBODY\*\//d' wrapper.js > dist/post.js
+
+emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 dist/ffmpeg.bc --pre-js dist/pre.js --post-js dist/post.js -o dist/ffmpegaac.js
+#emcc -O0 tmp/ffmpeg.bc --pre-js tmp/pre.js --post-js tmp/post.js -o ffmpegaac.js
 
 #npm test
 
@@ -80,7 +82,7 @@ LOCAL_INSTALL_TARGET=../crossUserFrontend/node_modules/ffmpegaac
 rm -Rf $LOCAL_INSTALL_TARGET
 mkdir $LOCAL_INSTALL_TARGET
 cp ./.npmignore $LOCAL_INSTALL_TARGET
-cp ./ffmpegaac.js $LOCAL_INSTALL_TARGET
-cp ./ffmpegaac.js.mem $LOCAL_INSTALL_TARGET
+cp ./dist/ffmpegaac.js $LOCAL_INSTALL_TARGET
+cp ./dist/ffmpegaac.js.mem $LOCAL_INSTALL_TARGET
 cp ./package.json $LOCAL_INSTALL_TARGET
 cp ./README.md $LOCAL_INSTALL_TARGET

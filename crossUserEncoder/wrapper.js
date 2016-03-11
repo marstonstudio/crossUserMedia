@@ -11,41 +11,49 @@ this.onmessage = function(e) {
 
     //TODO: npm centric build.sh
     //TODO: use device to stream PCM data instead of batch file
-    //TODO: use worker specific filesystem
-    //TODO: can we just use ArrayBuffer instead of Uint8Array conversion?
 
     //TODO: add asserts on input that we get a valid bitrate and ArrayBuffer
     //TODO: add documentation
     //TODO: just use a pre.js ?
+    //TODO: separate ASM from ffmpeg code
 
-    var _bitrate = e.data.bitrate;
-    var _pcm = new Uint8Array(e.data.pcm);
-    console.log('ffmpegaac onmessage bitrate:' + _bitrate + ', pcm.byteLength:' + e.data.pcm.byteLength)
+    var inputSampleRate = e.data.inputSampleRate;
+    var outputBitrate = e.data.outputBitrate;
+    var pcmBuffer = e.data.pcmBuffer;
 
-    var _fileName = (0|Math.random()*9e6).toString(36);
-    var _inputName = _fileName + '.wav';
-    var _outputName = _fileName + '.mp4';
+    console.log('ffmpegaac onmessage inputSampleRate:' + inputSampleRate + ', outputBitrate:' + outputBitrate + ', pcmBuffer.byteLength:' + pcmBuffer.byteLength)
+
+    var fileName = (0|Math.random()*9e6).toString(36);
+    var inputName = fileName + '.pcm';
+    var outputName = fileName + '.mp4';
 
     Module['preRun'] = function() {
-        console.log('ffmpegaac preRun input data length: ' + _pcm.length);
-
-        var inputFile = FS.open(_inputName, "w+");
-        FS.write(inputFile, _pcm, 0, _pcm.length);
+        var inputArray = new Uint8Array(pcmBuffer);
+        var inputFile = FS.open(inputName, "w+");
+        FS.write(inputFile, inputArray, 0, inputArray.length);
         FS.close(inputFile);
     };
 
+    //bogus note: the order of the arguments is significant to ffmpeg
     Module['arguments'] = [
-        '-i', _inputName,
-        '-b:a', _bitrate,
         '-nostdin',
-        _outputName
+        '-stats',
+        '-f', 'f32le',
+        '-acodec', 'pcm_f32le',
+        '-ar', inputSampleRate.toString(),
+        '-ac', '1',
+        '-channel_layout', 'mono',
+        '-i', inputName,
+        '-b:a', outputBitrate.toString(),
+        '-acodec', 'aac',
+        outputName
     ];
 
     Module['postRun'] = function() {
-        var outputLength = FS.stat(_outputName).size;
+        var outputLength = FS.stat(outputName).size;
         console.log('ffmpegaac postRun output data length: ' + outputLength);
 
-        var outputFile = FS.open(_outputName, "r");
+        var outputFile = FS.open(outputName, "r");
         var outputData = new Uint8Array(outputLength);
         FS.read(outputFile, outputData, 0, outputLength, 0);
         FS.close(outputFile);
@@ -60,7 +68,7 @@ this.onmessage = function(e) {
 }
 
 this.onerror = function(e) {
-    console.error('EncoderFactory worker error: ' + e.message);
+    console.error('ffmpegaac worker error: ' + e);
 }
 
 /*EMSCRIPTENBODY*/

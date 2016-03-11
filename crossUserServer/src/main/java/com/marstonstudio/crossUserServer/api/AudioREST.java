@@ -24,7 +24,7 @@ public class AudioREST {
 
     protected static final Logger logger = Logger.getLogger(AudioREST.class);
 
-    public static Set<String> ACCEPTED_AUDIO_FORMATS = new HashSet<String>(Arrays.asList("wav", "ogg", "mp4"));
+    public static Set<String> ACCEPTED_AUDIO_FORMATS = new HashSet<String>(Arrays.asList("wav", "pcm", "mp4"));
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})

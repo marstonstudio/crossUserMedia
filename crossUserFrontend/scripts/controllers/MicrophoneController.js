@@ -82,10 +82,10 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
         return getRecordingObject()
             .stopRecording()
-            .then(function (wavBuffer) {
+            .then(function (pcmObject) {
 
                 return Encoder
-                    .encodeBufferToBlob(wavBuffer)
+                    .process(pcmObject.sampleRate, pcmObject.pcmBuffer)
                     .then(function(encodedBlob){
 
                         $log.log('MicrophoneController encodedBlob.size:' + encodedBlob.size);

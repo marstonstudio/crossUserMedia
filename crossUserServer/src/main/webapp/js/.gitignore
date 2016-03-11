@@ -1,3 +1,4 @@
 !.gitignore
 *.js
 *.map
+*.mem

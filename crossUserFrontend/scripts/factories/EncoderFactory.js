@@ -3,7 +3,7 @@ module.exports = function ($log, $q) {
     var Service = {};
 
     var initialized = false;
-    var supportTransferableObjects = true;
+    //var supportTransferableObjects = true;
 
     Service.initialize = function () {
         if (initialized) {
@@ -40,9 +40,8 @@ module.exports = function ($log, $q) {
         initialized = true;
     };
 
-    Service.encodeBufferToBlob = function(pcmBuffer) {
-
-        $log.log('EncoderFactory pcmBuffer.byteLength:' + pcmBuffer.byteLength);
+    Service.process = function(sampleRate, pcmBuffer) {
+        $log.log('EncoderFactory sampleRate:' + sampleRate + ', pcmBuffer.byteLength:' + pcmBuffer.byteLength);
 
         var deferred = $q.defer();
 
@@ -63,11 +62,7 @@ module.exports = function ($log, $q) {
             $log.error('EncoderFactory listener error: ' + e.message);
         };
 
-        if(supportTransferableObjects) {
-            encoder.postMessage({'bitrate':'32k', 'pcm':pcmBuffer}, [pcmBuffer]);
-        } else {
-            encoder.postMessage({'bitrate':'32k', 'pcm':pcmBuffer});
-        }
+        encoder.postMessage({'inputSampleRate':sampleRate, 'outputBitrate':'32k', 'pcmBuffer':pcmBuffer}, [pcmBuffer]);
 
         return deferred.promise;
     };

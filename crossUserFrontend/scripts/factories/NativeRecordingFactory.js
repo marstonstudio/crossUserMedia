@@ -21,7 +21,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
     };
 
     Service.startRecording = function() {
-        $log.debug('NativeRecordingFactory startRecording');
+        $log.log('NativeRecordingFactory startRecording');
         $rootScope.$emit('statusEvent', 'recording started');
 
         if (Navigator.enabled) {
@@ -79,6 +79,9 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             //$log.log('onaudioprocess time:' + e.playbackTime + ", level:" + level);
             $rootScope.$emit('recordingEvent', {'time': e.playbackTime, 'level':level});
 
+            //TODO: use AudioBuffer.copyFromChannel()
+            //https://developer.mozilla.org/en-US/docs/Web/API/AudioBuffer/copyFromChannel
+
             var mono = e.inputBuffer.getChannelData(0);
             // we clone the samples
             monochannel.push(new Float32Array(mono));
@@ -112,63 +115,19 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             recorder.onaudioprocess = null;
         }
 
-        var pcmBuffer = mergeBuffers(monochannel, recordingLength);
-        var channelCount = 1;
-        var bitsPerSample = 16;
-
-        // we create our wav file
-        var wavBuffer = new ArrayBuffer(44 + pcmBuffer.length * 2);
-        var wavView = new DataView(wavBuffer);
-
-        // RIFF chunk descriptor
-        writeUTFBytes(wavView, 0, 'RIFF');
-        wavView.setUint32(4, 44 + pcmBuffer.length * 2, true);
-        writeUTFBytes(wavView, 8, 'WAVE');
-        // FMT sub-chunk
-        writeUTFBytes(wavView, 12, 'fmt ');
-        wavView.setUint32(16, 16, true);
-        wavView.setUint16(20, 1, true);
-        wavView.setUint16(22, channelCount, true);
-        wavView.setUint32(24, sampleRate, true);
-        wavView.setUint32(28, sampleRate * channelCount * bitsPerSample / 8, true);
-        wavView.setUint16(32, channelCount * bitsPerSample / 8, true);
-        wavView.setUint16(34, bitsPerSample, true);
-        // data sub-chunk
-        writeUTFBytes(wavView, 36, 'data');
-        wavView.setUint32(40, pcmBuffer.length * 2, true);
-
-        // write the PCM samples
-        var lng = pcmBuffer.length;
-        var index = 44;
-        var volume = 1;
-        for (var j = 0; j < lng; j++) {
-            wavView.setInt16(index, pcmBuffer[j] * (0x7FFF * volume), true);
-            index += 2;
-        }
-
-        $rootScope.$emit('statusEvent', 'audio saved');
-
-        deferred.resolve(wavView.buffer);
-        return deferred.promise;
-    }
-
-    function mergeBuffers(channelBuffer, recordingLength) {
-        var result = new Float32Array(recordingLength);
+        //flatten all the 2048 length chunks of pcm data into a single Float32Array
+        var pcmArray = new Float32Array(recordingLength);
         var offset = 0;
-        var lng = channelBuffer.length;
-        for (var i = 0; i < lng; i++) {
-            var buffer = channelBuffer[i];
-            result.set(buffer, offset);
-            offset += buffer.length;
+        var chunkCount = monochannel.length;
+        for (var c = 0; c < chunkCount; c++) {
+            var chunk = monochannel[c];
+            pcmArray.set(chunk, offset);
+            offset += chunk.length;
         }
-        return result;
-    }
 
-    function writeUTFBytes(view, offset, string) {
-        var lng = string.length;
-        for (var i = 0; i < lng; i++) {
-            view.setUint8(offset + i, string.charCodeAt(i));
-        }
+        deferred.resolve({'sampleRate':sampleRate, 'pcmBuffer':pcmArray.buffer});
+        $rootScope.$emit('statusEvent', 'audio captured');
+        return deferred.promise;
     }
 
     function getAverageVolume(array) {

@@ -5,6 +5,7 @@ import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.MediaToolAdapter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.mediatool.event.IAddStreamEvent;
+import com.xuggle.xuggler.IAudioSamples;
 import com.xuggle.xuggler.IError;
 import com.xuggle.xuggler.IStreamCoder;
 import org.apache.log4j.Logger;
@@ -24,19 +25,6 @@ public class AudioUtil {
 
     static private final Logger logger = Logger.getLogger(AudioUtil.class);
 
-    static private final int DEFAULT_SAMPLE_RATE = 16000;
-    static private final int DEFAULT_CHANNEL_COUNT = 1;
-
-    public static File saveWavAudioToFile(byte[] audioBytes, File audioFile) throws IOException {
-
-        AudioFormat inputFormat = new AudioFormat(16000, 16, 1, true, false);
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(audioBytes, 44, audioBytes.length);
-        AudioInputStream audioInputStream = new AudioInputStream(inputStream, inputFormat, audioBytes.length / inputFormat.getFrameSize());
-
-        AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, audioFile);
-        return audioFile;
-    }
-
     public static File convertAudioFile(File inputFile, String outputFileType, boolean passThru) throws InterruptedException, IOException {
         logger.info("inputFile: " + inputFile);
 
@@ -45,7 +33,7 @@ public class AudioUtil {
             return FileUtil.copyFile(inputFile, outputFile);
         }
 
-        ConverterTool converter = initializeConverterTool(inputFile);
+        ConverterTool converter = new ConverterTool();
         IMediaReader reader = ToolFactory.makeReader(inputFile.getAbsolutePath());
         reader.addListener(converter);
 
@@ -67,26 +55,9 @@ public class AudioUtil {
         return outputFile;
     }
 
-    static private ConverterTool initializeConverterTool(File inputFile) {
-        try {
-            AudioFileFormat audioFileFormat = AudioSystem.getAudioFileFormat(inputFile);
-            AudioFormat audioFormat = audioFileFormat.getFormat();
-            return new ConverterTool(Math.round(audioFormat.getSampleRate()), audioFormat.getChannels());
-        } catch (UnsupportedAudioFileException | IOException e) {
-            logger.warn(e);
-            return new ConverterTool(DEFAULT_SAMPLE_RATE, DEFAULT_CHANNEL_COUNT);
-        }
-    }
-
     static class ConverterTool extends MediaToolAdapter {
 
-        private int sampleRate;
-        private int channelCount;
-
-        public ConverterTool(int sampleRate, int channelCount) {
-            this.sampleRate = sampleRate;
-            this.channelCount = channelCount;
-        }
+        public ConverterTool() {}
 
         public void onAddStream(IAddStreamEvent event) {
 
@@ -94,9 +65,6 @@ public class AudioUtil {
                     .getContainer()
                     .getStream(event.getStreamIndex())
                     .getStreamCoder();
-
-            //streamCoder.setChannels(channelCount);
-            //streamCoder.setSampleRate(sampleRate);
 
             super.onAddStream(event);
         }
