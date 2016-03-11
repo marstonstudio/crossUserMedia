@@ -84,9 +84,10 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
             .stopRecording()
             .then(function (pcmObject) {
 
-                /*
+                $log.log('MicrophoneController stopRecording sampleRate:' + pcmObject.sampleRate + ', format:' + pcmObject.format + ', pcmBuffer.byteLength:' + pcmObject.pcmBuffer.byteLength);
+
                 return Encoder
-                    .process(pcmObject.sampleRate, pcmObject.pcmBuffer)
+                    .process(pcmObject.sampleRate, pcmObject.format, pcmObject.pcmBuffer)
                     .then(function(encodedBlob){
 
                         $log.log('MicrophoneController encodedBlob.size:' + encodedBlob.size);
@@ -97,12 +98,13 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
                             .then(displayProcessedOutput, function(reason) {$log.error(reason);});
 
                     }, function(reason) {$log.error(reason);});
-                    */
 
-                var pcmBlob = new Blob([pcmObject.buffer], { type: 'audio/L16' });
+                /*
+                var pcmBlob = new Blob([pcmObject.pcmBuffer], { type: 'audio/L16' });
                 return UploadRecording
                     .send(pcmBlob, 'pcm', 'pcm')
                     .then(displayProcessedOutput, function(reason) {$log.error(reason);});
+                */
 
             }, function(reason) {$log.error(reason);});
     };

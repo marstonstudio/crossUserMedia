@@ -40,8 +40,8 @@ module.exports = function ($log, $q) {
         initialized = true;
     };
 
-    Service.process = function(sampleRate, pcmBuffer) {
-        $log.log('EncoderFactory sampleRate:' + sampleRate + ', pcmBuffer.byteLength:' + pcmBuffer.byteLength);
+    Service.process = function(sampleRate, format, pcmBuffer) {
+        //$log.log('EncoderFactory sampleRate:' + sampleRate + ', pcmBuffer.byteLength:' + pcmBuffer.byteLength);
 
         var deferred = $q.defer();
 
@@ -62,7 +62,7 @@ module.exports = function ($log, $q) {
             $log.error('EncoderFactory listener error: ' + e.message);
         };
 
-        encoder.postMessage({'inputSampleRate':sampleRate, 'outputBitrate':'32k', 'pcmBuffer':pcmBuffer}, [pcmBuffer]);
+        encoder.postMessage({'inputSampleRate':sampleRate, 'inputFormat':format, 'outputBitrate':'32k', 'pcmBuffer':pcmBuffer}, [pcmBuffer]);
 
         return deferred.promise;
     };

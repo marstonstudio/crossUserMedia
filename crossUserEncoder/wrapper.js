@@ -18,10 +18,11 @@ this.onmessage = function(e) {
     //TODO: separate ASM from ffmpeg code
 
     var inputSampleRate = e.data.inputSampleRate;
+    var inputFormat = e.data.inputFormat;
     var outputBitrate = e.data.outputBitrate;
     var pcmBuffer = e.data.pcmBuffer;
 
-    console.log('ffmpegaac onmessage inputSampleRate:' + inputSampleRate + ', outputBitrate:' + outputBitrate + ', pcmBuffer.byteLength:' + pcmBuffer.byteLength)
+    console.log('ffmpegaac onmessage inputSampleRate:' + inputSampleRate + ', inputFormat:' + inputFormat + ', outputBitrate:' + outputBitrate + ', pcmBuffer.byteLength:' + pcmBuffer.byteLength);
 
     var fileName = (0|Math.random()*9e6).toString(36);
     var inputName = fileName + '.pcm';
@@ -37,8 +38,8 @@ this.onmessage = function(e) {
     Module['arguments'] = [
         '-nostdin',
         '-stats',
-        '-f', 'f32le',
-        '-acodec', 'pcm_f32le',
+        '-f', inputFormat,
+        '-acodec', 'pcm_' + inputFormat,
         '-ar', inputSampleRate.toString(),
         '-ac', '1',
         '-channel_layout', 'mono',

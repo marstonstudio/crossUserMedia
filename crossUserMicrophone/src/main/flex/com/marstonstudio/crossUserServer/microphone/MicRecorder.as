@@ -9,7 +9,7 @@ import flash.media.Microphone;
 import flash.utils.ByteArray;
 import flash.utils.getTimer;
 
-/**
+    /**
      * Dispatched during the recording of the audio stream coming from the microphone.
      *
      * @eventType org.bytearray.micrecorder.RecordingEvent.RECORDING
@@ -51,13 +51,13 @@ import flash.utils.getTimer;
 
         private const _silenceLevel:uint = 0;
         private const _timeOut:uint = 4000;
-        private const _sampleRate:int = 16000;
+        private const _rateKHz:int = 16;
         private var   _gain:uint = 75;
 
 
-        private var _difference:uint;
+        private var _startTime:uint;
         private var _microphone:Microphone;
-        private var _buffer:ByteArray = new ByteArray();
+        private var _buffer:ByteArray;
 
         public function MicRecorder() {}
 
@@ -69,20 +69,16 @@ import flash.utils.getTimer;
 
             if ( _microphone == null ) {
                 _microphone = Microphone.getMicrophone();
-                _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
-                _microphone.addEventListener(StatusEvent.STATUS, onStatus);
             }
 
-            _difference = getTimer();
+            _startTime = getTimer();
 
             _microphone.setSilenceLevel(_silenceLevel, _timeOut);
-            _microphone.rate = _sampleRate;
+            _microphone.rate = _rateKHz;
             _microphone.gain = _gain;
-            _buffer.length = 0;
-        }
-        
-        private function onStatus(event:StatusEvent):void {
-            _difference = getTimer();
+            _buffer = new ByteArray();
+
+            _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
         }
         
         /**
@@ -90,8 +86,8 @@ import flash.utils.getTimer;
          * @param event
          */        
         private function onSampleData(event:SampleDataEvent):void {
-            var time:Number = getTimer() - _difference;
-            dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time, _sampleRate, null) );
+            var time:Number = getTimer() - _startTime;
+            dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time, null) );
             
             while(event.data.bytesAvailable > 0) {
                 _buffer.writeFloat(event.data.readFloat());
@@ -103,9 +99,8 @@ import flash.utils.getTimer;
          */        
         public function stop():void {
             _microphone.removeEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
-            
-            _buffer.position = 0;
-            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, _sampleRate, _buffer) );
+
+            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, _buffer) );
         }
 
         public function get gain():uint {
@@ -119,6 +114,11 @@ import flash.utils.getTimer;
 
         public function get activityLevel():Number {
             if(_microphone != null) return _microphone.activityLevel;
+            return 0;
+        }
+
+        public function get sampleRate():Number {
+            if(_microphone != null) return _microphone.rate * 1000;
             return 0;
         }
     }

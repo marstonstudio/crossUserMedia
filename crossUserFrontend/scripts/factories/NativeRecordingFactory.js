@@ -125,7 +125,7 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             offset += chunk.length;
         }
 
-        deferred.resolve({'sampleRate':sampleRate, 'pcmBuffer':pcmArray.buffer});
+        deferred.resolve({'sampleRate':sampleRate, 'format':'f32le', 'pcmBuffer':pcmArray.buffer});
         $rootScope.$emit('statusEvent', 'audio captured');
         return deferred.promise;
     }
