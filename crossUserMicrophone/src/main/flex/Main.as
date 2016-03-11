@@ -179,7 +179,7 @@ package {
             var b64:Base64Encoder = new Base64Encoder();
             b64.insertNewLines = false;
             b64.encodeBytes(event.data);
-            ExternalInterface.call("onFlashSoundRecorded", b64.toString());
+            ExternalInterface.call("onFlashSoundRecorded", event.sampleRate.toString(), b64.toString());
 
             ExternalInterface.call("onFlashStatusMessage", "audio saved");
         }

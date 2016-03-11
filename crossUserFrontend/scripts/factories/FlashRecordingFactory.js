@@ -12,9 +12,9 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
         }
 
         //functions globally accessible for flash ExternalInterface
-        $window.onFlashSoundRecorded = function (audioBase64) {
-            var wavBuffer = b64toBuffer(audioBase64, 'audio/wav');
-            recordingDeferred.resolve(wavBuffer);
+        $window.onFlashSoundRecorded = function (sampleRate, audioBase64) {
+            var pcmArray = b64toByteArray(audioBase64);
+            recordingDeferred.resolve({'sampleRate':sampleRate, 'pcmBuffer':pcmArray.buffer});
         };
 
         $window.onFlashSoundRecordingError = function (error) {
@@ -63,7 +63,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
     }
 
     // http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
-    function b64toBuffer(base64Data) {
+    function b64toByteArray(base64Data) {
 
         var byteCharacters = atob(base64Data);
         var byteNumbers = new Array(byteCharacters.length);
@@ -71,7 +71,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
 
-        return new Uint8Array(byteNumbers).buffer;
+        return new Uint8Array(byteNumbers);
     }
 
     return Service;

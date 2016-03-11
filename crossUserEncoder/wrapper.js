@@ -34,7 +34,6 @@ this.onmessage = function(e) {
         FS.close(inputFile);
     };
 
-    //bogus note: the order of the arguments is significant to ffmpeg
     Module['arguments'] = [
         '-nostdin',
         '-stats',
@@ -45,6 +44,7 @@ this.onmessage = function(e) {
         '-channel_layout', 'mono',
         '-i', inputName,
         '-b:a', outputBitrate.toString(),
+        '-f', 'mp4',
         '-acodec', 'aac',
         outputName
     ];

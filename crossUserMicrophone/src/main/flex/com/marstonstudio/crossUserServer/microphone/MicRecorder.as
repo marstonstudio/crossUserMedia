@@ -1,14 +1,11 @@
 package com.marstonstudio.crossUserServer.microphone {
 
-import com.marstonstudio.crossUserServer.encoder.*;
 import com.marstonstudio.crossUserServer.events.RecordingEvent;
-import com.marstonstudio.crossUserServer.util.Console;
 
 import flash.events.EventDispatcher;
 import flash.events.SampleDataEvent;
 import flash.events.StatusEvent;
 import flash.media.Microphone;
-import flash.media.SoundCodec;
 import flash.utils.ByteArray;
 import flash.utils.getTimer;
 
@@ -54,12 +51,13 @@ import flash.utils.getTimer;
 
         private const _silenceLevel:uint = 0;
         private const _timeOut:uint = 4000;
+        private const _sampleRate:int = 16000;
         private var   _gain:uint = 75;
+
 
         private var _difference:uint;
         private var _microphone:Microphone;
         private var _buffer:ByteArray = new ByteArray();
-        private var _encoder:AbstractEncoder;
 
         public function MicRecorder() {}
 
@@ -68,21 +66,19 @@ import flash.utils.getTimer;
          * The first time the record() method is called the settings manager may pop-up to request access to the Microphone.
          */        
         public function record():void {
+
             if ( _microphone == null ) {
                 _microphone = Microphone.getMicrophone();
+                _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
+                _microphone.addEventListener(StatusEvent.STATUS, onStatus);
             }
 
             _difference = getTimer();
 
-            _encoder = new WavEncoder();
-
             _microphone.setSilenceLevel(_silenceLevel, _timeOut);
-            _microphone.rate = _encoder.microphoneRate;
+            _microphone.rate = _sampleRate;
             _microphone.gain = _gain;
             _buffer.length = 0;
-            
-            _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
-            _microphone.addEventListener(StatusEvent.STATUS, onStatus);
         }
         
         private function onStatus(event:StatusEvent):void {
@@ -95,7 +91,7 @@ import flash.utils.getTimer;
          */        
         private function onSampleData(event:SampleDataEvent):void {
             var time:Number = getTimer() - _difference;
-            dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time, null) );
+            dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time, _sampleRate, null) );
             
             while(event.data.bytesAvailable > 0) {
                 _buffer.writeFloat(event.data.readFloat());
@@ -109,7 +105,7 @@ import flash.utils.getTimer;
             _microphone.removeEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
             
             _buffer.position = 0;
-            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, _encoder.encode(_buffer)) );
+            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, _sampleRate, _buffer) );
         }
 
         public function get gain():uint {

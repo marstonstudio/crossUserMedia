@@ -6,7 +6,7 @@ The Flex Microphone component is for microphone support of Internet Explorer and
 
 The Flash ActionScript widget can be compiled using Maven 3.3 or higher, but the Apache Flex SDK artifacts need to be 'mavenized' and installed into a maven repository.
 
-The [Apache Flex Wiki](https://cwiki.apache.org/confluence/display/FLEX/Building+Flex+applications+with+Maven) has detailed instructions on how to do this for Flex 14.1 and flexmojos-maven-plugin 7.1.0-SNAPSHOT.
+The [Apache Flex Wiki](https://cwiki.apache.org/confluence/display/FLEX/Building+Flex+applications+with+Maven) has detailed instructions on how to do this for Flex 14.1 and flexmojos-maven-plugin 7.1.0.
 
 **Set up a working directory**
 ```
@@ -60,7 +60,3 @@ In order to build in IntelliJ, you must add a compiler override option which wil
 * Setting the output of IntelliJ Flex builds to be inside the Java project makes it easier to trigger updates in the development envrionment.
 Replace ```~``` with the absolute local filesystem path.
 ```-output=~/crossUserMedia/crossUserServer/src/main/webapp/swf/crossUserMicrophone.swf```
-
-## Future work TODO ##
-
-* Use [crossbridge.io](http://crossbridge.io) to compile libspeex to support the encoding of the raw microphone PCM into speex.ogg files.

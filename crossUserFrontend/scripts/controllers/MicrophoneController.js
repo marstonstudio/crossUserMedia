@@ -84,6 +84,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
             .stopRecording()
             .then(function (pcmObject) {
 
+                /*
                 return Encoder
                     .process(pcmObject.sampleRate, pcmObject.pcmBuffer)
                     .then(function(encodedBlob){
@@ -93,9 +94,15 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
                         return UploadRecording
                             .send(encodedBlob, 'mp4', 'wav')
-                            .then(displayProcessedOutput, function(response) {if(response && response.data) {$log.error(response.data);}});
+                            .then(displayProcessedOutput, function(reason) {$log.error(reason);});
 
                     }, function(reason) {$log.error(reason);});
+                    */
+
+                var pcmBlob = new Blob([pcmObject.buffer], { type: 'audio/L16' });
+                return UploadRecording
+                    .send(pcmBlob, 'pcm', 'pcm')
+                    .then(displayProcessedOutput, function(reason) {$log.error(reason);});
 
             }, function(reason) {$log.error(reason);});
     };
