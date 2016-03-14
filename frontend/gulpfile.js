@@ -5,7 +5,7 @@ var concatCss       = require('gulp-concat-css');
 var fontgen         = require('gulp-fontgen');
 var jshint          = require('gulp-jshint');
 var less            = require('gulp-less');
-var minifyCSS       = require('gulp-minify-css');
+var cleanCSS        = require('gulp-clean-css');
 var ngAnnotate      = require('gulp-ng-annotate');
 var sourcemaps      = require('gulp-sourcemaps');
 var uglify          = require('gulp-uglify');
@@ -21,21 +21,23 @@ var targetDir = '../server/target/server';
 
 gulp.task('default', [
     'clean',
+    'assembleHtml',
     'assembleStyles',
     'assembleImages',
-    'assembleHtml',
     'assembleScripts',
     'copy',
     'deploy'
 ]);
 
-gulp.task('clean', function(callback) {
-    del([
+gulp.task('clean', function() {
+    return del([
             'dist/**/*',
             '!dist/css',
             '!dist/css/fonts',
             '!dist/css/fonts.css',
             '!dist/css/fonts/*',
+            '!dist/img',
+            '!dist/js',
             webappDir + '/css/*',
             webappDir + '/js/*',
             webappDir + '/*.html',
@@ -44,20 +46,24 @@ gulp.task('clean', function(callback) {
             targetDir + '/js/*',
             targetDir + '/*.html'
         ]
-        , {force: true}
-        , callback);
+        , {force: true});
 });
 
-gulp.task('assembleStyles', [
-    'compileLess',
-    //'generateFonts',
-    //'concatenateFonts'
-]);
+gulp.task('assembleHtml', ['clean'], function() {
+    return gulp.src('html/**/*.html')
+        .pipe(gulp.dest('dist'));
+});
+
+gulp.task('assembleImages', ['clean'], function() {
+    return gulp.src([assetDir + '/images/**/*'])
+        .pipe(gulp.dest('dist/img'));
+});
+
 
 gulp.task('compileLess', ['clean'] , function() {
     return gulp.src('styles/**/*.less')
         .pipe(less())
-        .pipe(minifyCSS())
+        .pipe(cleanCSS())
         .pipe(gulp.dest('dist/css'));
 });
 
@@ -75,23 +81,19 @@ gulp.task('generateFonts', ['clean'] , function() {
         });
 });
 
-gulp.task('concatenateFonts', ['generateFonts'] , function() {
+gulp.task('concatenateFonts', ['clean', 'generateFonts'] , function() {
     return gulp.src('dist' + fontPath + '/*.css')
         .pipe(concatCss('fonts.css'))
         .pipe(gulp.dest('dist/css'));
 });
 
-gulp.task('assembleImages', ['clean'], function() {
-    return gulp.src(assetDir + '/images/**/*')
-        .pipe(gulp.dest('dist/img'));
-})
+gulp.task('assembleStyles', [
+    'compileLess',
+//    'generateFonts',
+//    'concatenateFonts'
+]);
 
-gulp.task('assembleHtml', ['clean'], function() {
-    return gulp.src('html/**/*.html')
-        .pipe(gulp.dest('dist'));
-});
-
-gulp.task('analyzeScripts', function(){
+gulp.task('analyzeScripts', ['clean'], function(){
     return gulp.src('scripts/**/*.js')
         .pipe(jshint())
         .pipe(jshint.reporter('default', { verbose: true }))
@@ -100,7 +102,7 @@ gulp.task('analyzeScripts', function(){
 gulp.task('copyEncoderJs', ['clean'], function(){
     return gulp.src(['node_modules/encoderjs/encoder.js', 'node_modules/encoderjs/encoder.js.mem'])
         .pipe(gulp.dest('dist/js/'));
-})
+});
 
 gulp.task('assembleScripts', ['clean', 'analyzeScripts', 'copyEncoderJs'] , function() {
     var browserified = browserify({
@@ -123,7 +125,7 @@ gulp.task('assembleScripts', ['clean', 'analyzeScripts', 'copyEncoderJs'] , func
         .pipe(gulp.dest('dist/js/'));
 });
 
-gulp.task('copy', ['assembleHtml', 'assembleImages','assembleScripts', 'assembleStyles'], function() {
+gulp.task('copy', ['assembleHtml', 'assembleImages','assembleStyles', 'assembleScripts'], function() {
     return gulp.src('dist/**/*')
         .pipe(gulp.dest(webappDir));
 });
