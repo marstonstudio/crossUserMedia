@@ -1,0 +1,10 @@
+@font-face {
+    font-family: "SourceSansPro";
+    src: url("/css/fonts/SourceSansPro-LightIt.eot");
+    src: url("/css/fonts/SourceSansPro-LightIt.eot?#iefix") format("embedded-opentype"),
+         url("/css/fonts/SourceSansPro-LightIt.woff") format("woff"),
+         url("/css/fonts/SourceSansPro-LightIt.ttf") format("truetype"),
+         url("/css/fonts/SourceSansPro-LightIt.svg#SourceSansPro") format("svg");
+    font-weight: light;
+    font-style: italic;
+}

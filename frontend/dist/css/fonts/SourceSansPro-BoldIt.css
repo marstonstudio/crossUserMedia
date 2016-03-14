@@ -1,0 +1,10 @@
+@font-face {
+    font-family: "SourceSansPro";
+    src: url("/css/fonts/SourceSansPro-BoldIt.eot");
+    src: url("/css/fonts/SourceSansPro-BoldIt.eot?#iefix") format("embedded-opentype"),
+         url("/css/fonts/SourceSansPro-BoldIt.woff") format("woff"),
+         url("/css/fonts/SourceSansPro-BoldIt.ttf") format("truetype"),
+         url("/css/fonts/SourceSansPro-BoldIt.svg#SourceSansPro") format("svg");
+    font-weight: bold;
+    font-style: italic;
+}

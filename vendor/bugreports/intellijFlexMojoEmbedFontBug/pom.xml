@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.marstonstudio</groupId>
+    <artifactId>intellijFlexMojoEmbedFontBug</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>swf</packaging>
+
+    <prerequisites>
+        <maven>3.1.1</maven>
+    </prerequisites>
+
+    <properties>
+        <flex.version>4.14.1</flex.version>
+        <player.version>14.0</player.version>
+        <configurationReport>true</configurationReport>
+        <player.debug>true</player.debug>
+        <skipTests>true</skipTests>
+    </properties>
+
+    <build>
+        <finalName>intellijFlexMojoEmbedFontBug</finalName>
+        <sourceDirectory>src/main/flex</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>net.flexmojos.oss</groupId>
+                <artifactId>flexmojos-maven-plugin</artifactId>
+                <version>7.1.0-SNAPSHOT</version>
+                <extensions>true</extensions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.flex</groupId>
+                        <artifactId>compiler</artifactId>
+                        <version>${flex.version}</version>
+                        <type>pom</type>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.adobe</groupId>
+                        <artifactId>fontkit</artifactId>
+                        <version>1.0</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+
+                    <sourceFile>Main.as</sourceFile>
+
+                    <flashVersion>${player.version}</flashVersion>
+                    <debug>true</debug>
+                    <headlessServer>true</headlessServer>
+
+                    <fonts>
+                        <advancedAntiAliasing>true</advancedAntiAliasing>
+                        <languageRange>
+                            <en>U+0020-U+007E</en>
+                        </languageRange>
+                        <managers>
+                            <manager>flash.fonts.JREFontManager</manager>
+                            <manager>flash.fonts.BatikFontManager</manager>
+                            <manager>flash.fonts.AFEFontManager</manager>
+                            <manager>flash.fonts.CFFFontManager</manager>
+                        </managers>
+                    </fonts>
+                    <localesCompiled>
+                        <locale>en_US</locale>
+                    </localesCompiled>
+
+                    <defines>
+                        <property>
+                            <name>CONFIG::cffFont</name>
+                            <value>true</value>
+                        </property>
+                    </defines>
+
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.flex</groupId>
+            <artifactId>framework</artifactId>
+            <version>${flex.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>com.adobe.flash.framework</groupId>
+            <artifactId>playerglobal</artifactId>
+            <version>${player.version}</version>
+            <type>swc</type>
+        </dependency>
+        <dependency>
+            <groupId>org.flexunit</groupId>
+            <artifactId>flexunit</artifactId>
+            <version>4.1.0</version>
+            <classifier>flex4</classifier>
+            <type>swc</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

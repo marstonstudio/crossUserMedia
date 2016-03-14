@@ -1,0 +1,29 @@
+{
+  "name": "angularMaterialThemeMinifyBug",
+  "version": "1.0.0",
+  "description": "Angular test case",
+  "main": "gulpfile.js",
+  "dependencies": {
+    "angular": "^1.4.4",
+    "angular-animate": "^1.4.4",
+    "angular-aria": "^1.4.4",
+    "angular-material": "^0.10.1"
+  },
+  "devDependencies": {
+    "browserify": "^11.0.1",
+    "del": "^1.2.1",
+    "express": "^4.13.3",
+    "gulp": "^3.9.0",
+    "gulp-uglify": "^1.2.0",
+    "gulp-util": "^3.0.6",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "vinyl-transform": "^1.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jon Marston <jon@marstonstudio.com> (http://www.marstonstudio.com)",
+  "license": "MIT",
+  "private": true
+}
