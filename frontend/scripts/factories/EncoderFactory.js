@@ -1,4 +1,4 @@
-module.exports = function ($log, $q) {
+module.exports = function ($log, $q, encoderjs) {
 
     var Service = {};
 
@@ -48,7 +48,7 @@ module.exports = function ($log, $q) {
 
         //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker
         //https://github.com/substack/webworkify
-        var encoder = new Worker('/js/ffmpegaac.js');
+        var encoder = new Worker('/js/encoder.js');
         encoder.onmessage = function(e) {
             $log.debug('EncoderFactory listener result in ' + (new Date() - startTime) / 1000 + ' seconds');
 

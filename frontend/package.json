@@ -17,7 +17,7 @@
     "angular-animate": "global:angular-animate",
     "angular-aria": "global:angular-aria",
     "angular-material": "global:angular-material",
-    "ffmpegaac": "global:ffmpegaac"
+    "encoderjs": "global:encoderjs"
   },
   "dependencies": {
     "angular": "^1.4.4",
@@ -26,7 +26,7 @@
     "angular-material": "^0.10.1",
     "bowser": "^1.0.0",
     "jakobmattsson-swfobject": "^2.2.0",
-    "ffmpegaac": "^3.0.0"
+    "encoderjs": "^3.0.0"
   },
   "devDependencies": {
     "browserify": "^11.0.1",

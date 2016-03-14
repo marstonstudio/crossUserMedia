@@ -11,5 +11,5 @@ A similar [HTML5 Microphone & Web Audio Demo](https://dev.modern.ie/testdrive/de
 * [Java 8 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 * [Maven 3.3](https://maven.apache.org/download.cgi)
 * [Tomcat 8](https://tomcat.apache.org)
-* [Mavenized Apache Flex artifacts](crossUserMicrophone/README.md)
-* [Font tools](crossUserFrontend/README.md)
+* [Mavenized Apache Flex artifacts](microphone/README.md)
+* [Font tools](frontend/README.md)

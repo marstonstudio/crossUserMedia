@@ -3,11 +3,11 @@
 rm -Rf dist
 mkdir dist
 
-cd ffmpeg
+cd ../vendor/ffmpeg
 emmake make clean
 
 emconfigure ./configure \
-    --prefix=../tmp \
+    --prefix=../../encoderjs/dist \
 \
     --disable-runtime-cpudetect \
 \
@@ -68,23 +68,23 @@ emconfigure ./configure \
 
 emmake make
 
-cd ..
-cp ffmpeg/ffmpeg dist/ffmpeg.bc
+cd ../../encoderjs
+cp ../vendor/ffmpeg/ffmpeg dist/ffmpeg.bc
 
 
 sed -e '\/\*EMSCRIPTENBODY\*\//,$d' wrapper.js > dist/pre.js
 sed -e '1,\/\*EMSCRIPTENBODY\*\//d' wrapper.js > dist/post.js
 
-emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 dist/ffmpeg.bc --pre-js dist/pre.js --post-js dist/post.js -o dist/ffmpegaac.js
+emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 dist/ffmpeg.bc --pre-js dist/pre.js --post-js dist/post.js -o dist/encoder.js
 #emcc -O0 tmp/ffmpeg.bc --pre-js tmp/pre.js --post-js tmp/post.js -o ffmpegaac.js
 
 #npm test
 
-LOCAL_INSTALL_TARGET=../crossUserFrontend/node_modules/ffmpegaac
+LOCAL_INSTALL_TARGET=../frontend/node_modules/encoderjs
 rm -Rf $LOCAL_INSTALL_TARGET
 mkdir $LOCAL_INSTALL_TARGET
 cp ./.npmignore $LOCAL_INSTALL_TARGET
-cp ./dist/ffmpegaac.js $LOCAL_INSTALL_TARGET
-cp ./dist/ffmpegaac.js.mem $LOCAL_INSTALL_TARGET
+cp ./dist/encoder.js $LOCAL_INSTALL_TARGET
+cp ./dist/encoder.js.mem $LOCAL_INSTALL_TARGET
 cp ./package.json $LOCAL_INSTALL_TARGET
 cp ./README.md $LOCAL_INSTALL_TARGET

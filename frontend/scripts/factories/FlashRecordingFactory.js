@@ -59,7 +59,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
     };
 
     function getFlashObject() {
-        return document.getElementById('crossUserMicrophoneSwf');
+        return document.getElementById('microphoneSwf');
     }
 
     // http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript

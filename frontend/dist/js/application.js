@@ -1168,7 +1168,7 @@ angular.module('Microphone', ['ngMaterial'])
 
     .value('bowser', require('bowser'))
     .value('swfEmbedder', require('jakobmattsson-swfobject'))
-    .value('ffmpegaac', (typeof window !== "undefined" ? window['ffmpegaac'] : typeof global !== "undefined" ? global['ffmpegaac'] : null))
+    .value('encoderjs', (typeof window !== "undefined" ? window['encoderjs'] : typeof global !== "undefined" ? global['encoderjs'] : null))
 
     .controller('MicrophoneController', [
         '$rootScope',
@@ -1214,7 +1214,7 @@ angular.module('Microphone', ['ngMaterial'])
     .factory('EncoderFactory', [
         '$log',
         '$q',
-        'ffmpegaac',
+        'encoderjs',
         require('./factories/EncoderFactory.js')
     ])
     .factory('UploadFactory', [
@@ -1462,7 +1462,7 @@ module.exports = function ($log, $window, $timeout, $interval, swfEmbedder) {
     };
 };
 },{}],6:[function(require,module,exports){
-module.exports = function ($log, $q) {
+module.exports = function ($log, $q, encoderjs) {
 
     var Service = {};
 
@@ -1512,7 +1512,7 @@ module.exports = function ($log, $q) {
 
         //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker
         //https://github.com/substack/webworkify
-        var encoder = new Worker('/js/ffmpegaac.js');
+        var encoder = new Worker('/js/encoder.js');
         encoder.onmessage = function(e) {
             $log.debug('EncoderFactory listener result in ' + (new Date() - startTime) / 1000 + ' seconds');
 
@@ -1597,7 +1597,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
     };
 
     function getFlashObject() {
-        return document.getElementById('crossUserMicrophoneSwf');
+        return document.getElementById('microphoneSwf');
     }
 
     // http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript

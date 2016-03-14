@@ -1,6 +1,6 @@
-package com.marstonstudio.crossUserServer.util;
+package com.marstonstudio.server.util;
 
-import com.marstonstudio.crossUserServer.util.FileUtil;
+import com.marstonstudio.server.util.FileUtil;
 import io.humble.video.*;
 import org.apache.log4j.Logger;
 import io.humble.video.AudioFormat;

@@ -2,8 +2,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.marstonstudio</groupId>
-    <artifactId>crossUserMedia</artifactId>
+    <groupId>com.marstonstudio.crossusermedia</groupId>
+    <artifactId>parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>crossUserMedia Parent</name>
@@ -13,9 +13,9 @@
     </prerequisites>
 
     <modules>
-        <module>crossUserFrontend</module>
-        <module>crossUserMicrophone</module>
-        <module>crossUserServer</module>
+        <module>frontend</module>
+        <module>microphone</module>
+        <module>server</module>
     </modules>
 
     <properties>

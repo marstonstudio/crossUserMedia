@@ -16,7 +16,7 @@ public class JerseyApplication extends ResourceConfig {
 
     @Inject
     public JerseyApplication(ServiceLocator serviceLocator) {
-        packages("com.marstonstudio.server.api");
+        packages("com.marstonstudio.crossusermedia.server.api");
 
         Logger.getLogger("org.glassfish.jersey").setLevel(Level.INFO);
 

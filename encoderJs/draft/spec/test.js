@@ -1,4 +1,4 @@
-describe("FfmpegAAC", function() {
+describe("EncoderJs", function() {
 
     var fs = require('fs');
 

@@ -16,8 +16,8 @@ var vinylTransform  = require('vinyl-transform');
 
 var assetDir = '../assets';
 var fontPath = '/css/fonts'
-var webappDir = '../crossUserServer/src/main/webapp';
-var targetDir = '../crossUserServer/target/crossUserServer';
+var webappDir = '../server/src/main/webapp';
+var targetDir = '../server/target/server';
 
 gulp.task('default', [
     'clean',
@@ -97,12 +97,12 @@ gulp.task('analyzeScripts', function(){
         .pipe(jshint.reporter('default', { verbose: true }))
 });
 
-gulp.task('copyFfmpegAac', ['clean'], function(){
-    return gulp.src(['node_modules/ffmpegaac/ffmpegaac.js', 'node_modules/ffmpegaac/ffmpegaac.js.mem'])
+gulp.task('copyEncoderJs', ['clean'], function(){
+    return gulp.src(['node_modules/encoderjs/encoder.js', 'node_modules/encoderjs/encoder.js.mem'])
         .pipe(gulp.dest('dist/js/'));
 })
 
-gulp.task('assembleScripts', ['clean', 'analyzeScripts', 'copyFfmpegAac'] , function() {
+gulp.task('assembleScripts', ['clean', 'analyzeScripts', 'copyEncoderJs'] , function() {
     var browserified = browserify({
         entries: './scripts/Main.js',
         debug: true

@@ -1,9 +1,9 @@
 package {
 
-    import com.marstonstudio.crossUserServer.events.RecordingEvent;
-    import com.marstonstudio.crossUserServer.microphone.MicRecorder;
-    import com.marstonstudio.crossUserServer.sprites.CFFTextField;
-    import com.marstonstudio.crossUserServer.util.Console;
+    import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
+    import com.marstonstudio.crossusermedia.microphone.Recorder;
+    import com.marstonstudio.crossusermedia.microphone.sprites.CFFTextField;
+    import com.marstonstudio.crossusermedia.microphone.util.Console;
 
     import flash.display.BitmapData;
 
@@ -23,7 +23,7 @@ package {
     [SWF(width="430", height="276", frameRate="24", backgroundColor="#FFFFFF")]
     public class Main extends Sprite {
 
-        private var _recorder:MicRecorder;
+        private var _recorder:Recorder;
 
         private var _textField:CFFTextField;
 
@@ -40,7 +40,7 @@ package {
         /*
          IntelliJ 14.1 unable to embed CFF Fonts which are supported by flexmojos 7.1.0
          to prevent build error must add a compiler option to in IntelliJ overriding value set in pom.xml
-         File->Project Structure->Modules->crossUserMicrophone->Compiler Options->Additional compiler options->"-define+=CONFIG::cffFont,false"
+         File->Project Structure->Modules->microphone->Compiler Options->Additional compiler options->"-define+=CONFIG::cffFont,false"
 
          http://apache-flex-users.2333346.n4.nabble.com/Flex-Mojos-Fonts-and-Theme-Questions-tc10999.html
          https://youtrack.jetbrains.com/issue/IDEA-144541
@@ -144,7 +144,7 @@ package {
                 _microphonePermissionTimer.start();
             }
 
-            _recorder = new MicRecorder();
+            _recorder = new Recorder();
             _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
             _recorder.addEventListener(RecordingEvent.COMPLETE, onRecordComplete);
             _recorder.record();

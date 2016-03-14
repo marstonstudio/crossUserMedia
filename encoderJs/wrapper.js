@@ -22,7 +22,7 @@ this.onmessage = function(e) {
     var outputBitrate = e.data.outputBitrate;
     var pcmBuffer = e.data.pcmBuffer;
 
-    console.log('ffmpegaac onmessage inputSampleRate:' + inputSampleRate + ', inputFormat:' + inputFormat + ', outputBitrate:' + outputBitrate + ', pcmBuffer.byteLength:' + pcmBuffer.byteLength);
+    console.log('encoderjs onmessage inputSampleRate:' + inputSampleRate + ', inputFormat:' + inputFormat + ', outputBitrate:' + outputBitrate + ', pcmBuffer.byteLength:' + pcmBuffer.byteLength);
 
     var fileName = (0|Math.random()*9e6).toString(36);
     var inputName = fileName + '.pcm';
@@ -52,7 +52,7 @@ this.onmessage = function(e) {
 
     Module['postRun'] = function() {
         var outputLength = FS.stat(outputName).size;
-        console.log('ffmpegaac postRun output data length: ' + outputLength);
+        console.log('encoderjs postRun output data length: ' + outputLength);
 
         var outputFile = FS.open(outputName, "r");
         var outputData = new Uint8Array(outputLength);
@@ -69,7 +69,7 @@ this.onmessage = function(e) {
 }
 
 this.onerror = function(e) {
-    console.error('ffmpegaac worker error: ' + e);
+    console.error('encoderjs worker error: ' + e);
 }
 
 /*EMSCRIPTENBODY*/
