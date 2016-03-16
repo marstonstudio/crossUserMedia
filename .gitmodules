@@ -1,3 +1,6 @@
 [submodule "vendor/ffmpeg"]
 	path = vendor/ffmpeg
 	url = git://source.ffmpeg.org/ffmpeg.git
+[submodule "vendor/crossbridge"]
+	path = vendor/crossbridge
+	url = git@github.com:crossbridge-community/crossbridge.git
