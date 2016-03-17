@@ -1,3 +1,0 @@
-[submodule "encoder/ffmpeg"]
-	path = encoder/ffmpeg
-	url = git://source.ffmpeg.org/ffmpeg.git
