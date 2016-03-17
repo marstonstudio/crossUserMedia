@@ -3,11 +3,11 @@
 rm -Rf dist
 mkdir dist
 
-cd ../vendor/ffmpeg
+cd ../ffmpeg
 emmake make clean
 
 emconfigure ./configure \
-    --prefix=../../encoderjs/dist \
+    --prefix=../js/dist \
 \
     --disable-runtime-cpudetect \
 \
@@ -68,8 +68,8 @@ emconfigure ./configure \
 
 emmake make
 
-cd ../../encoderjs
-cp ../vendor/ffmpeg/ffmpeg dist/ffmpeg.bc
+cd ../js
+cp ../ffmpeg/ffmpeg dist/ffmpeg.bc
 
 
 sed -e '\/\*EMSCRIPTENBODY\*\//,$d' wrapper.js > dist/pre.js
@@ -80,7 +80,7 @@ emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 dist/ffmpeg.bc --pre
 
 #npm test
 
-LOCAL_INSTALL_TARGET=../frontend/node_modules/encoderjs
+LOCAL_INSTALL_TARGET=../../frontend/node_modules/encoderjs
 rm -Rf $LOCAL_INSTALL_TARGET
 mkdir $LOCAL_INSTALL_TARGET
 cp ./.npmignore $LOCAL_INSTALL_TARGET

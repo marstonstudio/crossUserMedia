@@ -3,8 +3,8 @@
 *.iml
 target/
 fonts.ser
-encoderjs/dist
-encoderjs/node_modules
+encoder/js/dist
+encoder/js/node_modules
 frontend/dist
 frontend/node
 frontend/node_modules
