@@ -5,6 +5,7 @@ target/
 fonts.ser
 encoder/js/dist
 encoder/js/node_modules
+encoder/swc/dist
 frontend/dist
 frontend/node
 frontend/node_modules

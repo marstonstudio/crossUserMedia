@@ -6,10 +6,8 @@ Module['printErr'] = function(text) { console.log(text); };
 
 this.onmessage = function(e) {
 
-    //TODO: ./configure: line 4920: emnm: command not found
-    //TODO: WARNING: empkg-config not found, library detection may fail.
-
     //TODO: npm centric build.sh
+
     //TODO: use device to stream PCM data instead of batch file
 
     //TODO: add asserts on input that we get a valid bitrate and ArrayBuffer
@@ -35,6 +33,7 @@ this.onmessage = function(e) {
         FS.close(inputFile);
     };
 
+    /*
     Module['arguments'] = [
         '-nostdin',
         '-stats',
@@ -44,6 +43,21 @@ this.onmessage = function(e) {
         '-ac', '1',
         '-channel_layout', 'mono',
         '-i', inputName,
+        '-b:a', outputBitrate.toString(),
+        '-f', 'mp4',
+        '-acodec', 'aac',
+        outputName
+    ];
+    */
+    Module['arguments'] = [
+        '-nostdin',
+        '-stats',
+        '-f', inputFormat,
+        '-acodec', 'pcm_' + inputFormat,
+        '-ar', inputSampleRate.toString(),
+        '-ac', '1',
+        '-channel_layout', 'mono',
+        '-i', 'pipe:0',
         '-b:a', outputBitrate.toString(),
         '-f', 'mp4',
         '-acodec', 'aac',

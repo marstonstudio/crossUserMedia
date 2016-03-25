@@ -11,3 +11,4 @@ Inspired by
 * http://labs.byhook.com/2011/02/15/ogg-vorbis-encoder-for-flash-alchemy-series-part-1/
 * http://labs.byhook.com/2011/05/03/alchemy-series-part-6-ogg-vorbis-library-source-release/
 * http://stackoverflow.com/questions/6317816/how-to-compile-ffmpeg-via-alchemy-gcc
+

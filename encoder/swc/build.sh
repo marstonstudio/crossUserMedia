@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 
+FLASCC=/usr/local/crossbridge/sdk
+FLEX=/usr/local/air_sdk
+PATH=$FLASCC/usr/bin:$PATH
+
 rm -Rf dist
 mkdir dist
 
 cd ../ffmpeg
-emmake make clean
 
-emconfigure ./configure \
-    --prefix=../js/dist \
-    --progs-suffix=.bc \
+make clean
+
+./configure \
+    --prefix=../swc/dist \
 \
     --disable-runtime-cpudetect \
 \
@@ -58,8 +62,6 @@ emconfigure ./configure \
     --cpu=generic \
     --enable-cross-compile \
     --target-os=none \
-    --cross-prefix=em \
-    --cc=emcc \
 \
     --disable-asm \
     --disable-fast-unaligned \
@@ -67,23 +69,8 @@ emconfigure ./configure \
     --disable-debug \
     --disable-stripping
 
-emmake make
+make
 make install
 
-cd ../js
+cd ../swc
 
-sed -e '\/\*EMSCRIPTENBODY\*\//,$d' wrapper.js > dist/pre.js
-sed -e '1,\/\*EMSCRIPTENBODY\*\//d' wrapper.js > dist/post.js
-
-emcc -O3 -s OUTLINING_LIMIT=100000 -s TOTAL_MEMORY=67108864 dist/bin/ffmpeg.bc --pre-js dist/pre.js --post-js dist/post.js -o dist/encoder.js
-
-#npm test
-
-LOCAL_INSTALL_TARGET=../../frontend/node_modules/encoderjs
-rm -Rf $LOCAL_INSTALL_TARGET
-mkdir $LOCAL_INSTALL_TARGET
-cp ./.npmignore $LOCAL_INSTALL_TARGET
-cp ./dist/encoder.js $LOCAL_INSTALL_TARGET
-cp ./dist/encoder.js.mem $LOCAL_INSTALL_TARGET
-cp ./package.json $LOCAL_INSTALL_TARGET
-cp ./README.md $LOCAL_INSTALL_TARGET
