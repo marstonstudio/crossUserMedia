@@ -1,11 +1,13 @@
 .DS_Store
 .idea/
+
 *.iml
 target/
 fonts.ser
 encoder/js/dist
 encoder/js/node_modules
 encoder/swc/dist
+encoder/swc/blog.html
 frontend/dist
 frontend/node
 frontend/node_modules
