@@ -27,12 +27,23 @@ this.onmessage = function(e) {
     var outputName = fileName + '.mp4';
 
     Module['preRun'] = function() {
+        console.log('encoderjs preRun');
+
         var inputArray = new Uint8Array(pcmBuffer);
         var inputFile = FS.open(inputName, "w+");
         FS.write(inputFile, inputArray, 0, inputArray.length);
         FS.close(inputFile);
     };
+
+    Module['arguments'] = [
+        inputName,
+        inputFormat,
+        inputSampleRate.toString(),
+        outputName,
+        outputBitrate.toString()
+    ];
     
+    /*
     Module['arguments'] = [
         '-nostdin',
         '-stats',
@@ -47,6 +58,7 @@ this.onmessage = function(e) {
         '-acodec', 'aac',
         outputName
     ];
+    */
 
     Module['postRun'] = function() {
         var outputLength = FS.stat(outputName).size;

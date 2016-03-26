@@ -72,4 +72,4 @@ emmake make clean
 cd ../js
 emmake make clean
 emmake make
-emmake install
+emmake make install

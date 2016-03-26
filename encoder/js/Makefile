@@ -1,18 +1,20 @@
 CC = emcc
 
-CFLAGS = -v -O3 \
-	-s OUTLINING_LIMIT=100000 \
-	-s TOTAL_MEMORY=67108864 \
-	-I./dist/include \
-	--emit-symbol-map \
-	--pre-js pre.js
-
 LDFLAGS = -L./dist/lib
 
 LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
 
-#OBJECTS = ../c/transcode_aac.c
-OBJECTS = dist/bin/ffmpeg.bc
+CFLAGS = -v -O3 \
+	-I./dist/include \
+	-s OUTLINING_LIMIT=100000 \
+	-s TOTAL_MEMORY=67108864 \
+	--emit-symbol-map \
+	--pre-js pre.js
+
+OBJECTS = ../c/encoder.c
+#OBJECTS = dist/bin/ffmpeg.bc
+
+TARGET = dist/encoder.js
 
 INSTALL_DIR = ../../frontend/node_modules/encoderjs
 
@@ -20,7 +22,7 @@ all: program
 
 program: $(OBJECTS)
 	mkdir -p dist
-	$(CC) $(CFLAGS) $(OBJECTS) -o dist/encoder.js $(LDFLAGS) $(LDLIBS)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $(TARGET) $(LDFLAGS) $(LDLIBS)
 
 install:
 	mkdir -p $(INSTALL_DIR)
@@ -31,4 +33,5 @@ install:
 
 clean:
 	rm -f dist/encoder.*
+	rm -f dist/hello.*
 	rm -Rf $(INSTALL_DIR)

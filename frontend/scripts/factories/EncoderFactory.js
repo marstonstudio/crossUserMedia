@@ -63,7 +63,7 @@ module.exports = function ($log, $q, encoderjs) {
             $log.error('EncoderFactory listener error: ' + e.message);
         };
 
-        encoder.postMessage({'inputSampleRate':sampleRate, 'inputFormat':format, 'outputBitrate':'32k', 'pcmBuffer':pcmBuffer}, [pcmBuffer]);
+        encoder.postMessage({'inputSampleRate':sampleRate, 'inputFormat':format, 'outputBitrate':'32000', 'pcmBuffer':pcmBuffer}, [pcmBuffer]);
 
         return deferred.promise;
     };
