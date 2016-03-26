@@ -11,11 +11,12 @@ cd ../ffmpeg
 
 make clean
 
-./configure \
+emconfigure ./configure \
     --prefix=../swc/dist \
 \
     --disable-runtime-cpudetect \
 \
+    --disable-ffmpeg \
     --disable-ffplay \
     --disable-ffprobe \
     --disable-ffserver \
@@ -58,7 +59,7 @@ make clean
     --disable-securetransport \
     --disable-xlib \
 \
-    --arch=x86_32 \
+    --arch=x86_64 \
     --cpu=generic \
     --enable-cross-compile \
     --target-os=none \
@@ -71,6 +72,9 @@ make clean
 
 make
 make install
+make clean
 
 cd ../swc
-
+make clean
+make
+make install

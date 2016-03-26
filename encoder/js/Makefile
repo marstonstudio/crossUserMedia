@@ -33,5 +33,4 @@ install:
 
 clean:
 	rm -f dist/encoder.*
-	rm -f dist/hello.*
 	rm -Rf $(INSTALL_DIR)
