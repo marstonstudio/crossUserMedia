@@ -4,12 +4,14 @@ LDFLAGS = -L./dist/lib
 
 LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
 
-CFLAGS = -v -O3 \
+CFLAGS = -v -O0 \
 	-I./dist/include \
 	-s OUTLINING_LIMIT=100000 \
 	-s TOTAL_MEMORY=67108864 \
+	-s EXPORTED_FUNCTIONS="['_main', '_init', '_compress', '_force_exit']" \
 	--emit-symbol-map \
-	--pre-js pre.js
+	--pre-js pre.js \
+	--post-js post.js
 
 OBJECTS = ../c/encoder.c
 #OBJECTS = dist/bin/ffmpeg.bc
@@ -30,6 +32,7 @@ install:
 	cp -f ./dist/encoder.* $(INSTALL_DIR)
 	cp -f ./package.json $(INSTALL_DIR)
 	cp -f ./README.md $(INSTALL_DIR)
+	#cp -f ./draft/testworker.js $(INSTALL_DIR)
 
 clean:
 	rm -f dist/encoder.*

@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <emscripten.h>
 
 #include "libavformat/avformat.h"
 #include "libavformat/avio.h"
@@ -40,6 +41,11 @@
 #include "libavutil/opt.h"
 
 #include "libswresample/swresample.h"
+
+static char *input_fmt;
+static int input_sample_rate;
+static char *output_fmt;
+static int output_bit_rate;
 
 /**
  * Convert an error code into a text message.
@@ -55,13 +61,11 @@ static const char *get_error_text(const int error)
 
 /** Open an input file and the required decoder. */
 static int open_input_file(const char *filename,
-                           const char *fmt_short_name,
-                           const int sample_rate,
                            AVFormatContext **input_format_context,
                            AVCodecContext **input_codec_context)
 {
     AVCodec *input_codec;
-    AVInputFormat *fmt = av_find_input_format(fmt_short_name);
+    AVInputFormat *fmt = av_find_input_format(input_fmt);
 
     int error;
 
@@ -101,7 +105,7 @@ static int open_input_file(const char *filename,
     }
 
     *input_codec_context = (*input_format_context)->streams[0]->codec;
-    (*input_codec_context)->sample_rate = sample_rate;
+    (*input_codec_context)->sample_rate = input_sample_rate;
 
     return 0;
 }
@@ -112,7 +116,6 @@ static int open_input_file(const char *filename,
  * Some of these parameters are based on the input file's parameters.
  */
 static int open_output_file(const char *filename,
-                            const int output_bitrate,
                             AVCodecContext *input_codec_context,
                             AVFormatContext **output_format_context,
                             AVCodecContext **output_codec_context)
@@ -169,7 +172,7 @@ static int open_output_file(const char *filename,
     (*output_codec_context)->channel_layout = av_get_default_channel_layout(1);
     (*output_codec_context)->sample_rate    = input_codec_context->sample_rate;
     (*output_codec_context)->sample_fmt     = output_codec->sample_fmts[0];
-    (*output_codec_context)->bit_rate       = output_bitrate;
+    (*output_codec_context)->bit_rate       = output_bit_rate;
 
     /** Set the sample rate for the container. */
     stream->time_base.den = input_codec_context->sample_rate;
@@ -617,8 +620,23 @@ static int write_output_file_trailer(AVFormatContext *output_format_context)
     return 0;
 }
 
+int main(int argc, char **argv) {
+    fprintf(stdout, "main\n");
+    emscripten_exit_with_live_runtime();
+}
+
+void init(char *i_fmt, int i_sample_rate, char *o_fmt, int o_bit_rate) {
+    fprintf(stdout, "input_fmt:%s, input_sample_rate:%d, output_format:%s, output_bit_rate:%d\n",
+                     i_fmt, i_sample_rate, o_fmt, o_bit_rate);
+
+    input_fmt = i_fmt;
+    input_sample_rate = i_sample_rate;
+    output_fmt = o_fmt;
+    output_bit_rate = o_bit_rate;
+}
+
 /** Convert an audio file to an AAC file in an MP4 container. */
-int main(int argc, char **argv)
+int compress(int argc, char **argv)
 {
     AVFormatContext *input_format_context = NULL, *output_format_context = NULL;
     AVCodecContext *input_codec_context = NULL, *output_codec_context = NULL;
@@ -626,28 +644,25 @@ int main(int argc, char **argv)
     AVAudioFifo *fifo = NULL;
     int ret = AVERROR_EXIT;
 
-    if (argc < 6) {
-        fprintf(stderr, "Usage: %s <input file> <input format> <input sample rate> <output file> <output bitrate>\n", argv[0]);
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <input file> <output file>\n", argv[0]);
         exit(1);
     }
 
     const char *input_filename = argv[1];
-    const char *input_fmt = argv[2];
-    const int  input_sample_rate = atoi(argv[3]);
-    const char *output_filename = argv[4];
-    const int output_bitrate = atoi(argv[5]);
+    const char *output_filename = argv[2];
 
-    fprintf(stdout, "input_filename:%s, input_fmt:%s, input_sample_rate:%d, output_filename:%s, input_bitrate:%d\n",
-                     input_filename, input_fmt, input_sample_rate, output_filename, output_bitrate);
+    fprintf(stdout, "input_filename:%s, input_fmt:%s, input_sample_rate:%d, output_filename:%s, output_bit_rate:%d\n",
+                     input_filename, input_fmt, input_sample_rate, output_filename, output_bit_rate);
 
     /** Register all codecs and formats so that they can be used. */
     av_register_all();
     /** Open the input file for reading. */
-    if (open_input_file(input_filename, input_fmt, input_sample_rate, &input_format_context, &input_codec_context))
+    if (open_input_file(input_filename, &input_format_context, &input_codec_context))
         goto cleanup;
 
     /** Open the output file for writing. */
-    if (open_output_file(output_filename, output_bitrate, input_codec_context, &output_format_context, &output_codec_context))
+    if (open_output_file(output_filename, input_codec_context, &output_format_context, &output_codec_context))
         goto cleanup;
 
     /** Initialize the resampler to be able to convert audio sample formats. */
@@ -747,4 +762,9 @@ cleanup:
         avformat_close_input(&input_format_context);
 
     return ret;
+}
+
+void force_exit(int status) {
+    fprintf(stdout, "force_exit (%d)\n", status);
+    emscripten_force_exit(status);
 }

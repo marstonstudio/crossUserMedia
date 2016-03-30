@@ -23,7 +23,6 @@ angular.module('Microphone', ['ngMaterial'])
         'NavigatorFactory',
         'FlashRecordingFactory',
         'NativeRecordingFactory',
-        'EncoderFactory',
         'UploadFactory',
         require('./controllers/MicrophoneController.js')
     ])
@@ -46,6 +45,7 @@ angular.module('Microphone', ['ngMaterial'])
         '$log',
         '$q',
         'NavigatorFactory',
+        'EncoderFactory',
         require('./factories/NativeRecordingFactory.js')
     ])
     .factory('FlashRecordingFactory', [

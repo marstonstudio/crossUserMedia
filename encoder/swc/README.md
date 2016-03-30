@@ -12,4 +12,6 @@ Inspired by
 * http://labs.byhook.com/2011/05/03/alchemy-series-part-6-ogg-vorbis-library-source-release/
 * http://stackoverflow.com/questions/6317816/how-to-compile-ffmpeg-via-alchemy-gcc
 * http://www.adobe.com/devnet-docs/flascc/docs/Reference.html
+* https://github.com/normanzb/encoder-mp3
+* https://github.com/soywiz/as3libwebp
 

@@ -1,11 +1,10 @@
-module.exports = function($rootScope, $log, $q, Navigator) {
+module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
 
     // http://typedarray.org/from-microphone-to-wav-to-server/
 
     var monochannel = [];
     var recordingLength = 0;
     var volume = null;
-    var sampleRate = null;
     var audioStream = null;
     var context = null;
     var recorder = null;
@@ -38,6 +37,8 @@ module.exports = function($rootScope, $log, $q, Navigator) {
     };
 
     function startUserMediaRecording(stream) {
+        var deferred = $q.defer();
+        
         monochannel.length = 0;
         recordingLength = 0;
 
@@ -46,9 +47,6 @@ module.exports = function($rootScope, $log, $q, Navigator) {
         // creates the audio context
         var audioContext = window.AudioContext || window.webkitAudioContext;
         context = new audioContext();
-
-        // retrieve the current sample rate to be used for WAV packaging
-        sampleRate = context.sampleRate;
 
         // creates an audio node from the microphone incoming stream
         audioInput = context.createMediaStreamSource(audioStream);
@@ -88,9 +86,18 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             recordingLength += bufferSize;
         };
 
-        // we connect the recorder
-        volume.connect(recorder);
-        recorder.connect(context.destination);
+        Encoder.init('f32le', context.sampleRate)
+            
+            .then(function(){
+                volume.connect(recorder);
+                recorder.connect(context.destination);
+                deferred.resolve();
+                
+            }, function(reason) {
+                $log.error(reason);
+            });
+
+        return deferred.promise;
     }
 
     // https://blogs.windows.com/msedgedev/2015/05/13/announcing-media-capture-functionality-in-microsoft-edge/
@@ -125,7 +132,16 @@ module.exports = function($rootScope, $log, $q, Navigator) {
             offset += chunk.length;
         }
 
-        deferred.resolve({'sampleRate':sampleRate, 'format':'f32le', 'pcmBuffer':pcmArray.buffer});
+        Encoder.compress(pcmArray.buffer)
+            
+            .then(function(encodedBlob){
+                Encoder.exit();
+                deferred.resolve(encodedBlob);
+
+            }, function(reason) {
+                $log.error(reason);
+            });
+        
         $rootScope.$emit('statusEvent', 'audio captured');
         return deferred.promise;
     }

@@ -14,7 +14,8 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
         //functions globally accessible for flash ExternalInterface
         $window.onFlashSoundRecorded = function (sampleRate, audioBase64) {
             var pcmArray = b64toByteArray(audioBase64);
-            recordingDeferred.resolve({'sampleRate':sampleRate, 'format':'f32be', 'pcmBuffer':pcmArray.buffer});
+            var pcmBlob = new Blob([pcmArray.buffer], { type: 'audio/L16' });
+            recordingDeferred.resolve(pcmBlob);
         };
 
         $window.onFlashSoundRecordingError = function (error) {

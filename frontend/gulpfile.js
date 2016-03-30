@@ -100,7 +100,7 @@ gulp.task('analyzeScripts', ['clean'], function(){
 });
 
 gulp.task('copyEncoderJs', ['clean'], function(){
-    return gulp.src(['node_modules/encoderjs/encoder.*'])
+    return gulp.src(['node_modules/encoderjs/encoder.*', 'node_modules/encoderjs/testworker.js'])
         .pipe(gulp.dest('dist/js/'));
 });
 

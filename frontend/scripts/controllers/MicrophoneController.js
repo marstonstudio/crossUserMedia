@@ -1,12 +1,10 @@
-module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRecording, NativeRecording, Encoder, UploadRecording) {
+module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRecording, NativeRecording, UploadRecording) {
     $log.log('MicrophoneController initialized');
 
     this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
 
     var self = this;
-
-    Encoder.initialize();
 
     $scope.microphoneSourceAudioEnabled = !bowser.msie;
 
@@ -82,29 +80,17 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
         return getRecordingObject()
             .stopRecording()
-            .then(function (pcmObject) {
+            .then(function (encodedBlob){
 
-                return Encoder
-                    .process(pcmObject.sampleRate, pcmObject.format, pcmObject.pcmBuffer)
-                    .then(function(encodedBlob){
+                $log.log('MicrophoneController encodedBlob.size:' + encodedBlob.size);
+                embedLocalBlob(encodedBlob);
 
-                        $log.log('MicrophoneController encodedBlob.size:' + encodedBlob.size);
-                        embedLocalBlob(encodedBlob);
-
-                        return UploadRecording
-                            .send(encodedBlob, 'mp4', 'wav')
-                            .then(displayProcessedOutput, function(reason) {$log.error(reason);});
-
-                    }, function(reason) {$log.error(reason);});
-
-                /*
-                var pcmBlob = new Blob([pcmObject.pcmBuffer], { type: 'audio/L16' });
                 return UploadRecording
-                    .send(pcmBlob, 'pcm', 'pcm')
+                    .send(encodedBlob, 'mp4', 'wav')
                     .then(displayProcessedOutput, function(reason) {$log.error(reason);});
-                */
 
-            }, function(reason) {$log.error(reason);});
+            }, function(reason) { $log.error(reason);});
+
     };
 
     this.playSource = function () {
