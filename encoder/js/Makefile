@@ -13,7 +13,8 @@ CFLAGS = -v -O0 \
 	--pre-js pre.js \
 	--post-js post.js
 
-OBJECTS = ../c/encoder.c
+OBJECTS = ../simple.c
+#OBJECTS = ../c/encoder.c
 #OBJECTS = dist/bin/ffmpeg.bc
 
 TARGET = dist/encoder.js
@@ -32,7 +33,6 @@ install:
 	cp -f ./dist/encoder.* $(INSTALL_DIR)
 	cp -f ./package.json $(INSTALL_DIR)
 	cp -f ./README.md $(INSTALL_DIR)
-	#cp -f ./draft/testworker.js $(INSTALL_DIR)
 
 clean:
 	rm -f dist/encoder.*

@@ -15,7 +15,11 @@ module.exports = function ($log, $q, encoderjs) {
                 deferred.resolve();
                 break;
 
-            case 'compressComplete':
+            case 'loadComplete':
+                deferred.resolve();
+                break;
+
+            case 'flushComplete':
                 var encodedBuffer = e.data.encodedBuffer;
                 if(encodedBuffer) {
                     deferred.resolve(new Blob([encodedBuffer], { type: 'audio/mp4' }));

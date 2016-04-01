@@ -5,6 +5,8 @@ var forceExitEncoder = Module.cwrap('force_exit', null, ['number']);
 var inputFormatBuffer;
 var outputFormatBuffer;
 
+var passThruBuffer;
+
 this.onmessage = function(e) {
     
     console.log('encoder.js onmessage cmd:' + e.data.cmd);
@@ -30,29 +32,15 @@ this.onmessage = function(e) {
             
             break;
         
-        case 'compress':
+        case 'load':
 
-            var pcmBuffer = e.data.pcmBuffer;
+            passThruBuffer = e.data.pcmBuffer;
+            self.postMessage({'cmd':'loadComplete'});
+            break;
 
-            /*
-            var fileName = (0|Math.random()*9e6).toString(36);
-            var inputName = fileName + '.pcm';
-            var outputName = fileName + '.mp4';
+        case 'flush':
 
-            var inputArray = new Uint8Array(pcmBuffer);
-            var inputFile = FS.open(inputName, "w+");
-            FS.write(inputFile, inputArray, 0, inputArray.length);
-            FS.close(inputFile);
-
-            var outputFile = FS.open(outputName, "r");
-            var outputData = new Uint8Array(outputLength);
-            FS.read(outputFile, outputData, 0, outputLength, 0);
-            FS.close(outputFile);
-
-            self.postMessage(outputData.buffer);
-            */
-
-            self.postMessage({'cmd':'compressComplete', 'encodedBuffer':pcmBuffer}, [pcmBuffer]);
+            self.postMessage({'cmd':'flushComplete', 'encodedBuffer':passThruBuffer}, [passThruBuffer]);
             break;
 
         case 'exit':
@@ -78,6 +66,24 @@ this.onmessage = function(e) {
 this.onerror = function(e) {
     console.error('encoder.js worker error: ' + e);
 }
+
+/*
+ var fileName = (0|Math.random()*9e6).toString(36);
+ var inputName = fileName + '.pcm';
+ var outputName = fileName + '.mp4';
+
+ var inputArray = new Uint8Array(pcmBuffer);
+ var inputFile = FS.open(inputName, "w+");
+ FS.write(inputFile, inputArray, 0, inputArray.length);
+ FS.close(inputFile);
+
+ var outputFile = FS.open(outputName, "r");
+ var outputData = new Uint8Array(outputLength);
+ FS.read(outputFile, outputData, 0, outputLength, 0);
+ FS.close(outputFile);
+
+ self.postMessage(outputData.buffer);
+ */
 
 
 
