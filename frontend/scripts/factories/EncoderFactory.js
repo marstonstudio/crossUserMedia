@@ -4,7 +4,7 @@ module.exports = function ($log, $q, encoderjs) {
 
     var encoder;
     var deferred;
-
+    
     var workerOnMessage = function(e) {
         
         $log.log('EncoderFactory onmessage cmd:' + e.data.cmd);
@@ -20,9 +20,14 @@ module.exports = function ($log, $q, encoderjs) {
                 break;
 
             case 'flushComplete':
-                var encodedBuffer = e.data.encodedBuffer;
-                if(encodedBuffer) {
-                    deferred.resolve(new Blob([encodedBuffer], { type: 'audio/mp4' }));
+                if(e.data.outputBuffer) {
+                    var blob = new Blob([e.data.outputBuffer], { type: 'audio/' + e.data.outputFormat });
+                    deferred.resolve({
+                        'format':e.data.outputFormat,
+                        'codec':e.data.outputCodec,
+                        'sampleRate':e.data.outputSampleRate,
+                        'blob':blob
+                    });
                 } else {
                     deferred.reject('EncoderFactory no data received');
                 }
@@ -37,26 +42,40 @@ module.exports = function ($log, $q, encoderjs) {
         $log.error('EncoderFactory listener error ' + e.filename + ' line:' + e.lineno + ' ' + e.message);
     };
 
-    Service.init = function (format, sampleRate) {
-        $log.log('EncoderFactory.init format:' + format + ', sampleRate:' + sampleRate);
+    Service.init = function (inputFormat, inputSampleRate, outputFormat) {
+        $log.log('EncoderFactory.init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
 
-        //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker
-        //https://github.com/substack/webworkify
-
+        //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker https://github.com/substack/webworkify
         encoder = new Worker('/js/encoder.js');
         encoder.onmessage = workerOnMessage;
         encoder.onerror = workerOnError;
 
         deferred = $q.defer();
-        encoder.postMessage({'cmd':'init', 'inputFormat':format, 'inputSampleRate':sampleRate, 'outputFormat':'mp4', 'outputBitrate':'32000'});
+        encoder.postMessage({
+            'cmd':'init', 
+            'inputFormat': inputFormat, 
+            'inputSampleRate': inputSampleRate, 
+            'outputFormat': outputFormat,
+            'outputCodec': outputFormat === 'mp4' ? 'aac' : 'pcm_' + inputFormat,
+            'outputSampleRate': inputSampleRate,
+            'outputBitRate': 32000
+        });
         return deferred.promise;
     };
 
-    Service.compress = function(pcmBuffer) {
-        $log.log('EncoderFactory.compress pcmBuffer.byteLength:' + pcmBuffer.byteLength);
+    Service.load = function(inputBuffer) {
+        $log.log('EncoderFactory.load inputBuffer.byteLength:' + inputBuffer.byteLength);
 
         deferred = $q.defer();
-        encoder.postMessage({'cmd':'compress', 'pcmBuffer':pcmBuffer}, [pcmBuffer]);
+        encoder.postMessage({'cmd':'load', 'inputBuffer':inputBuffer}, [inputBuffer]);
+        return deferred.promise;
+    };
+
+    Service.flush = function() {
+        $log.log('EncoderFactory.flush');
+
+        deferred = $q.defer();
+        encoder.postMessage({'cmd':'flush'});
         return deferred.promise;
     };
 

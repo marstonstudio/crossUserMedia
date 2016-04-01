@@ -1,11 +1,14 @@
 package com.marstonstudio.crossusermedia.server;
 
 import com.marstonstudio.crossusermedia.server.util.FileUtil;
+import com.xuggle.xuggler.IContainerFormat;
 import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+import java.util.Collection;
+import java.util.Set;
 
 @WebListener
 public class Bootstrap implements ServletContextListener {
@@ -17,7 +20,6 @@ public class Bootstrap implements ServletContextListener {
         logger.info("Starting Recorder");
 
         FileUtil.startup(servletContextEvent.getServletContext());
-
     }
 
     @Override

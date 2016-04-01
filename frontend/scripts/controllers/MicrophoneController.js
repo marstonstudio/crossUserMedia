@@ -80,13 +80,13 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
         return getRecordingObject()
             .stopRecording()
-            .then(function (encodedBlob){
+            .then(function (encodedSource){
 
-                $log.log('MicrophoneController encodedBlob.size:' + encodedBlob.size);
-                embedLocalBlob(encodedBlob);
+                $log.log('MicrophoneController encodedBlob.size:' + encodedSource.blob.size);
+                embedLocalBlob(encodedSource.blob);
 
                 return UploadRecording
-                    .send(encodedBlob, 'mp4', 'wav')
+                    .send(encodedSource.blob, encodedSource.format, encodedSource.codec, encodedSource.sampleRate, 'wav')
                     .then(displayProcessedOutput, function(reason) {$log.error(reason);});
 
             }, function(reason) { $log.error(reason);});

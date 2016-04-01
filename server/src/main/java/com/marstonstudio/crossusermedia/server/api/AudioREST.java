@@ -24,7 +24,7 @@ public class AudioREST {
 
     protected static final Logger logger = Logger.getLogger(AudioREST.class);
 
-    public static Set<String> ACCEPTED_AUDIO_FORMATS = new HashSet<String>(Arrays.asList("wav", "pcm", "mp4"));
+    public static Set<String> ACCEPTED_AUDIO_FORMATS = new HashSet<String>(Arrays.asList("wav", "f32le", "f32be", "mp4"));
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
@@ -42,19 +42,21 @@ public class AudioREST {
             @Context HttpServletRequest hsr,
             @FormDataParam("payload") final InputStream payloadBlob,
             @FormDataParam("inputFormat") final String inputFormat,
+            @FormDataParam("inputCodec") final String inputCodec,
+            @FormDataParam("inputSampleRate") final Integer inputSampleRate,
             @FormDataParam("outputFormat") final String outputFormat
     ) throws IOException {
         logger.info("POST /audio");
 
-        validateAudioFormat("inputFormat", inputFormat);
-        validateAudioFormat("outputFormat", outputFormat);
+        validateAudioType("inputFormat", inputFormat);
+        validateAudioType("outputFormat", outputFormat);
 
         byte[] inputBytes = FileUtil.decodeBlob(payloadBlob);
         File inputFile = FileUtil.getNewEmptyFile(inputFormat);
         FileUtil.saveBytesToFile(inputBytes, inputFile);
 
         try {
-            File outputFile = AudioUtil.convertAudioFile(inputFile, outputFormat, inputFormat.equals(outputFormat));
+            File outputFile = AudioUtil.convertAudioFile(inputFile, inputFormat, inputCodec, inputSampleRate, outputFormat);
             return new AudioSet(
                     FileUtil.getAudioUrlFromFile(hsr, inputFile),
                     FileUtil.getAudioUrlFromFile(hsr, outputFile)
@@ -66,7 +68,7 @@ public class AudioREST {
 
     }
 
-    private void validateAudioFormat(String paramName, String audioFormat) {
+    private void validateAudioType(String paramName, String audioFormat) {
 
         if(audioFormat == null) {
             throw new WebApplicationException(paramName + " is required", Response.Status.METHOD_NOT_ALLOWED);

@@ -86,7 +86,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
             recordingLength += bufferSize;
         };
 
-        Encoder.init('f32le', context.sampleRate)
+        Encoder.init('f32le', context.sampleRate, 'f32le')
             
             .then(function(){
                 volume.connect(recorder);
@@ -132,15 +132,18 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
             offset += chunk.length;
         }
 
-        Encoder.compress(pcmArray.buffer)
-            
-            .then(function(encodedBlob){
-                Encoder.exit();
-                deferred.resolve(encodedBlob);
-
-            }, function(reason) {
-                $log.error(reason);
-            });
+        Encoder.load(pcmArray.buffer)
+            .then(function(){
+                
+                Encoder.flush()
+                    .then(function(encodedSource){
+                        
+                        Encoder.exit();
+                        deferred.resolve(encodedSource);
+                        
+                    }, function(reason) {$log.error(reason);});
+                
+            }, function(reason) {$log.error(reason);});
         
         $rootScope.$emit('statusEvent', 'audio captured');
         return deferred.promise;

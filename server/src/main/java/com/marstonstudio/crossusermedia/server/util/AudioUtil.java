@@ -5,8 +5,7 @@ import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.MediaToolAdapter;
 import com.xuggle.mediatool.ToolFactory;
 import com.xuggle.mediatool.event.IAddStreamEvent;
-import com.xuggle.xuggler.IError;
-import com.xuggle.xuggler.IStreamCoder;
+import com.xuggle.xuggler.*;
 import org.apache.log4j.Logger;
 
 import javax.xml.ws.WebServiceException;
@@ -22,19 +21,28 @@ public class AudioUtil {
 
     static private final Logger logger = Logger.getLogger(AudioUtil.class);
 
-    public static File convertAudioFile(File inputFile, String outputFileType, boolean passThru) throws InterruptedException, IOException {
+    public static File convertAudioFile(File inputFile, String inputFormat, String inputCodec, Integer inputSampleRate, String outputFormat) throws InterruptedException, IOException {
+
         logger.info("inputFile: " + inputFile);
 
-        File outputFile = FileUtil.prepareOutputFile(inputFile, outputFileType, passThru);
+        boolean passThru = inputFormat.equals(outputFormat);
+
+        File outputFile = FileUtil.prepareOutputFile(inputFile, outputFormat, passThru);
         if(passThru) {
             return FileUtil.copyFile(inputFile, outputFile);
         }
 
-        ConverterTool converter = new ConverterTool();
-        IMediaReader reader = ToolFactory.makeReader(inputFile.getAbsolutePath());
-        reader.addListener(converter);
+        IContainerFormat format = IContainerFormat.make();
+        format.setInputFormat(inputFormat);
 
+        IContainer container = IContainer.make();
+        container.open(inputFile.getAbsolutePath(), IContainer.Type.READ, format);
+
+        IMediaReader reader = ToolFactory.makeReader(container);
         IMediaWriter writer = ToolFactory.makeWriter(outputFile.getAbsolutePath(), reader);
+
+        ConverterTool converter = new ConverterTool(inputSampleRate);
+        reader.addListener(converter);
         converter.addListener(writer);
 
         IError error = reader.readPacket();
@@ -54,7 +62,11 @@ public class AudioUtil {
 
     static class ConverterTool extends MediaToolAdapter {
 
-        public ConverterTool() {}
+        Integer sampleRate;
+
+        public ConverterTool(Integer sampleRate) {
+            this.sampleRate = sampleRate;
+        }
 
         public void onAddStream(IAddStreamEvent event) {
 
@@ -62,6 +74,8 @@ public class AudioUtil {
                     .getContainer()
                     .getStream(event.getStreamIndex())
                     .getStreamCoder();
+
+            if(sampleRate != null) streamCoder.setSampleRate(sampleRate);
 
             super.onAddStream(event);
         }

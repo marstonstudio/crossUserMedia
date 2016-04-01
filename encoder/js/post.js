@@ -5,11 +5,18 @@ var forceExitEncoder = Module.cwrap('force_exit', null, ['number']);
 var inputFormatBuffer;
 var outputFormatBuffer;
 
+//TODO: draft to get worker properly integrated
 var passThruBuffer;
+
+//FIXME: remove this state, pass through to C and get back without storing locally in worker
+var outputFormat;
+var outputCodec;
+var outputSampleRate;
+var outputBitRate;
 
 this.onmessage = function(e) {
     
-    console.log('encoder.js onmessage cmd:' + e.data.cmd);
+    //console.log('encoder.js onmessage cmd:' + e.data.cmd);
 
     switch(e.data.cmd) {
 
@@ -20,27 +27,41 @@ this.onmessage = function(e) {
             Module.writeStringToMemory(inputFormat, inputFormatBuffer);
             var inputSampleRate = e.data.inputSampleRate;
 
-            var outputFormat = e.data.outputFormat;
+            outputFormat = e.data.outputFormat;
             outputFormatBuffer = Module._malloc(outputFormat.length+1);
             Module.writeStringToMemory(outputFormat, outputFormatBuffer);
-            var outputBitrate = e.data.outputBitrate
+            
+            outputSampleRate = e.data.outputSampleRate;
+            outputCodec = e.data.outputCodec;
+            outputBitRate = e.data.outputBitRate;
 
-            //console.log('encoder.js inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat + ', outputBitrate:' + outputBitrate);
-
-            initEncoder(inputFormatBuffer, inputSampleRate, outputFormatBuffer, outputBitrate);
+            console.log('encoder.js init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + 
+                ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec + ', oustputSampleRate:' + outputSampleRate + ', outputBitRate:' + outputBitRate);
+            
+            initEncoder(inputFormatBuffer, inputSampleRate, outputFormatBuffer, outputBitRate);
             self.postMessage({'cmd':'initComplete'});
             
             break;
         
         case 'load':
 
-            passThruBuffer = e.data.pcmBuffer;
+            console.log('encoder.js load inputBuffer.byteLength:' + e.data.inputBuffer.byteLength);
+
+            passThruBuffer = e.data.inputBuffer.slice();
             self.postMessage({'cmd':'loadComplete'});
             break;
 
         case 'flush':
 
-            self.postMessage({'cmd':'flushComplete', 'encodedBuffer':passThruBuffer}, [passThruBuffer]);
+            console.log('encoder.js flush');
+
+            self.postMessage({
+                'cmd':'flushComplete',
+                'outputFormat':outputFormat,
+                'outputCodec':outputCodec, 
+                'outputSampleRate':outputSampleRate,
+                'outputBuffer':passThruBuffer},
+                [passThruBuffer]);
             break;
 
         case 'exit':

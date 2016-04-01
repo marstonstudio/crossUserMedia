@@ -13,8 +13,8 @@ CFLAGS = -v -O0 \
 	--pre-js pre.js \
 	--post-js post.js
 
-OBJECTS = ../simple.c
-#OBJECTS = ../c/encoder.c
+#OBJECTS = ../simple.c
+OBJECTS = ../c/encoder.c
 #OBJECTS = dist/bin/ffmpeg.bc
 
 TARGET = dist/encoder.js
