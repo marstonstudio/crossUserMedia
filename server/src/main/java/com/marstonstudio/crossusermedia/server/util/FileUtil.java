@@ -71,12 +71,32 @@ public class FileUtil {
         return new File(outputName);
     }
 
-    public static File saveBytesToFile(byte[] payload, File inputFile) {
+    public static File saveBytesToFile(byte[] header, byte[] payload, File inputFile) {
         try {
             FileOutputStream fileStream = new FileOutputStream(inputFile);
+            if(header != null) {
+                fileStream.write(header);
+            }
             fileStream.write(payload);
             fileStream.close();
             return inputFile;
+        } catch (Exception e) {
+            logger.error(e);
+            throw new WebApplicationException(e);
+        }
+    }
+
+    public static File saveBytesToFile(byte[] payload, File inputFile) {
+        return saveBytesToFile(null, payload, inputFile);
+    }
+
+    public static byte[] getBytesFromFile(File inputFile) {
+        try {
+            FileInputStream fileStream = new FileInputStream(inputFile);
+            byte[] fileContent = new byte[(int) inputFile.length()];
+            fileStream.read(fileContent);
+            fileStream.close();
+            return  fileContent;
         } catch (Exception e) {
             logger.error(e);
             throw new WebApplicationException(e);

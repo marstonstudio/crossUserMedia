@@ -2,12 +2,11 @@ module.exports = function($rootScope, $log, $http) {
 
     var Service = {};
 
-    Service.send = function(audioBlob, inputFormat, inputCodec, inputSampleRate, outputFormat) {
+    Service.send = function(audioBlob, inputFormat, inputSampleRate, outputFormat) {
 
         var formData = new FormData();
         formData.append('payload', audioBlob);
         formData.append('inputFormat', inputFormat);
-        formData.append('inputCodec', inputCodec);
         formData.append('inputSampleRate', inputSampleRate.toString());
         formData.append('outputFormat', outputFormat);
 

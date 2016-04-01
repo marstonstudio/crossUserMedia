@@ -24,7 +24,6 @@ module.exports = function ($log, $q, encoderjs) {
                     var blob = new Blob([e.data.outputBuffer], { type: 'audio/' + e.data.outputFormat });
                     deferred.resolve({
                         'format':e.data.outputFormat,
-                        'codec':e.data.outputCodec,
                         'sampleRate':e.data.outputSampleRate,
                         'blob':blob
                     });
@@ -56,7 +55,6 @@ module.exports = function ($log, $q, encoderjs) {
             'inputFormat': inputFormat, 
             'inputSampleRate': inputSampleRate, 
             'outputFormat': outputFormat,
-            'outputCodec': outputFormat === 'mp4' ? 'aac' : 'pcm_' + inputFormat,
             'outputSampleRate': inputSampleRate,
             'outputBitRate': 32000
         });

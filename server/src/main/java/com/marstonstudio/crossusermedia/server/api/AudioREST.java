@@ -1,6 +1,7 @@
 // Copyright (c) 2014. EnglishCentral. All rights reserved.
 package com.marstonstudio.crossusermedia.server.api;
 
+import com.marstonstudio.crossusermedia.server.element.AudioFormat;
 import com.marstonstudio.crossusermedia.server.util.FileUtil;
 import com.marstonstudio.crossusermedia.server.element.AudioSet;
 import com.marstonstudio.crossusermedia.server.util.AudioUtil;
@@ -41,22 +42,24 @@ public class AudioREST {
     public AudioSet postBlob(
             @Context HttpServletRequest hsr,
             @FormDataParam("payload") final InputStream payloadBlob,
-            @FormDataParam("inputFormat") final String inputFormat,
-            @FormDataParam("inputCodec") final String inputCodec,
+            @FormDataParam("inputFormat") final String inputFormatName,
             @FormDataParam("inputSampleRate") final Integer inputSampleRate,
-            @FormDataParam("outputFormat") final String outputFormat
+            @FormDataParam("outputFormat") final String outputFormatName
     ) throws IOException {
         logger.info("POST /audio");
+
+        AudioFormat inputFormat = AudioFormat.fromString(inputFormatName);
+        AudioFormat outputFormat = AudioFormat.fromString(outputFormatName);
 
         validateAudioType("inputFormat", inputFormat);
         validateAudioType("outputFormat", outputFormat);
 
         byte[] inputBytes = FileUtil.decodeBlob(payloadBlob);
-        File inputFile = FileUtil.getNewEmptyFile(inputFormat);
+        File inputFile = FileUtil.getNewEmptyFile(inputFormat.getExtension());
         FileUtil.saveBytesToFile(inputBytes, inputFile);
 
         try {
-            File outputFile = AudioUtil.convertAudioFile(inputFile, inputFormat, inputCodec, inputSampleRate, outputFormat);
+            File outputFile = AudioUtil.convertAudioFile(inputFile, inputFormat, inputSampleRate, outputFormat);
             return new AudioSet(
                     FileUtil.getAudioUrlFromFile(hsr, inputFile),
                     FileUtil.getAudioUrlFromFile(hsr, outputFile)
@@ -68,14 +71,9 @@ public class AudioREST {
 
     }
 
-    private void validateAudioType(String paramName, String audioFormat) {
-
+    private void validateAudioType(String paramName, Enum audioFormat) {
         if(audioFormat == null) {
-            throw new WebApplicationException(paramName + " is required", Response.Status.METHOD_NOT_ALLOWED);
-        }
-
-        if(!ACCEPTED_AUDIO_FORMATS.contains(audioFormat)) {
-            throw new WebApplicationException(paramName + " must be in " + ACCEPTED_AUDIO_FORMATS.toString(), Response.Status.NOT_ACCEPTABLE);
+            throw new WebApplicationException(paramName + " is required and must be one of " + AudioFormat.toEnumeratedList(), Response.Status.METHOD_NOT_ALLOWED);
         }
     }
 

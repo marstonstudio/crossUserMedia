@@ -1,4 +1,4 @@
-var initEncoder = Module.cwrap('init', null, ['number', 'number', 'number', 'number']);
+var initEncoder = Module.cwrap('init', null, ['number', 'number', 'number', 'number', 'number']);
 
 var forceExitEncoder = Module.cwrap('force_exit', null, ['number']);
 
@@ -10,7 +10,6 @@ var passThruBuffer;
 
 //FIXME: remove this state, pass through to C and get back without storing locally in worker
 var outputFormat;
-var outputCodec;
 var outputSampleRate;
 var outputBitRate;
 
@@ -21,24 +20,23 @@ this.onmessage = function(e) {
     switch(e.data.cmd) {
 
         case 'init':
-
+            
             var inputFormat = e.data.inputFormat;
             inputFormatBuffer = Module._malloc(inputFormat.length+1);
             Module.writeStringToMemory(inputFormat, inputFormatBuffer);
-            var inputSampleRate = e.data.inputSampleRate;
-
+            
             outputFormat = e.data.outputFormat;
             outputFormatBuffer = Module._malloc(outputFormat.length+1);
             Module.writeStringToMemory(outputFormat, outputFormatBuffer);
-            
-            outputSampleRate = e.data.outputSampleRate;
-            outputCodec = e.data.outputCodec;
-            outputBitRate = e.data.outputBitRate;
 
-            console.log('encoder.js init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + 
-                ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec + ', oustputSampleRate:' + outputSampleRate + ', outputBitRate:' + outputBitRate);
+            var inputSampleRate = e.data.inputSampleRate;
+            outputSampleRate = e.data.outputSampleRate;
+            outputBitRate = e.data.outputBitRate;
             
-            initEncoder(inputFormatBuffer, inputSampleRate, outputFormatBuffer, outputBitRate);
+            console.log('encoder.js init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + 
+                ', outputFormat:' + outputFormat + ', oustputSampleRate:' + outputSampleRate + ', outputBitRate:' + outputBitRate);
+            
+            initEncoder(inputFormatBuffer, inputSampleRate, outputFormatBuffer, outputSampleRate, outputBitRate);
             self.postMessage({'cmd':'initComplete'});
             
             break;
@@ -58,7 +56,6 @@ this.onmessage = function(e) {
             self.postMessage({
                 'cmd':'flushComplete',
                 'outputFormat':outputFormat,
-                'outputCodec':outputCodec, 
                 'outputSampleRate':outputSampleRate,
                 'outputBuffer':passThruBuffer},
                 [passThruBuffer]);
