@@ -5,6 +5,7 @@ import java.nio.ByteOrder;
 public enum AudioFormat {
 
     WAV("wav", "wav"),
+    MP3("mp3", "mp3"),
     MP4("mp4", "mp4"),
     PCM_F32_LE("f32le", "pcm"),
     PCM_F32_BE("f32be", "pcm");

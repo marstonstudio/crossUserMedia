@@ -86,7 +86,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
                 embedLocalBlob(encodedSource.blob);
 
                 return UploadRecording
-                    .send(encodedSource.blob, encodedSource.format, encodedSource.sampleRate, 'wav')
+                    .send(encodedSource.blob, encodedSource.format, encodedSource.sampleRate, 'mp3')
                     .then(displayProcessedOutput, function(reason) {$log.error(reason);});
 
             }, function(reason) { $log.error(reason);});

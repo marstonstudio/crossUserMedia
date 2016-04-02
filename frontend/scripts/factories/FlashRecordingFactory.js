@@ -1,7 +1,7 @@
-module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
+module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Encoder) {
 
     var Service = {};
-    var recordingDeferred;
+    var deferred;
 
     var initialized = false;
     var hasFlashInstalled = false;
@@ -14,12 +14,23 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
         //functions globally accessible for flash ExternalInterface
         $window.onFlashSoundRecorded = function (sampleRate, audioBase64) {
             var pcmArray = b64toByteArray(audioBase64);
-            var pcmBlob = new Blob([pcmArray.buffer], { type: 'audio/L16' });
-            recordingDeferred.resolve(pcmBlob);
+
+            Encoder.load(pcmArray.buffer)
+                .then(function(){
+
+                    Encoder.flush()
+                        .then(function(encodedSource){
+
+                            Encoder.exit();
+                            deferred.resolve(encodedSource);
+
+                        }, function(reason) {$log.error(reason);});
+
+                }, function(reason) {$log.error(reason);});
         };
 
         $window.onFlashSoundRecordingError = function (error) {
-            recordingDeferred.reject(error);
+            deferred.reject(error);
         };
 
         $window.onFlashStatusMessage = function(message) {
@@ -47,16 +58,24 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder) {
     Service.startRecording = function () {
         $log.log('FlashRecordingFactory startRecording');
         if(hasFlashInstalled) {
-            getFlashObject().startRecording();
+
+            Encoder.init('f32be', 16000, 'f32be')
+                .then(function(){
+                    getFlashObject().startRecording();
+                }, function(reason) {
+                    $log.error(reason);
+                });
+            
+            
         }
     };
 
     Service.stopRecording = function () {
-        recordingDeferred = $q.defer();
+        deferred = $q.defer();
         if(hasFlashInstalled) {
             getFlashObject().stopRecording();
         }
-        return recordingDeferred.promise;
+        return deferred.promise;
     };
 
     function getFlashObject() {

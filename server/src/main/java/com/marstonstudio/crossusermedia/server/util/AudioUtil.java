@@ -14,15 +14,9 @@ import javax.ws.rs.core.Response;
 import javax.xml.ws.WebServiceException;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
-
-
-// read from demuxer, write to muxer
-// https://github.com/artclarke/humble-video/blob/master/humble-video-test/src/test/java/io/humble/video_test/BeepSoundTest.java
-// http://dl.beligum.com/Converter.java
 
 public class AudioUtil {
 
@@ -39,17 +33,13 @@ public class AudioUtil {
             return FileUtil.copyFile(inputFile, outputFile);
         }
 
-        IContainerFormat format = IContainerFormat.make();
-        format.setInputFormat(inputFormat.getName());
+        File encodingFile = inputFormat.isPCM() ? convertPcmToWav(inputFile, inputFormat, inputSampleRate) : inputFile;
 
-        IContainer container = IContainer.make();
-        container.open(inputFile.getAbsolutePath(), IContainer.Type.READ, format);
-
-        IMediaReader reader = ToolFactory.makeReader(container);
-        IMediaWriter writer = ToolFactory.makeWriter(outputFile.getAbsolutePath(), reader);
-
-        ConverterTool converter = new ConverterTool(inputSampleRate);
+        ConverterTool converter = new ConverterTool(null);
+        IMediaReader reader = ToolFactory.makeReader(encodingFile.getAbsolutePath());
         reader.addListener(converter);
+
+        IMediaWriter writer = ToolFactory.makeWriter(outputFile.getAbsolutePath(), reader);
         converter.addListener(writer);
 
         IError error = reader.readPacket();
@@ -89,17 +79,13 @@ public class AudioUtil {
     }
 
     //http://stackoverflow.com/questions/4440015/java-pcm-to-wav
-    public File convertPcmToWav(File inputFile, AudioFormat inputFormat, Integer inputSampleRate) throws IOException {
+    public static File convertPcmToWav(File pcmFile, AudioFormat inputFormat, Integer inputSampleRate) throws IOException {
 
         if(inputSampleRate == null) {
             throw new WebApplicationException("inputSampleRate is required for format type: " + inputFormat.getName(), Response.Status.METHOD_NOT_ALLOWED);
         }
 
-
-        byte[] float32PcmData = FileUtil.getBytesFromFile(inputFile);
-
-        byte[] header = new byte[44];
-
+        byte[] float32PcmData = FileUtil.getBytesFromFile(pcmFile);
         byte[] int16PcmData = convertFloat32ToInt16Pcm(float32PcmData, inputFormat);
 
         int bitsPerSample = 16;
@@ -108,6 +94,7 @@ public class AudioUtil {
         long totalDataLen = int16PcmData.length + 36;
         long bitrate = inputSampleRate * channels * bitsPerSample;
 
+        byte[] header = new byte[44];
         header[0] = 'R';
         header[1] = 'I';
         header[2] = 'F';
@@ -153,41 +140,29 @@ public class AudioUtil {
         header[42] = (byte) ((int16PcmData.length >> 16) & 0xff);
         header[43] = (byte) ((int16PcmData.length >> 24) & 0xff);
 
-        File outputFile = FileUtil.prepareOutputFile(inputFile, AudioFormat.WAV.getExtension(), false);
-        outputFile = FileUtil.saveBytesToFile(header, int16PcmData, outputFile);
-        return outputFile;
+        File wavFile = FileUtil.prepareOutputFile(pcmFile, AudioFormat.WAV.getExtension(), false);
+        wavFile = FileUtil.saveBytesToFile(header, int16PcmData, wavFile);
+        return wavFile;
     }
 
-    public byte[] convertFloat32ToInt16Pcm(byte[] float32PcmData, AudioFormat inputFormat) {
+    public static byte[] convertFloat32ToInt16Pcm(byte[] float32PcmData, AudioFormat inputFormat) {
+        logger.info("convertFloat32ToInt16Pcm format:" + inputFormat.getName() +", byteOrder:" + inputFormat.getByteOrder());
 
         FloatBuffer float32Buffer = ByteBuffer.wrap(float32PcmData).order(inputFormat.getByteOrder()).asFloatBuffer();
+        float32Buffer.rewind();
+        int l = float32Buffer.remaining();
 
-        float[] floatArray = float32Buffer.array();
-        int l = floatArray.length;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(l*2).order(ByteOrder.LITTLE_ENDIAN);
 
-        ByteBuffer byteBuffer = ByteBuffer.allocate(l*2);
-
-        for(int i=0; i<l; i++) {
-            float f = floatArray[i] * Short.MAX_VALUE;
-            if(f > Short.MAX_VALUE) f = Short.MAX_VALUE;
-            if(f < Short.MIN_VALUE) f = Short.MIN_VALUE;
-            byteBuffer.putShort(i, (short) f);
+        while(float32Buffer.hasRemaining()) {
+            float sample = float32Buffer.get() * Short.MAX_VALUE;
+            if(sample > Short.MAX_VALUE) sample = Short.MAX_VALUE;
+            if(sample < Short.MIN_VALUE) sample = Short.MIN_VALUE;
+            byteBuffer.putShort((short) sample);
         }
 
         return byteBuffer.array();
     }
 
-    /*
-    public byte[] get16BitPcm(short[] data) {
-        byte[] resultData = new byte[2 * data.length];
-        int iter = 0;
-        for (double sample : data) {
-            short maxSample = (short)((sample * Short.MAX_VALUE));
-            resultData[iter++] = (byte)(maxSample & 0x00ff);
-            resultData[iter++] = (byte)((maxSample & 0xff00) >>> 8);
-        }
-        return resultData;
-    }
-    */
 
 }

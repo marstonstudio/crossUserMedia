@@ -54,6 +54,7 @@ angular.module('Microphone', ['ngMaterial'])
         '$window',
         '$q',
         'swfEmbedder',
+        'EncoderFactory',
         require('./factories/FlashRecordingFactory.js')
     ])
     .factory('EncoderFactory', [

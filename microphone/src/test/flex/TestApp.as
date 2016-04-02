@@ -14,13 +14,10 @@ package {
         
         [Test(description="Load audio asset")]
         public function testAudioLoad():void {
-            //trace("testAudioLoad :: " + new Date().toLocaleString());
+            trace("testAudioLoad :: " + new Date().toLocaleString());
 
             var audioPcmAsset:ByteArrayAsset = new AudioPcm();
-            //assertTrue("testing asserts", audioPcmAsset.bytesAvailable > 0);
-            
-            var encoder:Encoder = new Encoder("hello");
-            //encoder.encode("world")
+            assertTrue("testing asserts", audioPcmAsset.bytesAvailable > 0);
         }
     }
 }

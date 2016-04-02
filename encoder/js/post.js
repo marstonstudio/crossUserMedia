@@ -45,7 +45,7 @@ this.onmessage = function(e) {
 
             console.log('encoder.js load inputBuffer.byteLength:' + e.data.inputBuffer.byteLength);
 
-            passThruBuffer = e.data.inputBuffer.slice();
+            passThruBuffer = e.data.inputBuffer.slice(0);
             self.postMessage({'cmd':'loadComplete'});
             break;
 
