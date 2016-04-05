@@ -41,7 +41,7 @@ var init = function(inputFormat, inputSampleRate, outputFormat, outputSampleRate
 };
 
 var load = function(inputAudio) {
-    console.log('encoder.js load inputAudio.byteLength:' + inputAudio.byteLength);
+    //console.log('encoder.js load inputAudio.byteLength:' + inputAudio.byteLength);
 
     var inputAudioArray = new Uint8Array(inputAudio);
     Module.ccall(

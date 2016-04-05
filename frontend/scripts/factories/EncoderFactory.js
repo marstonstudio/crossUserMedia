@@ -7,7 +7,7 @@ module.exports = function ($log, $q, encoderjs) {
     
     var workerOnMessage = function(e) {
         
-        $log.log('EncoderFactory onmessage cmd:' + e.data.cmd);
+        //$log.log('EncoderFactory onmessage cmd:' + e.data.cmd);
 
         switch(e.data.cmd) {
 
@@ -62,7 +62,7 @@ module.exports = function ($log, $q, encoderjs) {
     };
 
     Service.load = function(inputAudio) {
-        $log.log('EncoderFactory.load inputAudio.byteLength:' + inputAudio.byteLength);
+        //$log.log('EncoderFactory.load inputAudio.byteLength:' + inputAudio.byteLength);
 
         deferred = $q.defer();
         encoder.postMessage({'cmd':'load', 'inputAudio':inputAudio}, [inputAudio]);

@@ -782,16 +782,13 @@ void init(const char *i_format, int i_sample_rate, const char *o_format, int o_s
 }
 
 void load(uint8_t *input_data, int input_length) {
-    fprintf(stdout, "load input_length:%u\n", input_length);
+    //fprintf(stdout, "load input_length:%u\n", input_length);
 
-    //TODO: assert output_data + output_length < max_output_length
+    //TODO: get asserts working
+    //assert(input_length + output_length < max_output_length);
+
     memcpy(output_data + output_length, input_data, input_length);
     output_length += input_length;
-}
-
-uint8_t *flush() {
-    fprintf(stdout, "flush\n");
-    return output_data;
 }
 
 int get_output_sample_rate() {
@@ -807,6 +804,11 @@ char *get_output_format() {
 int get_output_length() {
     fprintf(stdout, "get_output_length:%u\n", output_length);
     return output_length;
+}
+
+uint8_t *flush() {
+    fprintf(stdout, "flush\n");
+    return output_data;
 }
 
 void force_exit(int status) {

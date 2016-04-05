@@ -67,11 +67,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
         analyser.smoothingTimeConstant = 0;
         analyser.fftSize = BUFFER_SIZE;
         audioInput.connect(analyser);
-
-        /* From the spec: This value controls how frequently the audioprocess event is
-         dispatched and how many sample-frames need to be processed each call.
-         Lower values for buffer size will result in a lower (better) latency.
-         Higher values will be necessary to avoid audio breakup and glitches */
+        
         recorder = context.createScriptProcessor(BUFFER_SIZE, 1, 1);
 
         recorder.onaudioprocess = function(e) {
@@ -84,7 +80,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
             var pcmArray = new Float32Array(e.inputBuffer.getChannelData(0));
             Encoder.load(pcmArray.buffer)
                 .then(function(){
-                    $log.log('onaudioprocess time:' + e.playbackTime + ', level:' + level);
+                    //$log.log('onaudioprocess time:' + e.playbackTime + ', level:' + level);
                 }, function(reason) {
                     $log.error(reason);
                 });

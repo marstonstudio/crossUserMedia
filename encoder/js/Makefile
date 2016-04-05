@@ -4,7 +4,7 @@ LDFLAGS = -L./dist/lib
 
 LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
 
-CFLAGS = -v -O0 \
+CFLAGS = -v -O3 \
 	-I./dist/include \
 	-s OUTLINING_LIMIT=100000 \
 	-s TOTAL_MEMORY=67108864 \
