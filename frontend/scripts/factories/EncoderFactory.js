@@ -20,8 +20,8 @@ module.exports = function ($log, $q, encoderjs) {
                 break;
 
             case 'flushComplete':
-                if(e.data.outputBuffer) {
-                    var blob = new Blob([e.data.outputBuffer], { type: 'audio/' + e.data.outputFormat });
+                if(e.data.outputAudio) {
+                    var blob = new Blob([e.data.outputAudio], { type: 'audio/' + e.data.outputFormat });
                     deferred.resolve({
                         'format':e.data.outputFormat,
                         'sampleRate':e.data.outputSampleRate,
@@ -61,11 +61,11 @@ module.exports = function ($log, $q, encoderjs) {
         return deferred.promise;
     };
 
-    Service.load = function(inputBuffer) {
-        $log.log('EncoderFactory.load inputBuffer.byteLength:' + inputBuffer.byteLength);
+    Service.load = function(inputAudio) {
+        $log.log('EncoderFactory.load inputAudio.byteLength:' + inputAudio.byteLength);
 
         deferred = $q.defer();
-        encoder.postMessage({'cmd':'load', 'inputBuffer':inputBuffer}, [inputBuffer]);
+        encoder.postMessage({'cmd':'load', 'inputAudio':inputAudio}, [inputAudio]);
         return deferred.promise;
     };
 

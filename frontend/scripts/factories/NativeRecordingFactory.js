@@ -11,6 +11,12 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
     var audioInput = null;
     var analyser = null;
 
+    var PCM_FORMAT = 'f32le';
+    var OUTPUT_FORMAT = 'f32le';
+    //var OUTPUT_FORMAT = 'mp4';
+
+    var BUFFER_SIZE = 2048;
+
     var Service = {};
 
     Service.initialize = function() {};
@@ -59,34 +65,32 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
         //http://www.smartjava.org/content/exploring-html5-web-audio-visualizing-sound
         analyser = context.createAnalyser();
         analyser.smoothingTimeConstant = 0;
-        analyser.fftSize = 2048;
+        analyser.fftSize = BUFFER_SIZE;
         audioInput.connect(analyser);
 
         /* From the spec: This value controls how frequently the audioprocess event is
          dispatched and how many sample-frames need to be processed each call.
          Lower values for buffer size will result in a lower (better) latency.
          Higher values will be necessary to avoid audio breakup and glitches */
-        var bufferSize = 2048;
-        recorder = context.createScriptProcessor(bufferSize, 1, 1);
+        recorder = context.createScriptProcessor(BUFFER_SIZE, 1, 1);
 
         recorder.onaudioprocess = function(e) {
 
             var array =  new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(array);
             var level = getAverageVolume(array);
-            //$log.log('onaudioprocess time:' + e.playbackTime + ", level:" + level);
             $rootScope.$emit('recordingEvent', {'time': e.playbackTime, 'level':level});
 
-            //TODO: use AudioBuffer.copyFromChannel()
-            //https://developer.mozilla.org/en-US/docs/Web/API/AudioBuffer/copyFromChannel
-
-            var mono = e.inputBuffer.getChannelData(0);
-            // we clone the samples
-            monochannel.push(new Float32Array(mono));
-            recordingLength += bufferSize;
+            var pcmArray = new Float32Array(e.inputBuffer.getChannelData(0));
+            Encoder.load(pcmArray.buffer)
+                .then(function(){
+                    $log.log('onaudioprocess time:' + e.playbackTime + ', level:' + level);
+                }, function(reason) {
+                    $log.error(reason);
+                });
         };
 
-        Encoder.init('f32le', context.sampleRate, 'f32le')
+        Encoder.init(PCM_FORMAT, context.sampleRate, OUTPUT_FORMAT)
             
             .then(function(){
                 volume.connect(recorder);
@@ -122,27 +126,12 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
             recorder.onaudioprocess = null;
         }
 
-        //flatten all the 2048 length chunks of pcm data into a single Float32Array
-        var pcmArray = new Float32Array(recordingLength);
-        var offset = 0;
-        var chunkCount = monochannel.length;
-        for (var c = 0; c < chunkCount; c++) {
-            var chunk = monochannel[c];
-            pcmArray.set(chunk, offset);
-            offset += chunk.length;
-        }
+        Encoder.flush()
+            .then(function(encodedSource){
 
-        Encoder.load(pcmArray.buffer)
-            .then(function(){
-                
-                Encoder.flush()
-                    .then(function(encodedSource){
-                        
-                        Encoder.exit();
-                        deferred.resolve(encodedSource);
-                        
-                    }, function(reason) {$log.error(reason);});
-                
+                Encoder.exit();
+                deferred.resolve(encodedSource);
+
             }, function(reason) {$log.error(reason);});
         
         $rootScope.$emit('statusEvent', 'audio captured');

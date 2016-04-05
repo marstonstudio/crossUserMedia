@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include <emscripten.h>
 
 #include "libavformat/avformat.h"
@@ -42,11 +43,17 @@
 
 #include "libswresample/swresample.h"
 
-static char *input_fmt;
-static int input_sample_rate;
-static char *output_fmt;
-static int output_sample_rate;
-static int output_bit_rate;
+char *input_format;
+int input_sample_rate;
+
+char *output_format;
+int output_sample_rate;
+int output_bit_rate;
+uint8_t *output_data;
+int output_length;
+
+//max of 30 seconds at 44100khz
+const int max_output_length = 44100 * 4 * 30;
 
 /**
  * Convert an error code into a text message.
@@ -66,7 +73,7 @@ static int open_input_file(const char *filename,
                            AVCodecContext **input_codec_context)
 {
     AVCodec *input_codec;
-    AVInputFormat *fmt = av_find_input_format(input_fmt);
+    AVInputFormat *fmt = av_find_input_format(input_format);
 
     int error;
 
@@ -638,8 +645,8 @@ int compress(int argc, char **argv)
     const char *input_filename = argv[1];
     const char *output_filename = argv[2];
 
-    fprintf(stdout, "input_filename:%s, input_fmt:%s, input_sample_rate:%d, output_filename:%s, output_bit_rate:%d\n",
-                     input_filename, input_fmt, input_sample_rate, output_filename, output_bit_rate);
+    fprintf(stdout, "input_filename:%s, input_format:%s, input_sample_rate:%d, output_filename:%s, output_bit_rate:%d\n",
+                     input_filename, input_format, input_sample_rate, output_filename, output_bit_rate);
 
     /** Register all codecs and formats so that they can be used. */
     av_register_all();
@@ -750,29 +757,60 @@ cleanup:
     return ret;
 }
 
-int main(int argc, char **argv) {
+/****************************************************/
+
+int main() {
     fprintf(stdout, "main\n");
     emscripten_exit_with_live_runtime();
 }
 
-void init(char *i_fmt, int i_sample_rate, char *o_fmt, int o_sample_rate, int o_bit_rate) {
-    fprintf(stdout, "input_fmt:%s, input_sample_rate:%d, output_format:%s, output_sample_rate:%d, output_bit_rate:%d\n",
-                     i_fmt, i_sample_rate, o_fmt, o_sample_rate, o_bit_rate);
+void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
+    fprintf(stdout, "init input_format:%s, input_sample_rate:%u, output_format:%s, output_sample_rate:%u, output_bit_rate:%u\n",
+        i_format, i_sample_rate, o_format, o_sample_rate, o_bit_rate);
 
-    input_fmt = i_fmt;
+    input_format = malloc(strlen(i_format) + 1);
+    strcpy(input_format, i_format);
     input_sample_rate = i_sample_rate;
-    output_fmt = o_fmt;
+
+    output_format = malloc(strlen(o_format) + 1);
+    strcpy(output_format, o_format);
     output_sample_rate = o_sample_rate;
     output_bit_rate = o_bit_rate;
+
+    output_length = 0;
+    output_data = malloc(max_output_length);
 }
 
-void load() {
+void load(uint8_t *input_data, int input_length) {
+    fprintf(stdout, "load input_length:%u\n", input_length);
+
+    //TODO: assert output_data + output_length < max_output_length
+    memcpy(output_data + output_length, input_data, input_length);
+    output_length += input_length;
 }
 
-void flush() {
+uint8_t *flush() {
+    fprintf(stdout, "flush\n");
+    return output_data;
+}
+
+int get_output_sample_rate() {
+    fprintf(stdout, "get_output_sample_rate:%u\n", output_sample_rate);
+    return output_sample_rate;
+}
+
+char *get_output_format() {
+    fprintf(stdout, "get_output_format:%s\n", output_format);
+    return output_format;
+}
+
+int get_output_length() {
+    fprintf(stdout, "get_output_length:%u\n", output_length);
+    return output_length;
 }
 
 void force_exit(int status) {
     fprintf(stdout, "force_exit (%d)\n", status);
+    free(output_data);
     emscripten_force_exit(status);
 }

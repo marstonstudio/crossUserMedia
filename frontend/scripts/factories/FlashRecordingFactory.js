@@ -1,10 +1,17 @@
 module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Encoder) {
 
-    var Service = {};
     var deferred;
 
     var initialized = false;
     var hasFlashInstalled = false;
+
+    var PCM_FORMAT = 'f32be';
+    var OUTPUT_FORMAT = 'f32be';
+    //var OUTPUT_FORMAT = 'mp4';
+
+    var SAMPLE_RATE = 16000;
+
+    var Service = {};
 
     Service.initialize = function () {
         if (initialized) {
@@ -59,7 +66,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Encoder) 
         $log.log('FlashRecordingFactory startRecording');
         if(hasFlashInstalled) {
 
-            Encoder.init('f32be', 16000, 'f32be')
+            Encoder.init(PCM_FORMAT, SAMPLE_RATE, OUTPUT_FORMAT)
                 .then(function(){
                     getFlashObject().startRecording();
                 }, function(reason) {
