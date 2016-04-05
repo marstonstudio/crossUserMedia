@@ -2,20 +2,16 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
 
     // http://typedarray.org/from-microphone-to-wav-to-server/
 
-    var monochannel = [];
-    var recordingLength = 0;
+    var PCM_FORMAT = 'f32le';
+    var OUTPUT_FORMAT = 'f32le';  //'f32le' for passthru, 'mp4' for encoding
+    var BUFFER_SIZE = 2048;
+
     var volume = null;
     var audioStream = null;
     var context = null;
     var recorder = null;
     var audioInput = null;
     var analyser = null;
-
-    var PCM_FORMAT = 'f32le';
-    var OUTPUT_FORMAT = 'f32le';
-    //var OUTPUT_FORMAT = 'mp4';
-
-    var BUFFER_SIZE = 2048;
 
     var Service = {};
 
@@ -44,9 +40,6 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
 
     function startUserMediaRecording(stream) {
         var deferred = $q.defer();
-        
-        monochannel.length = 0;
-        recordingLength = 0;
 
         audioStream = stream;
 
@@ -78,16 +71,17 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
             $rootScope.$emit('recordingEvent', {'time': e.playbackTime, 'level':level});
 
             var pcmArray = new Float32Array(e.inputBuffer.getChannelData(0));
+
             Encoder.load(pcmArray.buffer)
                 .then(function(){
                     //$log.log('onaudioprocess time:' + e.playbackTime + ', level:' + level);
+
                 }, function(reason) {
                     $log.error(reason);
                 });
         };
 
         Encoder.init(PCM_FORMAT, context.sampleRate, OUTPUT_FORMAT)
-            
             .then(function(){
                 volume.connect(recorder);
                 recorder.connect(context.destination);
@@ -124,7 +118,6 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
 
         Encoder.flush()
             .then(function(encodedSource){
-
                 Encoder.exit();
                 deferred.resolve(encodedSource);
 
