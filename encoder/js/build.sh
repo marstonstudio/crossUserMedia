@@ -6,10 +6,10 @@ emmake make clean
 
 emconfigure ./configure \
     --prefix=../js/dist \
-    --progs-suffix=.bc \
 \
     --disable-runtime-cpudetect \
 \
+    --disable-ffmpeg \
     --disable-ffplay \
     --disable-ffprobe \
     --disable-ffserver \
@@ -52,7 +52,7 @@ emconfigure ./configure \
     --disable-securetransport \
     --disable-xlib \
 \
-    --arch=x86_32 \
+    --arch=x86_64 \
     --cpu=generic \
     --enable-cross-compile \
     --target-os=none \

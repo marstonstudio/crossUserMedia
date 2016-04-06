@@ -28,7 +28,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#endif
 
 #include "libavformat/avformat.h"
 #include "libavformat/avio.h"
@@ -761,7 +764,6 @@ cleanup:
 
 int main() {
     fprintf(stdout, "main\n");
-    emscripten_exit_with_live_runtime();
 }
 
 void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
@@ -785,6 +787,7 @@ void load(uint8_t *input_data, int input_length) {
     //fprintf(stdout, "load input_length:%u\n", input_length);
 
     //TODO: get asserts working
+    //https://kripken.github.io/emscripten-site/docs/porting/Debugging.html
     //assert(input_length + output_length < max_output_length);
 
     memcpy(output_data + output_length, input_data, input_length);
@@ -814,5 +817,8 @@ uint8_t *flush() {
 void force_exit(int status) {
     fprintf(stdout, "force_exit (%d)\n", status);
     free(output_data);
+
+    #ifdef __EMSCRIPTEN__
     emscripten_force_exit(status);
+    #endif
 }

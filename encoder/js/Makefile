@@ -4,8 +4,9 @@ LDFLAGS = -L./dist/lib
 
 LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
 
-CFLAGS = -v -O3 \
+CFLAGS = -v -O0 \
 	-I./dist/include \
+	-s NO_EXIT_RUNTIME=1 \
 	-s OUTLINING_LIMIT=100000 \
 	-s TOTAL_MEMORY=67108864 \
 	-s EXPORTED_FUNCTIONS="['_main', '_init', '_load', '_flush', '_get_output_sample_rate', '_get_output_format', '_get_output_length', '_force_exit']" \
@@ -13,9 +14,7 @@ CFLAGS = -v -O3 \
 	--pre-js pre.js \
 	--post-js post.js
 
-#OBJECTS = ../simple.c
 OBJECTS = ../c/encoder.c
-#OBJECTS = dist/bin/ffmpeg.bc
 
 TARGET = dist/encoder.js
 

@@ -94,3 +94,8 @@ var forceExit = function() {
         }
     }
 };
+
+//hack, necessary so memory optimizer can be found in browser
+if(ENVIRONMENT_IS_WEB) {
+    Module["memoryInitializerPrefixURL"] = "/js/";
+}
