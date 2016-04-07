@@ -776,7 +776,7 @@ int main(int argc, char **argv) {
 
 void log_console(const char *format, ...) {
 
-    int max_chars = 100;
+    int max_chars = 200;
     char message[max_chars];
 
     va_list va;
@@ -789,9 +789,9 @@ void log_console(const char *format, ...) {
     #endif
 
     #ifdef __FLASHPLAYER__
-        AS3_DeclareVar(flash_string, String);
-        AS3_CopyCStringToVar(flash_string, message, max_chars);
-        AS3_Trace(flash_string);
+        AS3_DeclareVar(flash_message, String);
+        AS3_CopyCStringToVar(flash_message, message, max_chars);
+        AS3_Trace(flash_message);
     #endif
 }
 

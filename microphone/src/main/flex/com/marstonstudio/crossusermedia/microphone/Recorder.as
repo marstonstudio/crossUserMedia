@@ -1,5 +1,6 @@
 package com.marstonstudio.crossusermedia.microphone {
 
+import com.marstonstudio.crossusermedia.encoder.Encoder;
 import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
 
 import flash.events.EventDispatcher;
@@ -52,11 +53,15 @@ import flash.utils.getTimer;
         private const _timeOut:uint = 4000;
         private const _rateKHz:int = 16;
         private var   _gain:uint = 75;
+        
+        private var   _pcmFormat:String = "f32be";
+        private var   _bitRate:int = 32000;
 
 
         private var _startTime:uint;
         private var _microphone:Microphone;
         private var _buffer:ByteArray;
+        private var _encoder:Encoder;
 
         public function Recorder() {}
 
@@ -69,13 +74,16 @@ import flash.utils.getTimer;
             if ( _microphone == null ) {
                 _microphone = Microphone.getMicrophone();
             }
-
+            
             _startTime = getTimer();
 
             _microphone.setSilenceLevel(_silenceLevel, _timeOut);
             _microphone.rate = _rateKHz;
             _microphone.gain = _gain;
             _buffer = new ByteArray();
+            
+            _encoder = new Encoder();
+            _encoder.init(_pcmFormat, sampleRate, _pcmFormat, sampleRate, _bitRate);
 
             _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
         }

@@ -6,8 +6,8 @@ target/
 fonts.ser
 encoder/js/dist
 encoder/js/node_modules
-encoder/swc/dist
-encoder/swc/blog.html
+encoder/as3/dist
+encoder/as3/blog.html
 frontend/dist
 frontend/node
 frontend/node_modules
