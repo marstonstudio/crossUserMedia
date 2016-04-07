@@ -28,9 +28,14 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdarg.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#endif
+
+#ifdef __FLASHPLAYER__
+#include "AS3/AS3.h"
 #endif
 
 #include "libavformat/avformat.h"
@@ -648,9 +653,6 @@ int compress(int argc, char **argv)
     const char *input_filename = argv[1];
     const char *output_filename = argv[2];
 
-    fprintf(stdout, "input_filename:%s, input_format:%s, input_sample_rate:%d, output_filename:%s, output_bit_rate:%d\n",
-                     input_filename, input_format, input_sample_rate, output_filename, output_bit_rate);
-
     /** Register all codecs and formats so that they can be used. */
     av_register_all();
     /** Open the input file for reading. */
@@ -762,13 +764,40 @@ cleanup:
 
 /****************************************************/
 
-int main() {
-    fprintf(stdout, "main\n");
+int main(int argc, char **argv) {
+    #ifdef __EMSCRIPTEN__
+        emscripten_exit_with_live_runtime();
+    #endif
+
+    #ifdef __FLASHPLAYER__
+        AS3_GoAsync();
+    #endif
+}
+
+void log_console(const char *format, ...) {
+
+    int max_chars = 100;
+    char message[max_chars];
+
+    va_list va;
+    va_start (va, format);
+    vsprintf (message, format, va);
+    va_end (va);
+
+    #ifdef __EMSCRIPTEN__
+        fprintf(stdout, "%s\n", message);
+    #endif
+
+    #ifdef __FLASHPLAYER__
+        AS3_DeclareVar(flash_string, String);
+        AS3_CopyCStringToVar(flash_string, message, max_chars);
+        AS3_Trace(flash_string);
+    #endif
 }
 
 void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
-    fprintf(stdout, "init input_format:%s, input_sample_rate:%u, output_format:%s, output_sample_rate:%u, output_bit_rate:%u\n",
-        i_format, i_sample_rate, o_format, o_sample_rate, o_bit_rate);
+    log_console("init input_format:%s, input_sample_rate:%u, output_format:%s, output_sample_rate:%u, output_bit_rate:%u",
+           i_format, i_sample_rate, o_format, o_sample_rate, o_bit_rate);
 
     input_format = malloc(strlen(i_format) + 1);
     strcpy(input_format, i_format);
@@ -784,7 +813,7 @@ void init(const char *i_format, int i_sample_rate, const char *o_format, int o_s
 }
 
 void load(uint8_t *input_data, int input_length) {
-    //fprintf(stdout, "load input_length:%u\n", input_length);
+    //log_console("load input_length:%u", input_length);
 
     //TODO: get asserts working
     //https://kripken.github.io/emscripten-site/docs/porting/Debugging.html
@@ -795,30 +824,30 @@ void load(uint8_t *input_data, int input_length) {
 }
 
 int get_output_sample_rate() {
-    fprintf(stdout, "get_output_sample_rate:%u\n", output_sample_rate);
+    log_console("get_output_sample_rate:%u", output_sample_rate);
     return output_sample_rate;
 }
 
 char *get_output_format() {
-    fprintf(stdout, "get_output_format:%s\n", output_format);
+    log_console("get_output_format:%s", output_format);
     return output_format;
 }
 
 int get_output_length() {
-    fprintf(stdout, "get_output_length:%u\n", output_length);
+    log_console("get_output_length:%u", output_length);
     return output_length;
 }
 
 uint8_t *flush() {
-    fprintf(stdout, "flush\n");
+    log_console("flush\n");
     return output_data;
 }
 
 void force_exit(int status) {
-    fprintf(stdout, "force_exit (%d)\n", status);
+    log_console("force_exit (%d)", status);
     free(output_data);
 
     #ifdef __EMSCRIPTEN__
-    emscripten_force_exit(status);
+        emscripten_force_exit(status);
     #endif
 }

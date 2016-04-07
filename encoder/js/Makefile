@@ -4,9 +4,8 @@ LDFLAGS = -L./dist/lib
 
 LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
 
-CFLAGS = -v -O0 \
+CFLAGS = -v -O3 \
 	-I./dist/include \
-	-s NO_EXIT_RUNTIME=1 \
 	-s OUTLINING_LIMIT=100000 \
 	-s TOTAL_MEMORY=67108864 \
 	-s EXPORTED_FUNCTIONS="['_main', '_init', '_load', '_flush', '_get_output_sample_rate', '_get_output_format', '_get_output_length', '_force_exit']" \
@@ -36,3 +35,5 @@ install:
 clean:
 	rm -f dist/encoder.*
 	rm -Rf $(INSTALL_DIR)
+
+#	-s NO_EXIT_RUNTIME=1 \

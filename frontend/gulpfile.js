@@ -100,7 +100,7 @@ gulp.task('analyzeScripts', ['clean'], function(){
 });
 
 gulp.task('copyEncoderJs', ['clean'], function(){
-    return gulp.src(['node_modules/encoderjs/encoder.*', 'node_modules/encoderjs/testworker.js'])
+    return gulp.src(['node_modules/encoderjs/encoder.*'])
         .pipe(gulp.dest('dist/js/'));
 });
 
@@ -116,7 +116,7 @@ gulp.task('assembleScripts', ['clean', 'analyzeScripts', 'copyEncoderJs'] , func
         .pipe(vinylBuffer())
         .pipe(ngAnnotate())
         .pipe(sourcemaps.init({loadMaps: true}))
-        //.pipe(uglify())
+        .pipe(uglify())
         .on('error', function(err){
             console.error(err.toString());
             this.emit('end');

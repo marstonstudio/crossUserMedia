@@ -14,4 +14,10 @@ Inspired by
 * http://www.adobe.com/devnet-docs/flascc/docs/Reference.html
 * https://github.com/normanzb/encoder-mp3
 * https://github.com/soywiz/as3libwebp
+* https://github.com/claus/libtess2.swc
+
+
+https://helpx.adobe.com/air/kb/archived-air-sdk-version.html
+
+download air sdk 18.0
 

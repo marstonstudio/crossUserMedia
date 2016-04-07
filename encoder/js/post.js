@@ -81,12 +81,7 @@ var forceExit = function() {
     console.log('encoder.js forceExit');
 
     try {
-        Module.ccall(
-            'force_exit',
-            null,
-            ['number'],
-            [0]
-        );
+        Module.ccall('force_exit', null, ['number'], [0]);
         close();
     } catch(ex) {
         if(!(ex instanceof ExitStatus)) {
@@ -97,5 +92,5 @@ var forceExit = function() {
 
 //hack, necessary so memory optimizer can be found in browser
 if(ENVIRONMENT_IS_WEB) {
-    Module["memoryInitializerPrefixURL"] = "/js/";
-}
+    Module['memoryInitializerPrefixURL'] = '/js/';
+};
