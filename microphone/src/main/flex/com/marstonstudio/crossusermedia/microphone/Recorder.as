@@ -3,6 +3,8 @@ package com.marstonstudio.crossusermedia.microphone {
 import com.marstonstudio.crossusermedia.encoder.Encoder;
 import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
 
+import flash.display.Sprite;
+
 import flash.events.EventDispatcher;
 import flash.events.SampleDataEvent;
 import flash.media.Microphone;
@@ -62,8 +64,11 @@ import flash.utils.getTimer;
         private var _microphone:Microphone;
         private var _buffer:ByteArray;
         private var _encoder:Encoder;
+        private var _rootSprite:Sprite;
 
-        public function Recorder() {}
+        public function Recorder(rootSprite:Sprite) {
+            this._rootSprite = rootSprite;
+        }
 
         /**
          * Starts recording from the default or specified microphone.
@@ -82,7 +87,8 @@ import flash.utils.getTimer;
             _microphone.gain = _gain;
             _buffer = new ByteArray();
             
-            _encoder = new Encoder();
+            _encoder = new Encoder(_rootSprite);
+            //_encoder = new Encoder();
             _encoder.init(_pcmFormat, sampleRate, _pcmFormat, sampleRate, _bitRate);
 
             _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
@@ -127,6 +133,10 @@ import flash.utils.getTimer;
         public function get sampleRate():Number {
             if(_microphone != null) return _microphone.rate * 1000;
             return 0;
+        }
+
+        public function get format():String {
+            return _pcmFormat;
         }
     }
 }

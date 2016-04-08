@@ -24,32 +24,28 @@
  * Convert an input audio file to AAC in an MP4 container using FFmpeg.
  * @author Andreas Unterweger (dustsigns@gmail.com)
  */
-
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
-#ifdef __FLASHPLAYER__
-#include "AS3/AS3.h"
-#endif
-
 #include "libavformat/avformat.h"
 #include "libavformat/avio.h"
-
 #include "libavcodec/avcodec.h"
-
 #include "libavutil/audio_fifo.h"
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/frame.h"
 #include "libavutil/opt.h"
-
 #include "libswresample/swresample.h"
+
+#ifdef __FLASHPLAYER__
+#include "AS3/AS3.h"
+#endif
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 char *input_format;
 int input_sample_rate;
@@ -62,6 +58,64 @@ int output_length;
 
 //max of 30 seconds at 44100khz
 const int max_output_length = 44100 * 4 * 30;
+
+void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
+
+    input_format = (char*)malloc(strlen(i_format) + 1);
+    strcpy(input_format, i_format);
+    input_sample_rate = i_sample_rate;
+
+    output_format = (char*)malloc(strlen(o_format) + 1);
+    strcpy(output_format, o_format);
+    output_sample_rate = o_sample_rate;
+    output_bit_rate = o_bit_rate;
+
+    fprintf(stdout, "init input_format:%s, input_sample_rate:%u, output_format:%s, output_sample_rate:%u, output_bit_rate:%u\n",
+               input_format, input_sample_rate, output_format, output_sample_rate, output_bit_rate);
+
+    output_length = 0;
+    output_data = (uint8_t*)malloc(max_output_length);
+}
+
+void load(uint8_t *i_data, int i_length) {
+    //fprintf(stdout, "load i_length:%u\n", i_length);
+
+    //TODO: get asserts working
+    //https://kripken.github.io/emscripten-site/docs/porting/Debugging.html
+    //assert(input_length + output_length < max_output_length);
+
+    memcpy(output_data + output_length, i_data, i_length);
+    output_length += i_length;
+}
+
+int get_output_sample_rate() {
+    fprintf(stdout, "get_output_sample_rate:%u\n", output_sample_rate);
+    return output_sample_rate;
+}
+
+char *get_output_format() {
+    fprintf(stdout, "get_output_format:%s\n", output_format);
+    return output_format;
+}
+
+int get_output_length() {
+    fprintf(stdout, "get_output_length:%u\n", output_length);
+    return output_length;
+}
+
+uint8_t *flush() {
+    fprintf(stdout, "flush\n");
+    return output_data;
+}
+
+void force_exit(int status) {
+    fprintf(stdout, "force_exit (%d\n)", status);
+    free(output_data);
+
+    #ifdef __EMSCRIPTEN__
+        emscripten_force_exit(status);
+    #endif
+}
 
 /**
  * Convert an error code into a text message.
@@ -760,94 +814,4 @@ cleanup:
         avformat_close_input(&input_format_context);
 
     return ret;
-}
-
-/****************************************************/
-
-int main(int argc, char **argv) {
-    #ifdef __EMSCRIPTEN__
-        emscripten_exit_with_live_runtime();
-    #endif
-
-    #ifdef __FLASHPLAYER__
-        AS3_GoAsync();
-    #endif
-}
-
-void log_console(const char *format, ...) {
-
-    int max_chars = 200;
-    char message[max_chars];
-
-    va_list va;
-    va_start (va, format);
-    vsprintf (message, format, va);
-    va_end (va);
-
-    #ifdef __EMSCRIPTEN__
-        fprintf(stdout, "%s\n", message);
-    #endif
-
-    #ifdef __FLASHPLAYER__
-        AS3_DeclareVar(flash_message, String);
-        AS3_CopyCStringToVar(flash_message, message, max_chars);
-        AS3_Trace(flash_message);
-    #endif
-}
-
-void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
-    log_console("init input_format:%s, input_sample_rate:%u, output_format:%s, output_sample_rate:%u, output_bit_rate:%u",
-           i_format, i_sample_rate, o_format, o_sample_rate, o_bit_rate);
-
-    input_format = malloc(strlen(i_format) + 1);
-    strcpy(input_format, i_format);
-    input_sample_rate = i_sample_rate;
-
-    output_format = malloc(strlen(o_format) + 1);
-    strcpy(output_format, o_format);
-    output_sample_rate = o_sample_rate;
-    output_bit_rate = o_bit_rate;
-
-    output_length = 0;
-    output_data = malloc(max_output_length);
-}
-
-void load(uint8_t *input_data, int input_length) {
-    //log_console("load input_length:%u", input_length);
-
-    //TODO: get asserts working
-    //https://kripken.github.io/emscripten-site/docs/porting/Debugging.html
-    //assert(input_length + output_length < max_output_length);
-
-    memcpy(output_data + output_length, input_data, input_length);
-    output_length += input_length;
-}
-
-int get_output_sample_rate() {
-    log_console("get_output_sample_rate:%u", output_sample_rate);
-    return output_sample_rate;
-}
-
-char *get_output_format() {
-    log_console("get_output_format:%s", output_format);
-    return output_format;
-}
-
-int get_output_length() {
-    log_console("get_output_length:%u", output_length);
-    return output_length;
-}
-
-uint8_t *flush() {
-    log_console("flush\n");
-    return output_data;
-}
-
-void force_exit(int status) {
-    log_console("force_exit (%d)", status);
-    free(output_data);
-
-    #ifdef __EMSCRIPTEN__
-        emscripten_force_exit(status);
-    #endif
 }

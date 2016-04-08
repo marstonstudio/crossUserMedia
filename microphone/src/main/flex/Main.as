@@ -144,7 +144,7 @@ package {
                 _microphonePermissionTimer.start();
             }
 
-            _recorder = new Recorder();
+            _recorder = new Recorder(this);
             _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
             _recorder.addEventListener(RecordingEvent.COMPLETE, onRecordComplete);
             _recorder.record();

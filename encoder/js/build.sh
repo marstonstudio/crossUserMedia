@@ -41,7 +41,6 @@ emconfigure ./configure \
     --disable-bsfs \
     --disable-protocols \
     --enable-protocol=file \
-    --enable-protocol=pipe \
     --disable-indevs \
     --disable-outdevs \
     --disable-filters \

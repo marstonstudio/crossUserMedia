@@ -2,9 +2,19 @@ package {
 
 import com.marstonstudio.crossusermedia.encoder.Encoder;
 
+import flash.display.DisplayObjectContainer;
+import flash.display.Sprite;
+import flash.display.Stage;
+import flash.events.Event;
+
 import mx.core.ByteArrayAsset;
+import mx.core.UIComponent;
+
+import org.flexunit.asserts.assertNotNull;
 
 import org.flexunit.asserts.assertTrue;
+import org.flexunit.async.Async;
+import org.fluint.uiImpersonation.UIImpersonator;
 
 public class TestApp {
 
@@ -12,16 +22,40 @@ public class TestApp {
 
         [Embed(source="../resources/audio.pcm",mimeType="application/octet-stream")]
         public var AudioPcm:Class;
+    
+        public var container:Sprite;
+
+        [Before(async,ui)]
+        public function initialize():void {
+            container = new UIComponent();
+            Async.proceedOnEvent(this, container, Event.ADDED_TO_STAGE, 100);
+            UIImpersonator.addChild(container);
+        }
         
         [Test(description="Load audio asset")]
         public function testAudioLoad():void {
-            trace("testAudioLoad :: " + new Date().toLocaleString());
+            trace("testAudioLoad::" + new Date().toLocaleString());
 
             var audioPcmAsset:ByteArrayAsset = new AudioPcm();
-            assertTrue("testing asserts", audioPcmAsset.bytesAvailable > 0);
+            assertTrue("embedded bytesAvailable", audioPcmAsset.bytesAvailable > 0);
+
+            assertNotNull(container.stage);
             
-            var encoder:Encoder = new Encoder();
-            encoder.init('f32be', 16000, 'f32be', 16000, 32000);
+            const sampleRate:int = 16000;
+            const format:String = 'f32be';
+            const bitRate:int = 32000;
+            
+            var encoder:Encoder = new Encoder(container);
+            encoder.init(format, sampleRate, format, sampleRate, bitRate);
+            assertTrue("outputSampleRate set to " + sampleRate, encoder.getOutputSampleRate() == sampleRate);
+            assertTrue("outputFormat set to " + format, encoder.getOutputFormat() == format);
         }
+    
+        [After]
+        public function finalize():void {
+            UIImpersonator.removeAllChildren();
+            container = null;
+        }
+
     }
 }

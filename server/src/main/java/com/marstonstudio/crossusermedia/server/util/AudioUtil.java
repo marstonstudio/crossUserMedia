@@ -40,6 +40,7 @@ public class AudioUtil {
         reader.addListener(converter);
 
         IMediaWriter writer = ToolFactory.makeWriter(outputFile.getAbsolutePath(), reader);
+
         converter.addListener(writer);
 
         IError error = reader.readPacket();

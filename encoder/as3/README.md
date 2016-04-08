@@ -21,3 +21,5 @@ https://helpx.adobe.com/air/kb/archived-air-sdk-version.html
 
 download air sdk 18.0
 
+replace  {}/{} with 18.0 in flex-config.xml
+
