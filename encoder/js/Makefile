@@ -9,7 +9,7 @@ CFLAGS = -v -O3 \
 	-s OUTLINING_LIMIT=100000 \
 	-s TOTAL_MEMORY=67108864 \
 	-s NO_EXIT_RUNTIME=1 \
-	-s EXPORTED_FUNCTIONS="['_main', '_init', '_load', '_flush', '_get_output_sample_rate', '_get_output_format', '_get_output_length', '_force_exit']" \
+	-s EXPORTED_FUNCTIONS="['_main', '_init', '_load', '_get_output', '_get_output_sample_rate', '_get_output_format', '_get_output_length', '_force_exit']" \
 	--emit-symbol-map \
 	--pre-js pre.js \
 	--post-js post.js

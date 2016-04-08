@@ -5,43 +5,60 @@ package com.marstonstudio.crossusermedia.encoder {
     /**
      * Wrapper for the flascc compiled FFMPEG encoder which handles CModule interactions
      *
+     * @see http://www.adobe.com/devnet-docs/flascc/docs/Reference.html
      * @see https://www.adobe.com/devnet-docs/flascc/docs/capidocs/as3.html
      * @see https://github.com/crossbridge-community/crossbridge/blob/master/samples/06_SWIG/PassingData/PassData.as
      */
     public class Encoder implements ISpecialFile {
 
-        import flash.display.Sprite;
+        import flash.display.DisplayObjectContainer;
+        import flash.external.ExternalInterface;
+        import flash.utils.ByteArray;
 
         import com.marstonstudio.crossusermedia.encoder.flascc.*;
 
-        public function Encoder(rootSprite:Sprite) {
-        //public function Encoder() {
-            trace("Encoder.as :: constructor");
+        //TODO: get worker threads properly supported
+        private var enableWorker:Boolean = false;
 
-            CModule.vfs.console = this;
-            CModule.rootSprite = rootSprite;
-            //if(CModule.canUseWorkers) {
-            //    CModule.startBackground(this, new <String>[], new <String>[]);
-            //} else {
-                CModule.startAsync(this);
-            //}
+        private var output:ByteArray;
+
+        public function Encoder(container:DisplayObjectContainer = null) {
+            log("Encoder.as", "constructor", false);
+
+            //TODO: Error: calling startAsync with an active console
+
+            try {
+                CModule.vfs.console = this;
+                CModule.rootSprite = container ? container.root : null;
+                if (CModule.canUseWorkers && CModule.rootSprite && enableWorker) {
+                    CModule.startBackground(this, new <String>[], new <String>[]);
+                } else {
+                    CModule.startAsync(this, null, null, true, false);
+                }
+            } catch (e:*) {
+                logException("Encoder.as", e);
+                throw e;
+            }
         }
 
-        public function init(i_format:String, i_sample_rate:int, o_format:String, o_sample_rate:int, o_bit_rate:int):void {
-            com.marstonstudio.crossusermedia.encoder.flascc.init(i_format, i_sample_rate, o_format, o_sample_rate, o_bit_rate);
-            
-            /*
-            var i_format_ptr:int = CModule.mallocString(i_format);
-            CModule.writeString(i_format_ptr, i_format);
+        public function init(inputFormat:String, inputSampleRate:int, outputFormat:String, outputSampleRate:int, outputBitRate:int):void {
+            com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputSampleRate, outputFormat, outputSampleRate, outputBitRate);
+        }
 
-            var o_format_ptr:int = CModule.mallocString(o_format);
-            CModule.writeString(o_format_ptr, o_format);
-
-            com.marstonstudio.crossusermedia.encoder.flascc.init(i_format_ptr, i_sample_rate, o_format_ptr, o_sample_rate, o_bit_rate);
-            
-            CModule.free(i_format_ptr);
-            CModule.free(o_format_ptr);
-            */
+        public function load(input:ByteArray):void {
+            var inputLength:int = input.length;
+            var inputPointer:int = CModule.malloc(inputLength);
+            CModule.writeBytes(inputPointer, inputLength, input);
+            com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
+            CModule.free(inputPointer);
+        }
+        
+        public function flush():ByteArray {
+            var outputPointer:int = com.marstonstudio.crossusermedia.encoder.flascc.flushPointer();
+            var outputLength:int = com.marstonstudio.crossusermedia.encoder.flascc.getOutputLength();
+            output = new ByteArray();
+            CModule.readBytes(outputPointer, outputLength, output);
+            return output;
         }
 
         public function getOutputSampleRate():int {
@@ -55,6 +72,14 @@ package com.marstonstudio.crossusermedia.encoder {
         public function getOutputLength():int {
             return com.marstonstudio.crossusermedia.encoder.flascc.getOutputLength();
         }
+        
+        public function forceExit(status:int):void {
+            try {
+                com.marstonstudio.crossusermedia.encoder.flascc.forceExit(status);
+            } catch(e:com.marstonstudio.crossusermedia.encoder.flascc.Exit) {
+                //expected Exit not an actual Exception
+            }
+        } 
 
         /**
          * The callback to call when FlasCC code calls the posix exit() function. Leave null to exit silently.
@@ -67,7 +92,7 @@ package com.marstonstudio.crossusermedia.encoder {
          * C process exit requests
          */
         public function exit(code:int):Boolean {
-            trace("Encoder.as :: exit code:" + code);
+            log("Encoder.as", "exit (" + code +")");
 
             return exitHook ? exitHook(code) : false;
         }
@@ -78,12 +103,10 @@ package com.marstonstudio.crossusermedia.encoder {
          * printf will pass through this function). See the ISpecialFile
          * documentation for more information about the arguments and return value.
          */
-        public function write(fd:int, buf:int, nbyte:int, errno_ptr:int):int
-        {
-            //strip off newline character
+        public function write(fd:int, buf:int, nbyte:int, errno_ptr:int):int {
             if(nbyte > 1) {
                 var str:String = CModule.readString(buf, nbyte - 1);
-                trace("encoder.c :: " + str);
+                log("encoder.c", str, fd == 2);
             }
             return nbyte;
         }
@@ -94,8 +117,7 @@ package com.marstonstudio.crossusermedia.encoder {
          * will expect this function to provide the data). See the ISpecialFile
          * documentation for more information about the arguments and return value.
          */
-        public function read(fd:int, bufPtr:int, nbyte:int, errnoPtr:int):int
-        {
+        public function read(fd:int, bufPtr:int, nbyte:int, errnoPtr:int):int {
             return 0
         }
 
@@ -105,8 +127,7 @@ package com.marstonstudio.crossusermedia.encoder {
          * See the ISpecialFile documentation for more information about the
          * arguments and return value.
          */
-        public function fcntl(fd:int, com:int, data:int, errnoPtr:int):int
-        {
+        public function fcntl(fd:int, com:int, data:int, errnoPtr:int):int {
             return 0
         }
 
@@ -116,9 +137,26 @@ package com.marstonstudio.crossusermedia.encoder {
          * See the ISpecialFile documentation for more information about the
          * arguments and return value.
          */
-        public function ioctl(fd:int, com:int, data:int, errnoPtr:int):int
-        {
+        public function ioctl(fd:int, com:int, data:int, errnoPtr:int):int {
             return 0
+        }
+
+
+
+        private function log(header:String, message:String, err:Boolean = false):void {
+            
+            var traceOutput:String = header + " :: ";
+            if(err) traceOutput += "ERROR :: ";
+            traceOutput += message;
+            trace(traceOutput);
+
+            if(ExternalInterface.available) {
+                ExternalInterface.call(err ? "console.error" : "console.log", header + " :: " + message);
+            }
+        }
+
+        private function logException(header:String, e:*):void {
+            log(header, e.toString() + "\n" + e.getStackTrace().toString(), true);
         }
 
     }

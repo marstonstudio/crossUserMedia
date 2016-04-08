@@ -6,6 +6,7 @@ package com.marstonstudio.crossusermedia.microphone.util {
     public class Console {
 
         public static function log(message:String):void {
+            trace(message);
             ExternalInterface.call('console.log', message);
         }
 

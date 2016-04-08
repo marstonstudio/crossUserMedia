@@ -88,7 +88,6 @@ import flash.utils.getTimer;
             _buffer = new ByteArray();
             
             _encoder = new Encoder(_rootSprite);
-            //_encoder = new Encoder();
             _encoder.init(_pcmFormat, sampleRate, _pcmFormat, sampleRate, _bitRate);
 
             _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);

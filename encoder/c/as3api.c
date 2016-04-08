@@ -12,14 +12,6 @@ int main(int argc, char **argv) {
 // https://www.adobe.com/devnet-docs/flascc/docs/capidocs/as3.html
 // https://github.com/crossbridge-community/crossbridge/blob/master/samples/06_SWIG/PassingData/PassData.as
 
-/*
-void init() __attribute__((
-        used,
-        annotate("as3sig:public function init(inputFormatPointer:int, inputSampleRate:int, outputFormatPointer:int, outputSampleRate:int, outputBitRate:int):void"),
-        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
-    ));
-*/
-
 void as3_init() __attribute__((
         used,
         annotate("as3sig:public function init(inputFormat:String, inputSampleRate:int, outputFormat:String, outputSampleRate:int, outputBitRate:int):void"),
@@ -38,6 +30,31 @@ void as3_init(const char *i_format, int i_sample_rate, const char *o_format, int
 
     free((char*)i_format);
     free((char*)o_format);
+}
+
+void as3_load_pointer() __attribute__((
+        used,
+        annotate("as3sig:public function loadPointer(inputPointer:int, inputLength:int):void"),
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
+    ));
+
+void as3_load_pointer(uint8_t *i_data, int i_length) {
+
+    AS3_GetScalarFromVar((uint8_t *)i_data, inputPointer);
+    AS3_GetScalarFromVar(i_length, inputLength);
+
+    load(i_data, i_length);
+}
+
+void as3_flush_pointer() __attribute__((
+        used,
+        annotate("as3sig:public function flushPointer():int"),
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
+    ));
+
+void as3_flush_pointer() {
+    int o_data = (int)flush();
+    AS3_Return(o_data);
 }
 
 void as3_get_output_sample_rate() __attribute__((
@@ -74,4 +91,15 @@ void as3_get_output_length() __attribute__((
 void as3_get_output_length() {
     int o_length = get_output_length();
     AS3_Return(o_length);
+}
+
+void as3_force_exit() __attribute__((
+        used,
+        annotate("as3sig:public function forceExit(status:int):void"),
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
+    ));
+
+void as3_force_exit(int status) {
+    AS3_GetScalarFromVar(status, status);
+    force_exit(status);
 }

@@ -25,6 +25,7 @@
  * @author Andreas Unterweger (dustsigns@gmail.com)
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
@@ -70,7 +71,7 @@ void init(const char *i_format, int i_sample_rate, const char *o_format, int o_s
     output_sample_rate = o_sample_rate;
     output_bit_rate = o_bit_rate;
 
-    fprintf(stdout, "init input_format:%s, input_sample_rate:%u, output_format:%s, output_sample_rate:%u, output_bit_rate:%u\n",
+    fprintf(stdout, "init (input_format:%s, input_sample_rate:%u, output_format:%s, output_sample_rate:%u, output_bit_rate:%u)\n",
                input_format, input_sample_rate, output_format, output_sample_rate, output_bit_rate);
 
     output_length = 0;
@@ -78,7 +79,7 @@ void init(const char *i_format, int i_sample_rate, const char *o_format, int o_s
 }
 
 void load(uint8_t *i_data, int i_length) {
-    //fprintf(stdout, "load i_length:%u\n", i_length);
+    fprintf(stdout, "load (i_length:%u)\n", i_length);
 
     //TODO: get asserts working
     //https://kripken.github.io/emscripten-site/docs/porting/Debugging.html
@@ -89,17 +90,17 @@ void load(uint8_t *i_data, int i_length) {
 }
 
 int get_output_sample_rate() {
-    fprintf(stdout, "get_output_sample_rate:%u\n", output_sample_rate);
+    fprintf(stdout, "get_output_sample_rate (%u)\n", output_sample_rate);
     return output_sample_rate;
 }
 
 char *get_output_format() {
-    fprintf(stdout, "get_output_format:%s\n", output_format);
+    fprintf(stdout, "get_output_format (%s)\n", output_format);
     return output_format;
 }
 
 int get_output_length() {
-    fprintf(stdout, "get_output_length:%u\n", output_length);
+    fprintf(stdout, "get_output_length (%u)\n", output_length);
     return output_length;
 }
 
@@ -109,12 +110,14 @@ uint8_t *flush() {
 }
 
 void force_exit(int status) {
-    fprintf(stdout, "force_exit (%d\n)", status);
+    fprintf(stdout, "force_exit (%d)\n", status);
     free(output_data);
 
     #ifdef __EMSCRIPTEN__
         emscripten_force_exit(status);
     #endif
+
+    exit(status);
 }
 
 /**
