@@ -2,6 +2,12 @@ package com.marstonstudio.crossusermedia.encoder {
 
     import com.marstonstudio.crossusermedia.encoder.flascc.vfs.*;
 
+    /**
+     * Wrapper for the flascc compiled FFMPEG encoder which handles CModule interactions
+     *
+     * @see https://www.adobe.com/devnet-docs/flascc/docs/capidocs/as3.html
+     * @see https://github.com/crossbridge-community/crossbridge/blob/master/samples/06_SWIG/PassingData/PassData.as
+     */
     public class Encoder implements ISpecialFile {
 
         import flash.display.Sprite;
@@ -10,7 +16,7 @@ package com.marstonstudio.crossusermedia.encoder {
 
         public function Encoder(rootSprite:Sprite) {
         //public function Encoder() {
-            trace("Encoder.as::constructor");
+            trace("Encoder.as :: constructor");
 
             CModule.vfs.console = this;
             CModule.rootSprite = rootSprite;
@@ -61,7 +67,7 @@ package com.marstonstudio.crossusermedia.encoder {
          * C process exit requests
          */
         public function exit(code:int):Boolean {
-            trace("Encoder.as::exit code:" + code);
+            trace("Encoder.as :: exit code:" + code);
 
             return exitHook ? exitHook(code) : false;
         }
@@ -74,8 +80,11 @@ package com.marstonstudio.crossusermedia.encoder {
          */
         public function write(fd:int, buf:int, nbyte:int, errno_ptr:int):int
         {
-            var str:String = CModule.readString(buf, nbyte);
-            trace("encoder.c::" + str); // or display this string in a textfield somewhere?
+            //strip off newline character
+            if(nbyte > 1) {
+                var str:String = CModule.readString(buf, nbyte - 1);
+                trace("encoder.c :: " + str);
+            }
             return nbyte;
         }
 

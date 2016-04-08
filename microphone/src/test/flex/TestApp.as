@@ -2,9 +2,7 @@ package {
 
 import com.marstonstudio.crossusermedia.encoder.Encoder;
 
-import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
-import flash.display.Stage;
 import flash.events.Event;
 
 import mx.core.ByteArrayAsset;
@@ -27,6 +25,9 @@ public class TestApp {
 
         [Before(async,ui)]
         public function initialize():void {
+            trace("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            trace("test::start " + new Date().toLocaleString());
+            trace("");
             container = new UIComponent();
             Async.proceedOnEvent(this, container, Event.ADDED_TO_STAGE, 100);
             UIImpersonator.addChild(container);
@@ -34,7 +35,7 @@ public class TestApp {
         
         [Test(description="Load audio asset")]
         public function testAudioLoad():void {
-            trace("testAudioLoad::" + new Date().toLocaleString());
+            
 
             var audioPcmAsset:ByteArrayAsset = new AudioPcm();
             assertTrue("embedded bytesAvailable", audioPcmAsset.bytesAvailable > 0);
@@ -49,12 +50,18 @@ public class TestApp {
             encoder.init(format, sampleRate, format, sampleRate, bitRate);
             assertTrue("outputSampleRate set to " + sampleRate, encoder.getOutputSampleRate() == sampleRate);
             assertTrue("outputFormat set to " + format, encoder.getOutputFormat() == format);
+
+            
         }
     
         [After]
         public function finalize():void {
             UIImpersonator.removeAllChildren();
             container = null;
+
+            trace("");
+            trace("test::complete " + new Date().toLocaleString());
+            trace("=======================================================");
         }
 
     }
