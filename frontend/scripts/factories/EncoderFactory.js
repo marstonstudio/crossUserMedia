@@ -33,16 +33,16 @@ module.exports = function ($log, $q, encoderjs) {
                 break;
             
             default:
-                $log.error('EncoderFactory unknown command ' + e.data.cmd);
+                $log.error('EncoderFactory.js :: unknown command ' + e.data.cmd);
         }
     };
 
     var workerOnError = function(e) {
-        $log.error('EncoderFactory listener error ' + e.filename + ' line:' + e.lineno + ' ' + e.message);
+        $log.error('EncoderFactory.js :: listener error ' + e.filename + ' line:' + e.lineno + ' ' + e.message);
     };
 
     Service.init = function (inputFormat, inputSampleRate, outputFormat) {
-        $log.log('EncoderFactory.init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
+        $log.log('EncoderFactory.js :: init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
 
         //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker https://github.com/substack/webworkify
         encoder = new Worker('/js/encoder.js');

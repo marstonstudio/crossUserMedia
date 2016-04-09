@@ -22,7 +22,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
     };
 
     Service.startRecording = function() {
-        $log.log('NativeRecordingFactory startRecording');
+        $log.log('NativeRecordingFactory.js startRecording');
         $rootScope.$emit('statusEvent', 'recording started');
 
         if (Navigator.enabled) {

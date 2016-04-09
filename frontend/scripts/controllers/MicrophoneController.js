@@ -1,5 +1,5 @@
 module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRecording, NativeRecording, UploadRecording) {
-    $log.log('MicrophoneController initialized');
+    $log.log('MicrophoneController.js :: initialized');
 
     this.sourceAudioElement = angular.element(document.querySelector('#sourceAudio'));
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
@@ -82,7 +82,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
             .stopRecording()
             .then(function (encodedSource){
 
-                $log.log('MicrophoneController encodedBlob.size:' + encodedSource.blob.size);
+                $log.log('MicrophoneController.js :: encodedBlob.size:' + encodedSource.blob.size);
                 embedLocalBlob(encodedSource.blob);
 
                 return UploadRecording
@@ -109,7 +109,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
     function displayProcessedOutput(response) {
         if (response && response.data && response.data.inputUrl) {
             var audioSet = response.data;
-            $log.log('received audioSet inputUrl:' + audioSet.inputUrl + ', outputUrl:' + audioSet.outputUrl);
+            $log.log('MicrophoneController.js :: received audioSet inputUrl:' + audioSet.inputUrl + ', outputUrl:' + audioSet.outputUrl);
 
             self.outputAudioElement.attr('src', audioSet.outputUrl);
             $scope.microphoneOutputAudioReady = true;
