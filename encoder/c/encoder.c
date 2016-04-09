@@ -109,8 +109,8 @@ uint8_t *flush() {
     return output_data;
 }
 
-void force_exit(int status) {
-    fprintf(stdout, "force_exit (%d)\n", status);
+void dispose(int status) {
+    fprintf(stdout, "dispose (%d)\n", status);
     free(output_data);
 
     #ifdef __EMSCRIPTEN__

@@ -25,8 +25,6 @@ package com.marstonstudio.crossusermedia.encoder {
         public function Encoder(container:DisplayObjectContainer = null) {
             log("Encoder.as", "constructor", false);
 
-            //TODO: Error: calling startAsync with an active console
-
             try {
                 CModule.vfs.console = this;
                 CModule.rootSprite = container ? container.root : null;
@@ -73,12 +71,13 @@ package com.marstonstudio.crossusermedia.encoder {
             return com.marstonstudio.crossusermedia.encoder.flascc.getOutputLength();
         }
         
-        public function forceExit(status:int):void {
+        public function dispose(status:int):void {
             try {
-                com.marstonstudio.crossusermedia.encoder.flascc.forceExit(status);
+                com.marstonstudio.crossusermedia.encoder.flascc.dispose(status);
             } catch(e:com.marstonstudio.crossusermedia.encoder.flascc.Exit) {
                 //expected Exit not an actual Exception
             }
+            CModule.dispose();
         } 
 
         /**

@@ -53,16 +53,15 @@ import flash.utils.getTimer;
 
         private const _silenceLevel:uint = 0;
         private const _timeOut:uint = 4000;
-        private const _rateKHz:int = 16;
+        private const _rateKHz:int = 16;    //using 44 will cause bugs . . . 
         private var   _gain:uint = 75;
         
         private var   _pcmFormat:String = "f32be";
         private var   _bitRate:int = 32000;
-
-
+        
         private var _startTime:uint;
         private var _microphone:Microphone;
-        private var _buffer:ByteArray;
+        //private var _buffer:ByteArray;
         private var _encoder:Encoder;
         private var _rootSprite:Sprite;
 
@@ -85,7 +84,6 @@ import flash.utils.getTimer;
             _microphone.setSilenceLevel(_silenceLevel, _timeOut);
             _microphone.rate = _rateKHz;
             _microphone.gain = _gain;
-            _buffer = new ByteArray();
             
             _encoder = new Encoder(_rootSprite);
             _encoder.init(_pcmFormat, sampleRate, _pcmFormat, sampleRate, _bitRate);
@@ -101,9 +99,7 @@ import flash.utils.getTimer;
             var time:Number = getTimer() - _startTime;
             dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time, null) );
             
-            while(event.data.bytesAvailable > 0) {
-                _buffer.writeFloat(event.data.readFloat());
-            }
+            _encoder.load(event.data);
         }
         
         /**
@@ -111,8 +107,10 @@ import flash.utils.getTimer;
          */        
         public function stop():void {
             _microphone.removeEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
-
-            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, _buffer) );
+            
+            var encodedBuffer:ByteArray = _encoder.flush();
+            _encoder.dispose(0);
+            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, encodedBuffer) );
         }
 
         public function get gain():uint {

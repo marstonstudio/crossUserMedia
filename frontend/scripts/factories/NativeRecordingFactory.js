@@ -118,7 +118,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
 
         Encoder.flush()
             .then(function(encodedSource){
-                Encoder.exit();
+                Encoder.dispose();
                 deferred.resolve(encodedSource);
 
             }, function(reason) {$log.error(reason);});

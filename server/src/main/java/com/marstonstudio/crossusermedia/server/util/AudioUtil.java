@@ -23,8 +23,7 @@ public class AudioUtil {
     static private final Logger logger = Logger.getLogger(AudioUtil.class);
 
     public static File convertAudioFile(File inputFile, AudioFormat inputFormat, Integer inputSampleRate, AudioFormat outputFormat) throws InterruptedException, IOException {
-
-        logger.info("inputFile: " + inputFile);
+        logger.info("inputFile: " + inputFile + ", inputFormat:" + inputFormat + ", inputSampleRate:" + inputSampleRate + ", outputFormat:" + outputFormat);
 
         boolean passThru = inputFormat == outputFormat;
 

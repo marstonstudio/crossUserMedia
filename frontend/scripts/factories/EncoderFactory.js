@@ -77,10 +77,10 @@ module.exports = function ($log, $q, encoderjs) {
         return deferred.promise;
     };
 
-    Service.exit = function() {
-        $log.log('EncoderFactory.exit');
+    Service.dispose = function() {
+        $log.log('EncoderFactory.dispose');
 
-        encoder.postMessage({'cmd':'exit'});
+        encoder.postMessage({'cmd':'dispose'});
     };
 
     return Service;

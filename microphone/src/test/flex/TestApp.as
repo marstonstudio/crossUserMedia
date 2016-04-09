@@ -58,7 +58,7 @@ public class TestApp {
             assertTrue("outputLength = audioPcmAsset.length = " + audioPcmAsset.length, encoder.getOutputLength() == audioPcmAsset.length);
             assertTrue("output.length = audioPcmAsset.length = " + audioPcmAsset.length, output.length == audioPcmAsset.length);
             
-            encoder.forceExit(0);
+            encoder.dispose(0);
         }
     
         [After]

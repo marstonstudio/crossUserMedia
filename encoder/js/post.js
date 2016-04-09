@@ -14,8 +14,8 @@ this.onmessage = function(e) {
             flush();
             break;
 
-        case 'exit':
-            forceExit();
+        case 'dispose':
+            dispose();
             break;
 
         default:
@@ -77,11 +77,11 @@ var flush = function() {
     );
 };
 
-var forceExit = function() {
-    console.log('encoder.js forceExit');
+var dispose = function() {
+    console.log('encoder.js dispose');
 
     try {
-        Module.ccall('force_exit', null, ['number'], [0]);
+        Module.ccall('dispose', null, ['number'], [0]);
         close();
     } catch(ex) {
         if(!(ex instanceof ExitStatus)) {

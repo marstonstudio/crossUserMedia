@@ -93,13 +93,13 @@ void as3_get_output_length() {
     AS3_Return(o_length);
 }
 
-void as3_force_exit() __attribute__((
+void as3_dispose() __attribute__((
         used,
-        annotate("as3sig:public function forceExit(status:int):void"),
+        annotate("as3sig:public function dispose(status:int):void"),
         annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
-void as3_force_exit(int status) {
+void as3_dispose(int status) {
     AS3_GetScalarFromVar(status, status);
-    force_exit(status);
+    dispose(status);
 }
