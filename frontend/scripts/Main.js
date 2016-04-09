@@ -14,6 +14,7 @@ angular.module('Microphone', ['ngMaterial'])
     .value('bowser', require('bowser'))
     .value('swfEmbedder', require('jakobmattsson-swfobject'))
     .value('encoderjs', require('encoderjs'))
+    .value('base64', require('base64it'))
 
     .controller('MicrophoneController', [
         '$rootScope',
@@ -54,7 +55,7 @@ angular.module('Microphone', ['ngMaterial'])
         '$window',
         '$q',
         'swfEmbedder',
-        'EncoderFactory',
+        'base64',
         require('./factories/FlashRecordingFactory.js')
     ])
     .factory('EncoderFactory', [

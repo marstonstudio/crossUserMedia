@@ -12,27 +12,33 @@ public final class RecordingEvent extends Event {
         private var _time:Number;
 
         private var _data:ByteArray;
+    
+        private var _format:String;
+    
+        private var _sampleRate:int;
 
-        public function RecordingEvent(type:String, time:Number, data:ByteArray) {
+        public function RecordingEvent(type:String, time:Number=NaN, data:ByteArray=null, format:String=null, sampleRate:int=0) {
             super(type, false, false);
             _time = time;
             _data = data;
+            _format = format;
+            _sampleRate = sampleRate;
         }
-
+    
         public function get time():Number {
             return _time;
-        }
-
-        public function set time(value:Number):void {
-            _time = value;
         }
 
         public function get data():ByteArray {
             return _data;
         }
 
-        public function set data(value:ByteArray):void {
-            _data = value;
+        public function get format():String {
+            return _format;
+        }
+
+        public function get sampleRate():int {
+            return _sampleRate;
         }
 
         public override function clone(): Event {

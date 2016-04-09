@@ -3,10 +3,10 @@ package {
     import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
     import com.marstonstudio.crossusermedia.microphone.Recorder;
     import com.marstonstudio.crossusermedia.microphone.sprites.CFFTextField;
+    import com.marstonstudio.crossusermedia.microphone.util.Base64Encoder;
     import com.marstonstudio.crossusermedia.microphone.util.Console;
 
     import flash.display.BitmapData;
-
     import flash.display.Sprite;
     import flash.display.StageAlign;
     import flash.display.StageScaleMode;
@@ -17,8 +17,6 @@ package {
     import flash.system.Security;
     import flash.system.SecurityPanel;
     import flash.utils.Timer;
-
-    import mx.utils.Base64Encoder;
 
     [SWF(width="430", height="276", frameRate="24", backgroundColor="#FFFFFF")]
     public class Main extends Sprite {
@@ -56,8 +54,7 @@ package {
         }
 
         public function Main() {
-            Console.log("FLASH::Main buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
-
+            Console.log("Main.as :: buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
             this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
 
@@ -97,7 +94,7 @@ package {
         }
 
         private function onStageResize(event:Event):void {
-            //Console.log("FLASH::onStageResize stageWidth:" + stage.stageWidth + ", stageHeight:" + stage.stageHeight);
+            //Console.log("Main.as :: onStageResize stageWidth:" + stage.stageWidth + ", stageHeight:" + stage.stageHeight);
             _background.x = (stage.stageWidth - _background.width) / 2;
             _background.y = (stage.stageHeight - _background.height) / 2;
         }
@@ -136,7 +133,7 @@ package {
         }
 
         private function externalStartRecording():void {
-            //Console.log("FLASH::Main::externalStartRecording");
+            //Console.log("Main.as :: Main::externalStartRecording");
             ExternalInterface.call("onFlashStatusMessage", "recording started");
 
             if(!_microphonePermissionConfirmed) {
@@ -148,17 +145,16 @@ package {
             _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
             _recorder.addEventListener(RecordingEvent.COMPLETE, onRecordComplete);
             _recorder.record();
-
         }
 
         private function externalStopRecording():void {
-            //Console.log("FLASH::Main::externalStopRecording");
+            //Console.log("Main.as :: Main::externalStopRecording");
             _recorder.stop();
             ExternalInterface.call("onFlashStatusMessage", "recording stopped");
         }
 
         private function onRecording(event:RecordingEvent):void {
-            //Console.log("FLASH::Main::onRecording");
+            //Console.log("Main.as :: Main::onRecording");
 
             if(!_microphonePermissionConfirmed) {
                 _microphonePermissionConfirmed = true;
@@ -169,7 +165,7 @@ package {
         }
 
         private function onMicrophonePermissionTimerComplete(event:TimerEvent):void {
-            //Console.log("FLASH::Main::onMicrophonePermissionTimerComplete");
+            //Console.log("Main.as :: onMicrophonePermissionTimerComplete");
             setFlashVisible(true);
         }
 
@@ -178,11 +174,12 @@ package {
 
             var b64:Base64Encoder = new Base64Encoder();
             b64.insertNewLines = false;
+            b64.useUrlFilenameSafeAlphabet = true;
             b64.encodeBytes(event.data);
-            ExternalInterface.call("onFlashSoundRecorded", _recorder.sampleRate.toString(), b64.toString());
-
+            
+            ExternalInterface.call("onFlashSoundRecorded", b64.toString(), event.format, event.sampleRate);
             ExternalInterface.call("onFlashStatusMessage", "audio saved");
         }
-
+        
     }
 }

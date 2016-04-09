@@ -1,16 +1,10 @@
-module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Encoder) {
+module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Base64) {
 
     var deferred;
 
     var initialized = false;
     var hasFlashInstalled = false;
-
-    var PCM_FORMAT = 'f32be';
-    var OUTPUT_FORMAT = 'f32be';
-    //var OUTPUT_FORMAT = 'mp4';
-
-    var SAMPLE_RATE = 16000;
-
+    
     var Service = {};
 
     Service.initialize = function () {
@@ -19,21 +13,15 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Encoder) 
         }
 
         //functions globally accessible for flash ExternalInterface
-        $window.onFlashSoundRecorded = function (sampleRate, audioBase64) {
-            var pcmArray = b64toByteArray(audioBase64);
+        $window.onFlashSoundRecorded = function (outputAudioB64, outputFormat, outputSampleRate) {
+            var outputAudio = b64toByteArray(outputAudioB64);
+            var blob = new Blob([outputAudio.buffer], { type: 'audio/' + outputFormat });
 
-            Encoder.load(pcmArray.buffer)
-                .then(function(){
-
-                    Encoder.flush()
-                        .then(function(encodedSource){
-
-                            Encoder.exit();
-                            deferred.resolve(encodedSource);
-
-                        }, function(reason) {$log.error(reason);});
-
-                }, function(reason) {$log.error(reason);});
+            deferred.resolve({
+                'format':outputFormat,
+                'sampleRate':outputSampleRate,
+                'blob':blob
+            });
         };
 
         $window.onFlashSoundRecordingError = function (error) {
@@ -65,15 +53,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Encoder) 
     Service.startRecording = function () {
         $log.log('FlashRecordingFactory startRecording');
         if(hasFlashInstalled) {
-
-            Encoder.init(PCM_FORMAT, SAMPLE_RATE, OUTPUT_FORMAT)
-                .then(function(){
-                    getFlashObject().startRecording();
-                }, function(reason) {
-                    $log.error(reason);
-                });
-            
-            
+            getFlashObject().startRecording();
         }
     };
 
@@ -91,8 +71,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Encoder) 
 
     // http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
     function b64toByteArray(base64Data) {
-
-        var byteCharacters = atob(base64Data);
+        var byteCharacters = Base64.urlSafeDecode(base64Data);
         var byteNumbers = new Array(byteCharacters.length);
         for (var i = 0; i < byteCharacters.length; i++) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);

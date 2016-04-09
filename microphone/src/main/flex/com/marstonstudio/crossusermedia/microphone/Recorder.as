@@ -53,15 +53,15 @@ import flash.utils.getTimer;
 
         private const _silenceLevel:uint = 0;
         private const _timeOut:uint = 4000;
-        private const _rateKHz:int = 16;    //using 44 will cause bugs . . . 
+        private const _rateKHz:int = 16;
         private var   _gain:uint = 75;
         
         private var   _pcmFormat:String = "f32be";
+        private var   _outputFormat:String = "f32be";   //mp4
         private var   _bitRate:int = 32000;
         
         private var _startTime:uint;
         private var _microphone:Microphone;
-        //private var _buffer:ByteArray;
         private var _encoder:Encoder;
         private var _rootSprite:Sprite;
 
@@ -97,7 +97,7 @@ import flash.utils.getTimer;
          */        
         private function onSampleData(event:SampleDataEvent):void {
             var time:Number = getTimer() - _startTime;
-            dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time, null) );
+            dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time) );
             
             _encoder.load(event.data);
         }
@@ -110,7 +110,7 @@ import flash.utils.getTimer;
             
             var encodedBuffer:ByteArray = _encoder.flush();
             _encoder.dispose(0);
-            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, encodedBuffer) );
+            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, encodedBuffer, outputFormat, sampleRate) );
         }
 
         public function get gain():uint {
@@ -128,12 +128,33 @@ import flash.utils.getTimer;
         }
 
         public function get sampleRate():Number {
-            if(_microphone != null) return _microphone.rate * 1000;
-            return 0;
+            if(_microphone != null) {
+                switch(_microphone.rate) {
+                    case 44:
+                        return 44100;
+                        break;
+                    case 22:
+                        return 22050;
+                        break;
+                    case 16:
+                        return 16000;
+                        break;
+                    case 11:
+                        return 11025;
+                        break;
+                    case 8:
+                        return 8000;
+                    case 5:
+                        return 5513;
+                    default:
+                        return _microphone.rate * 1000;
+                }
+            }
+            return NaN;
         }
-
-        public function get format():String {
-            return _pcmFormat;
+        
+        public function get outputFormat():String {
+            return _outputFormat;
         }
     }
 }
