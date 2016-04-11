@@ -24,11 +24,21 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
     };
 
     Service.startRecording = function() {
-        $log.log('NativeRecordingFactory.js ! startRecording');
+        $log.log('NativeRecordingFactory.js startRecording');
         $rootScope.$emit('statusEvent', 'recording started');
 
+        //try to avoid creating a new audioStream in firefox so we do not need to get permission again
         if (Navigator.enabled) {
-            Navigator.getNavigator().getUserMedia(constraints, startUserMediaRecording, logException);
+            if( audioStream &&
+                audioStream.getAudioTracks() && 
+                audioStream.getAudioTracks().length > 0 && 
+                audioStream.getAudioTracks()[0].readyState !== 'ended'
+            ) {
+                startUserMediaRecording(audioStream);
+            } else {
+                $log.log('NativeRecordingFactory.js creating new audioStream');
+                Navigator.getNavigator().getUserMedia(constraints, startUserMediaRecording, logException);
+            }
         }
     };
 
@@ -37,17 +47,13 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
 
         audioStream = stream;
 
-        // creates the audio audioContext
         audioContext = new window.AudioContext();
 
-        // creates an audio node from the microphone incoming stream
         audioInput = audioContext.createMediaStreamSource(audioStream);
 
-        // creates a gain node
         audioVolume = audioContext.createGain();
         audioInput.connect(audioVolume);
 
-        // create an analyzer for audioVolume graph
         //http://www.smartjava.org/content/exploring-html5-web-audio-visualizing-sound
         audioAnalyser = audioContext.createAnalyser();
         audioAnalyser.smoothingTimeConstant = 0;
@@ -55,7 +61,6 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
         audioInput.connect(audioAnalyser);
         
         audioRecorder = audioContext.createScriptProcessor(BUFFER_SIZE, 1, 1);
-
         audioRecorder.onaudioprocess = function(e) {
 
             var array =  new Uint8Array(audioAnalyser.frequencyBinCount);
@@ -90,10 +95,6 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
         
         var deferred = $q.defer();
 
-        if (audioInput) {
-            audioInput.disconnect();
-        }
-        
         if (audioStream && audioStream.active) {
             var audioTracks = audioStream.getAudioTracks();
             if(audioTracks) {
@@ -102,10 +103,33 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
                 }
             }
         }
+
         if (audioRecorder) {
             audioRecorder.onaudioprocess = null;
+            audioRecorder.disconnect();
+            audioRecorder = null;
         }
 
+        if(audioAnalyser) {
+            audioAnalyser.disconnect();
+            audioAnalyser = null;
+        }
+
+        if(audioVolume) {
+            audioVolume.disconnect();
+            audioVolume = null;
+        }
+
+        if (audioInput) {
+            audioInput.disconnect();
+            audioInput = null;
+        }
+        
+        if(audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+        
         Encoder.flush()
             .then(function(encodedSource){
                 Encoder.dispose();
