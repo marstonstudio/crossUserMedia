@@ -12,6 +12,8 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
     var audioVolume = null;
     var audioAnalyser = null;
     var audioRecorder = null;
+    
+    var constraints = {audio: true, video: false};
 
     var Service = {};
 
@@ -22,13 +24,11 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
     };
 
     Service.startRecording = function() {
-        $log.log('NativeRecordingFactory.js !! startRecording');
+        $log.log('NativeRecordingFactory.js ! startRecording');
         $rootScope.$emit('statusEvent', 'recording started');
 
         if (Navigator.enabled) {
-            Navigator.getNavigator().getUserMedia({audio: true, video: false}, startUserMediaRecording, function(e) {
-                $log.error(e.message);
-            });
+            Navigator.getNavigator().getUserMedia(constraints, startUserMediaRecording, logException);
         }
     };
 
@@ -69,9 +69,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
                 .then(function(){
                     //$log.log('onaudioprocess time:' + e.playbackTime + ', level:' + level);
 
-                }, function(reason) {
-                    $log.error(reason);
-                });
+                }).catch(logException);
         };
 
         Encoder.init(PCM_FORMAT, audioContext.sampleRate, OUTPUT_FORMAT)
@@ -80,9 +78,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
                 audioRecorder.connect(audioContext.destination);
                 deferred.resolve();
                 
-            }, function(reason) {
-                $log.error(reason);
-            });
+            }).catch(logException);
 
         return deferred.promise;
     }
@@ -115,7 +111,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
                 Encoder.dispose();
                 deferred.resolve(encodedSource);
 
-            }, function(reason) {$log.error(reason);});
+            }).catch(logException);
         
         $rootScope.$emit('statusEvent', 'audio captured');
         return deferred.promise;
@@ -134,6 +130,10 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
 
         average = values / length;
         return average;
+    }
+    
+    function logException(ex) {
+        $log.error(ex);
     }
 
     return Service;
