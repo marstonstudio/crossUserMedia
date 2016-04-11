@@ -54,7 +54,7 @@ package {
         }
 
         public function Main() {
-            Console.log("Main.as :: buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
+            Console.log("Main.as", "buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
             this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
 
@@ -94,7 +94,7 @@ package {
         }
 
         private function onStageResize(event:Event):void {
-            //Console.log("Main.as :: onStageResize stageWidth:" + stage.stageWidth + ", stageHeight:" + stage.stageHeight);
+            Console.log("Main.as", "onStageResize stageWidth:" + stage.stageWidth + ", stageHeight:" + stage.stageHeight);
             _background.x = (stage.stageWidth - _background.width) / 2;
             _background.y = (stage.stageHeight - _background.height) / 2;
         }
@@ -133,7 +133,7 @@ package {
         }
 
         private function externalStartRecording():void {
-            //Console.log("Main.as :: Main::externalStartRecording");
+            Console.log("Main.as", "externalStartRecording");
             ExternalInterface.call("onFlashStatusMessage", "recording started");
 
             if(!_microphonePermissionConfirmed) {
@@ -148,13 +148,13 @@ package {
         }
 
         private function externalStopRecording():void {
-            //Console.log("Main.as :: Main::externalStopRecording");
+            Console.log("Main.as", "externalStopRecording");
             _recorder.stop();
             ExternalInterface.call("onFlashStatusMessage", "recording stopped");
         }
 
         private function onRecording(event:RecordingEvent):void {
-            //Console.log("Main.as :: Main::onRecording");
+            Console.log("Main.as", "onRecording");
 
             if(!_microphonePermissionConfirmed) {
                 _microphonePermissionConfirmed = true;
@@ -165,7 +165,7 @@ package {
         }
 
         private function onMicrophonePermissionTimerComplete(event:TimerEvent):void {
-            //Console.log("Main.as :: onMicrophonePermissionTimerComplete");
+            Console.log("Main.as", "onMicrophonePermissionTimerComplete");
             setFlashVisible(true);
         }
 
