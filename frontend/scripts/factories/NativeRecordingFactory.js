@@ -6,12 +6,12 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
     var OUTPUT_FORMAT = 'f32le';  //'f32le' for passthru, 'mp4' for encoding
     var BUFFER_SIZE = 2048;
 
-    var volume = null;
     var audioStream = null;
-    var context = null;
-    var recorder = null;
+    var audioContext = null;
     var audioInput = null;
-    var analyser = null;
+    var audioVolume = null;
+    var audioAnalyser = null;
+    var audioRecorder = null;
 
     var Service = {};
 
@@ -22,7 +22,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
     };
 
     Service.startRecording = function() {
-        $log.log('NativeRecordingFactory.js startRecording');
+        $log.log('NativeRecordingFactory.js !! startRecording');
         $rootScope.$emit('statusEvent', 'recording started');
 
         if (Navigator.enabled) {
@@ -32,41 +32,34 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
         }
     };
 
-    Service.stopRecording = function() {
-        $rootScope.$emit('statusEvent', 'recording stopped');
-
-        return stopUserMediaRecording();
-    };
-
     function startUserMediaRecording(stream) {
         var deferred = $q.defer();
 
         audioStream = stream;
 
-        // creates the audio context
-        var audioContext = window.AudioContext || window.webkitAudioContext;
-        context = new audioContext();
+        // creates the audio audioContext
+        audioContext = new window.AudioContext();
 
         // creates an audio node from the microphone incoming stream
-        audioInput = context.createMediaStreamSource(audioStream);
+        audioInput = audioContext.createMediaStreamSource(audioStream);
 
         // creates a gain node
-        volume = context.createGain();
-        audioInput.connect(volume);
+        audioVolume = audioContext.createGain();
+        audioInput.connect(audioVolume);
 
-        // create an analyzer for volume graph
+        // create an analyzer for audioVolume graph
         //http://www.smartjava.org/content/exploring-html5-web-audio-visualizing-sound
-        analyser = context.createAnalyser();
-        analyser.smoothingTimeConstant = 0;
-        analyser.fftSize = BUFFER_SIZE;
-        audioInput.connect(analyser);
+        audioAnalyser = audioContext.createAnalyser();
+        audioAnalyser.smoothingTimeConstant = 0;
+        audioAnalyser.fftSize = BUFFER_SIZE;
+        audioInput.connect(audioAnalyser);
         
-        recorder = context.createScriptProcessor(BUFFER_SIZE, 1, 1);
+        audioRecorder = audioContext.createScriptProcessor(BUFFER_SIZE, 1, 1);
 
-        recorder.onaudioprocess = function(e) {
+        audioRecorder.onaudioprocess = function(e) {
 
-            var array =  new Uint8Array(analyser.frequencyBinCount);
-            analyser.getByteFrequencyData(array);
+            var array =  new Uint8Array(audioAnalyser.frequencyBinCount);
+            audioAnalyser.getByteFrequencyData(array);
             var level = getAverageVolume(array);
             $rootScope.$emit('recordingEvent', {'time': e.playbackTime, 'level':level});
 
@@ -81,10 +74,10 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
                 });
         };
 
-        Encoder.init(PCM_FORMAT, context.sampleRate, OUTPUT_FORMAT)
+        Encoder.init(PCM_FORMAT, audioContext.sampleRate, OUTPUT_FORMAT)
             .then(function(){
-                volume.connect(recorder);
-                recorder.connect(context.destination);
+                audioVolume.connect(audioRecorder);
+                audioRecorder.connect(audioContext.destination);
                 deferred.resolve();
                 
             }, function(reason) {
@@ -96,14 +89,15 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
 
     // https://blogs.windows.com/msedgedev/2015/05/13/announcing-media-capture-functionality-in-microsoft-edge/
     // https://github.com/MicrosoftEdge/Demos/blob/master/webaudiotuner/scripts/demo.js
-    function stopUserMediaRecording() {
+    Service.stopRecording = function() {
+        $rootScope.$emit('statusEvent', 'recording stopped');
+        
         var deferred = $q.defer();
-
-        $rootScope.$emit('statusEvent', 'audio saving');
 
         if (audioInput) {
             audioInput.disconnect();
         }
+        
         if (audioStream && audioStream.active) {
             var audioTracks = audioStream.getAudioTracks();
             if(audioTracks) {
@@ -112,8 +106,8 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
                 }
             }
         }
-        if (recorder) {
-            recorder.onaudioprocess = null;
+        if (audioRecorder) {
+            audioRecorder.onaudioprocess = null;
         }
 
         Encoder.flush()
@@ -125,7 +119,7 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
         
         $rootScope.$emit('statusEvent', 'audio captured');
         return deferred.promise;
-    }
+    };
 
     function getAverageVolume(array) {
         var values = 0;
