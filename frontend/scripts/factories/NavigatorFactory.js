@@ -1,4 +1,6 @@
 module.exports = function($window, $q) {
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
     
     var Service = {};
 
@@ -10,7 +12,7 @@ module.exports = function($window, $q) {
         navigator.mozGetUserMedia || 
         navigator.mediaDevices && navigator.mediaDevices.getUserMedia
     );
-    
+
     var promisifiedOldGetUserMedia = function(constraints, successCallback, errorCallback) {
 
         // First get ahold of getUserMedia, if present
