@@ -6,6 +6,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
     var self = this;
 
+    $scope.microphoneFlashEnabled = !Navigator.getUserMediaEnabled;
     $scope.microphoneSourceAudioEnabled = !bowser.msie;
 
     var resetState = function() {
@@ -18,16 +19,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
     };
 
     var getRecordingObject = function () {
-        var recordingObject;
-
-        if (Navigator.enabled) {
-            recordingObject = NativeRecording;
-            $scope.microphoneFlashEnabled = false;
-        } else {
-            recordingObject = FlashRecording;
-            $scope.microphoneFlashEnabled = true;
-        }
-        return recordingObject;
+        return Navigator.getUserMediaEnabled ? NativeRecording : FlashRecording;
     };
 
     (function init() {

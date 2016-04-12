@@ -1,6 +1,7 @@
-module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
+module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
 
     // http://typedarray.org/from-microphone-to-wav-to-server/
+    // https://github.com/MicrosoftEdge/Demos/blob/master/webaudiotuner/scripts/demo.js
 
     var PCM_FORMAT = 'f32le';
     var OUTPUT_FORMAT = 'f32le';  //'f32le' for passthru, 'mp4' for encoding
@@ -28,17 +29,17 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
         $rootScope.$emit('statusEvent', 'recording started');
 
         //try to avoid creating a new audioStream in firefox so we do not need to get permission again
-        if (Navigator.enabled) {
-            if( audioStream &&
-                audioStream.getAudioTracks() && 
-                audioStream.getAudioTracks().length > 0 && 
-                audioStream.getAudioTracks()[0].readyState !== 'ended'
-            ) {
-                startUserMediaRecording(audioStream);
-            } else {
-                $log.log('NativeRecordingFactory.js creating new audioStream');
-                Navigator.getNavigator().getUserMedia(constraints, startUserMediaRecording, logException);
-            }
+        if( audioStream &&
+            audioStream.getAudioTracks() && 
+            audioStream.getAudioTracks().length > 0 && 
+            audioStream.getAudioTracks()[0].readyState !== 'ended'
+        ) {
+            startUserMediaRecording(audioStream);
+        } else {
+            $log.log('NativeRecordingFactory.js creating new audioStream');
+            Navigator.getNavigator().mediaDevices.getUserMedia(constraints)
+                .then(startUserMediaRecording)
+                .catch(logException);
         }
     };
 
@@ -88,8 +89,6 @@ module.exports = function($rootScope, $log, $q, Navigator, Encoder) {
         return deferred.promise;
     }
 
-    // https://blogs.windows.com/msedgedev/2015/05/13/announcing-media-capture-functionality-in-microsoft-edge/
-    // https://github.com/MicrosoftEdge/Demos/blob/master/webaudiotuner/scripts/demo.js
     Service.stopRecording = function() {
         $rootScope.$emit('statusEvent', 'recording stopped');
         

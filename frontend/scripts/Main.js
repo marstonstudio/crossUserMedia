@@ -39,11 +39,13 @@ angular.module('Microphone', ['ngMaterial'])
 
     .factory('NavigatorFactory', [
         '$window',
+        '$q',
         require('./factories/NavigatorFactory.js')
     ])
     .factory('NativeRecordingFactory', [
         '$rootScope',
         '$log',
+        '$window',
         '$q',
         'NavigatorFactory',
         'EncoderFactory',
