@@ -17,7 +17,7 @@ cd ../ffmpeg
 make clean
 
 emconfigure ./configure \
-    --prefix=../swc/dist \
+    --prefix=../as3/dist \
 \
     --disable-runtime-cpudetect \
 \

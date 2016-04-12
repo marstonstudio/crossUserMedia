@@ -35,7 +35,6 @@
     "gulp": "^3.9.1",
     "gulp-clean-css": "^2.0.3",
     "gulp-concat-css": "^2.2.0",
-    "gulp-environments": "^0.1.1",
     "gulp-fontgen": "^0.1.6",
     "gulp-jshint": "^2.0.0",
     "gulp-less": "^3.0.5",

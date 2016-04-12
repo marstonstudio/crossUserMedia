@@ -44,7 +44,10 @@ module.exports = function ($log, $q, encoderjs) {
     Service.init = function (inputFormat, inputSampleRate, outputFormat) {
         $log.log('EncoderFactory.js :: init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
 
-        //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker https://github.com/substack/webworkify
+        //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker
+        // https://github.com/substack/webworkify
+        // https://github.com/shama/workerify
+        // https://github.com/fabiosantoscode/require-emscripten
         encoder = new Worker('/js/encoder.js');
         encoder.onmessage = workerOnMessage;
         encoder.onerror = workerOnError;
