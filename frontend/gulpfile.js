@@ -19,7 +19,7 @@ var fontPath = '/css/fonts'
 var webappDir = '../server/src/main/webapp';
 var targetDir = '../server/target/server';
 
-gulp.task('default', [
+gulp.task('_default', [
     'clean',
     'assembleHtml',
     'assembleStyles',
@@ -67,26 +67,7 @@ gulp.task('compileLess', ['clean'] , function() {
         .pipe(gulp.dest('dist/css'));
 });
 
-gulp.task('generateFonts', ['clean'] , function() {
-    // requires system libraries be installed
-    // brew install fontforge ttf2eot batik ttfautohint
-    return gulp.src(assetDir + '/fonts/*.otf')
-        .pipe(fontgen({
-            dest: 'dist' + fontPath,
-            css_fontpath: fontPath
-        }))
-        .on('error', function(err){
-            console.log(err.toString());
-            this.emit('end');
-        });
-});
-
-gulp.task('concatenateFonts', ['clean', 'generateFonts'] , function() {
-    return gulp.src('dist' + fontPath + '/*.css')
-        .pipe(concatCss('fonts.css'))
-        .pipe(gulp.dest('dist/css'));
-});
-
+//TODO: make this more conditional on an environment variable
 gulp.task('assembleStyles', [
     'compileLess',
 //    'generateFonts',
@@ -133,5 +114,42 @@ gulp.task('copy', ['assembleHtml', 'assembleImages','assembleStyles', 'assembleS
 gulp.task('deploy', ['copy'], function() {
     return gulp.src(['dist/**/*'])
         .pipe(gulp.dest(targetDir));
+});
+
+//TODO: make this more conditional on an environment variable
+//must be run once
+gulp.task('_defaultPrepareFonts', [
+    'cleanFonts',
+    'generateFonts',
+    'concatenateFonts'
+]);
+
+gulp.task('cleanFonts', function() {
+    return del([
+            'dist/**/*',
+            webappDir + '/css/*',
+            targetDir + '/css/*'
+        ]
+        , {force: true});
+});
+
+gulp.task('generateFonts', ['clean'] , function() {
+    // requires system libraries be installed
+    // brew install fontforge ttf2eot batik ttfautohint
+    return gulp.src(assetDir + '/fonts/*.otf')
+        .pipe(fontgen({
+            dest: 'dist' + fontPath,
+            css_fontpath: fontPath
+        }))
+        .on('error', function(err){
+            console.log(err.toString());
+            this.emit('end');
+        });
+});
+
+gulp.task('concatenateFonts', ['clean', 'generateFonts'] , function() {
+    return gulp.src('dist' + fontPath + '/*.css')
+        .pipe(concatCss('fonts.css'))
+        .pipe(gulp.dest('dist/css'));
 });
 

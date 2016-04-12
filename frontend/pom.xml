@@ -50,7 +50,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <arguments>default</arguments>
+                            <arguments>_default</arguments>
                         </configuration>
                     </execution>
 
