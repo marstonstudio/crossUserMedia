@@ -5,9 +5,12 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
     this.outputAudioElement = angular.element(document.querySelector('#outputAudio'));
 
     var self = this;
-
+    
     $scope.microphoneFlashEnabled = !Navigator.getUserMediaEnabled;
     $scope.microphoneSourceAudioEnabled = !bowser.msie;
+    
+    $scope.microphoneStartEnabled = true;
+    $scope.microphoneStopEnabled = false;
 
     var resetState = function() {
         $scope.microphoneSourceAudioReady = false;
@@ -32,6 +35,8 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
     });
 
     $rootScope.$on('recordingEvent', function (event, data) {
+
+        $scope.microphoneStopEnabled = true;
 
         if(data) {
             if(data.time && !isNaN(data.time)) {
@@ -63,12 +68,14 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
     };
 
     this.startRecording = function () {
+        $scope.microphoneStartEnabled = false;
         resetState();
         getRecordingObject().startRecording();
     };
 
     this.stopRecording = function () {
         $scope.microphoneLevel = 0;
+        $scope.microphoneStopEnabled = false;
 
         return getRecordingObject()
             .stopRecording()
@@ -76,6 +83,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
                 $log.log('MicrophoneController.js :: encodedBlob.size:' + encodedSource.blob.size);
                 embedLocalBlob(encodedSource.blob);
+                $scope.microphoneStartEnabled = true;
 
                 return UploadRecording
                     .send(encodedSource.blob, encodedSource.format, encodedSource.sampleRate, 'mp3')

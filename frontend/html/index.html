@@ -50,6 +50,7 @@
         <md-content layout="row" layout-align="space-between center">
             <md-button id="startButton"
                        class="md-raised md-accent" flex
+                       ng-disabled="!microphoneStartEnabled"
                        ng-click="microphone.startRecording();">
                 <md-icon>mic</md-icon>
                 Start Recording
@@ -57,6 +58,7 @@
 
             <md-button id="stopButton"
                        class="md-raised md-warn" flex
+                       ng-disabled="!microphoneStopEnabled"
                        ng-click="microphone.stopRecording();">
                 <md-icon>stop</md-icon>
                 Stop Recording
