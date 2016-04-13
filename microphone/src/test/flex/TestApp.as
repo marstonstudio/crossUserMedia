@@ -44,17 +44,19 @@ public class TestApp {
 
             assertNotNull(container.stage);
 
-            const sampleRate:int = 16000;
-            const format:String = 'f32be';
-            const bitRate:int = 32000;
-            
+            const inputFormat:String = 'f32be';
+            const inputSampleRate:int = 16000;
+            const outputFormat:String = 'f32be';
+            const outputSampleRate:int = 16000;
+            const outputBitRate:int = 32000;
+
             var encoder:Encoder = new Encoder(container);
-            encoder.init(format, sampleRate, format, sampleRate, bitRate);
+            encoder.init(inputFormat, inputSampleRate, outputFormat, outputSampleRate, outputBitRate);
             encoder.load(audioPcmAsset);
             var output:ByteArray = encoder.flush();
-            
-            assertTrue("outputSampleRate set to " + sampleRate, encoder.getOutputSampleRate() == sampleRate);
-            assertTrue("outputFormat set to " + format, encoder.getOutputFormat() == format);
+
+            assertTrue("outputFormat set to " + outputFormat, encoder.getOutputFormat() == outputFormat);
+            assertTrue("outputSampleRate set to " + outputSampleRate, encoder.getOutputSampleRate() == outputSampleRate);
             assertTrue("outputLength = audioPcmAsset.length = " + audioPcmAsset.length, encoder.getOutputLength() == audioPcmAsset.length);
             assertTrue("output.length = audioPcmAsset.length = " + audioPcmAsset.length, output.length == audioPcmAsset.length);
 
