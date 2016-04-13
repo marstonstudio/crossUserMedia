@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 export FLASCC=/usr/local/crossbridge/sdk
 export FLEX=/usr/local/air_sdk
 

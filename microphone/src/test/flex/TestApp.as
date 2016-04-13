@@ -3,6 +3,7 @@ package {
 import com.marstonstudio.crossusermedia.encoder.Encoder;
 
 import flash.display.DisplayObjectContainer;
+import flash.display.Sprite;
 
 import flash.events.Event;
 import flash.utils.ByteArray;
@@ -43,6 +44,8 @@ public class TestApp {
             assertTrue("embedded bytesAvailable", audioPcmAsset.bytesAvailable > 0);
 
             assertNotNull(container.stage);
+            var rootSprite:Sprite = new Sprite();
+            container.addChild(rootSprite);
 
             const inputFormat:String = 'f32be';
             const inputSampleRate:int = 16000;
@@ -50,7 +53,7 @@ public class TestApp {
             const outputSampleRate:int = 16000;
             const outputBitRate:int = 32000;
 
-            var encoder:Encoder = new Encoder(container);
+            var encoder:Encoder = new Encoder(rootSprite);
             encoder.init(inputFormat, inputSampleRate, outputFormat, outputSampleRate, outputBitRate);
             encoder.load(audioPcmAsset);
             var output:ByteArray = encoder.flush();

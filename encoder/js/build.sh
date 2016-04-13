@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 cd ../ffmpeg
 
 emmake make clean

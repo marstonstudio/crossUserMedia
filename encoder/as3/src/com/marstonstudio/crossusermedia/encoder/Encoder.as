@@ -11,27 +11,33 @@ package com.marstonstudio.crossusermedia.encoder {
      */
     public class Encoder implements ISpecialFile {
 
-        import flash.display.DisplayObjectContainer;
+        import flash.display.Sprite;
         import flash.external.ExternalInterface;
         import flash.utils.ByteArray;
 
         import com.marstonstudio.crossusermedia.encoder.flascc.*;
 
-        //TODO: get worker threads properly supported
+        // TODO: get worker threads properly supported
+        // @see http://www.adobe.com/devnet/games/articles/pthreads-flascc.html
+        // @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/system/Worker.html
         private var enableWorker:Boolean = false;
 
         private var output:ByteArray;
 
-        public function Encoder(container:DisplayObjectContainer = null) {
+        public function Encoder(container:Sprite = null) {
             log("Encoder.as", "constructor", false);
+
+            var args:Vector.<String> = new <String>[];
+            var env:Vector.<String> = new <String>[];
 
             try {
                 CModule.vfs.console = this;
-                CModule.rootSprite = container ? container.root : null;
+                CModule.rootSprite = container;
                 if (CModule.canUseWorkers && CModule.rootSprite && enableWorker) {
-                    CModule.startBackground(this, new <String>[], new <String>[]);
+                    log("Encoder.as", "using workers");
+                    CModule.startBackground(this, args, env, 65536);
                 } else {
-                    CModule.startAsync(this, null, null, true, false);
+                    CModule.startAsync(this, args, env, true);
                 }
             } catch (e:*) {
                 logException("Encoder.as", e);
