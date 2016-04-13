@@ -38,7 +38,7 @@ public class TestApp {
         
         [Test(description="Load audio asset")]
         public function testAudioLoad():void {
-            
+
             var audioPcmAsset:ByteArrayAsset = new AudioPcm();
             assertTrue("embedded bytesAvailable", audioPcmAsset.bytesAvailable > 0);
 
@@ -58,13 +58,10 @@ public class TestApp {
             assertTrue("outputLength = audioPcmAsset.length = " + audioPcmAsset.length, encoder.getOutputLength() == audioPcmAsset.length);
             assertTrue("output.length = audioPcmAsset.length = " + audioPcmAsset.length, output.length == audioPcmAsset.length);
 
-            //give stdout buffer a chance to catch up before terminating
-            sleep(1000);
-
             encoder.dispose(0);
         }
     
-        [After]
+        [After(ui)]
         public function finalize():void {
             UIImpersonator.removeAllChildren();
             container = null;
@@ -72,6 +69,7 @@ public class TestApp {
             trace("");
             trace("test::complete " + new Date().toLocaleString());
             trace("=======================================================");
+            sleep(1000);
         }
 
         private function sleep(ms:int):void {
