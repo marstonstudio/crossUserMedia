@@ -6,6 +6,7 @@ import flash.display.DisplayObjectContainer;
 
 import flash.events.Event;
 import flash.utils.ByteArray;
+import flash.utils.getTimer;
 
 import mx.core.ByteArrayAsset;
 import mx.core.UIComponent;
@@ -38,7 +39,6 @@ public class TestApp {
         [Test(description="Load audio asset")]
         public function testAudioLoad():void {
             
-
             var audioPcmAsset:ByteArrayAsset = new AudioPcm();
             assertTrue("embedded bytesAvailable", audioPcmAsset.bytesAvailable > 0);
 
@@ -57,7 +57,10 @@ public class TestApp {
             assertTrue("outputFormat set to " + format, encoder.getOutputFormat() == format);
             assertTrue("outputLength = audioPcmAsset.length = " + audioPcmAsset.length, encoder.getOutputLength() == audioPcmAsset.length);
             assertTrue("output.length = audioPcmAsset.length = " + audioPcmAsset.length, output.length == audioPcmAsset.length);
-            
+
+            //give stdout buffer a chance to catch up before terminating
+            sleep(1000);
+
             encoder.dispose(0);
         }
     
@@ -69,6 +72,15 @@ public class TestApp {
             trace("");
             trace("test::complete " + new Date().toLocaleString());
             trace("=======================================================");
+        }
+
+        private function sleep(ms:int):void {
+            var init:int = getTimer();
+            while(true) {
+                if(getTimer() - init >= ms) {
+                    break;
+                }
+            }
         }
 
     }
