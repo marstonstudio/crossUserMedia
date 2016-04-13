@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 cd ../ffmpeg
 
 emmake make clean
@@ -29,13 +31,11 @@ emconfigure ./configure \
     --disable-encoders \
     --enable-encoder=aac \
     --disable-decoders \
-    --enable-decoder=pcm_f32be \
     --enable-decoder=pcm_f32le \
     --disable-hwaccels \
     --disable-muxers \
     --enable-muxer=mp4 \
     --disable-demuxers \
-    --enable-demuxer=pcm_f32be \
     --enable-demuxer=pcm_f32le \
     --disable-parsers \
     --disable-bsfs \

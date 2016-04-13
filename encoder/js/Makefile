@@ -1,10 +1,14 @@
 CC = emcc
 
+SOURCES = ../c/encoder.c
+TARGET = dist/encoder.js
+INSTALL_DIR = ../../frontend/node_modules/encoderjs
+
 LDFLAGS = -L./dist/lib
 
 LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
 
-CFLAGS = -v -O3 \
+CFLAGS = -v -O0 \
 	-I./dist/include \
 	-s OUTLINING_LIMIT=100000 \
 	-s TOTAL_MEMORY=67108864 \
@@ -14,17 +18,15 @@ CFLAGS = -v -O3 \
 	--pre-js pre.js \
 	--post-js post.js
 
-OBJECTS = ../c/encoder.c
-
-TARGET = dist/encoder.js
-
-INSTALL_DIR = ../../frontend/node_modules/encoderjs
+################################################################
 
 all: program
 
-program: $(OBJECTS)
+program: prepare
+	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS) $(LDLIBS)
+
+prepare:
 	mkdir -p dist
-	$(CC) $(CFLAGS) $(OBJECTS) -o $(TARGET) $(LDFLAGS) $(LDLIBS)
 
 install:
 	mkdir -p $(INSTALL_DIR)
@@ -36,5 +38,3 @@ install:
 clean:
 	rm -f dist/encoder.*
 	rm -Rf $(INSTALL_DIR)
-
-#	-s NO_EXIT_RUNTIME=1 \

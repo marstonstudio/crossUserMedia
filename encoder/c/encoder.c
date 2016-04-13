@@ -60,6 +60,18 @@ int output_length;
 //max of 30 seconds at 44100khz
 const int max_output_length = 44100 * 4 * 30;
 
+int main(int argc, char **argv) {
+    fprintf(stdout, "%s\n", "main");
+
+    #ifdef __EMSCRIPTEN__
+    emscripten_exit_with_live_runtime();
+    #endif
+
+    #ifdef __FLASHPLAYER__
+    AS3_GoAsync();
+    #endif
+}
+
 void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
 
     input_format = (char*)malloc(strlen(i_format) + 1);
@@ -114,7 +126,7 @@ void dispose(int status) {
     free(output_data);
 
     #ifdef __EMSCRIPTEN__
-        emscripten_force_exit(status);
+    emscripten_force_exit(status);
     #endif
 
     exit(status);

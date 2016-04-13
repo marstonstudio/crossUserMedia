@@ -4,11 +4,6 @@
 #include <stdarg.h>
 #include "AS3/AS3.h"
 
-int main(int argc, char **argv) {
-    fprintf(stdout, "%s\n", "main");
-    AS3_GoAsync();
-}
-
 // https://www.adobe.com/devnet-docs/flascc/docs/capidocs/as3.html
 // https://github.com/crossbridge-community/crossbridge/blob/master/samples/06_SWIG/PassingData/PassData.as
 
