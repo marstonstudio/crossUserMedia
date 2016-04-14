@@ -87,7 +87,7 @@ make install
 ```
 
 ## TODO:
-- [ ] Get Jasmine test functioning with Web Worker implementation, blocked by [node-webworker ArrayBuffer bug](https://github.com/audreyt/node-webworker-threads/issues/60)
+- [ ] Get [Jasmine test](/encoder/js/spec/test.js) functioning with Web Worker implementation, blocked by [node-webworker ArrayBuffer bug](https://github.com/audreyt/node-webworker-threads/issues/60)
 
 ## Inspired by
 * https://github.com/Kagami/ffmpeg.js
