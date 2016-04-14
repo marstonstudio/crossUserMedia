@@ -1,28 +1,34 @@
-#encoder.js environment setup and build
+#encoder.js
+
+## Implementation
 
 The JavaScript cross compiled version of the encoder is bundled as an npm package and is intended to run in a
 [web worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) thread.
 The [build.sh](/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` encoder, and the `mp4` muxer.
 Change the `./configure` options in the [build.sh](/encoder/js/build.sh) script to support different encoders or output file formats.
 
-The encoder has a custom c wrapper around the libraries from ffmpeg and does not use the actual ffmpeg program.
+The encoder has a custom C wrapper around the libav libraries from ffmpeg and does not use the actual ffmpeg program itself.
 In [assets/draft/jsencoder/ffmpegwrapper.js](/assets/draft/jsencoder/ffmpegwrapper.js)
 you can see an earlier implementation which used the `ffmpeg` program, `Module['arguments']`
 and the emscripten filesystem to pass audio in and out of the encoder.
 Note that using this approach also requires making to the `./configure` options in [build.sh](/encoder/js/build.sh)
 to build the ffmpeg program and use the `.bc` suffix.
+See the [ffmpeg.js](https://github.com/Kagami/ffmpeg.js) project for a great example of this alternative approach.
 
-Raw PCM data from the getUserMedia() microphone is passed to the worker as a `Float32Array.buffer`,
-output is a `Uint8Array.buffer` which can be loaded into a `Blob` and played in the browser using the `Audio` element.
+Raw PCM data from the getUserMedia() microphone is passed to the worker as a `Float32Array.buffer`.
+Output from the worker is a `Uint8Array.buffer` which can be loaded into a `Blob` and played in the browser using the `Audio` element.
 See [frontend/scripts/factories/EncoderFactory.js](/frontend/scripts/factories/EncoderFactory.js)
-for usage and examples of the JSON objects used to transfer message back and forth from the web worker.
+for usage and examples of the JSON objects used to transfer messages and data back and forth from the web worker.
 
-## Install emscripten
+## Environment setup and installing emscripten
+
+The encoder.js library uses the [emscripten crosscompiler](http://kripken.github.io/emscripten-site) to compile the C code and
+underlying libraries into [ams.js]() which can be run in a browser.
 
 You can follow instructions on the [emscripten website](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)
 or use [homebrew](http://brew.sh) to install emscripten.
 
-If installing using homebrew on OS X, do the following to install and generate the ~/.emscripten config file:
+If using homebrew on OS X, do the following to install emscripten and generate the ~/.emscripten config file:
 ```
 brew install emscripten node yuicompressor
 emcc -v
