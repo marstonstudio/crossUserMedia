@@ -3,7 +3,8 @@
 ## Implementation
 
 Encoder.js uses the [emscripten crosscompiler](http://kripken.github.io/emscripten-site) to compile [encoder.c](/encoder/c/encoder.c),
-underlying FFMPEG libraries, and a javascript wrapper into [ams.js](http://asmjs.org) code which can be run in a browser.
+underlying [FFMPEG](https://ffmpeg.org) libraries, and the [pre.js](/encoder/js/pre.js) and [post.js](/encoder/js/post.js) javascript wrappers
+into [ams.js](http://asmjs.org) code which can be run in a browser.
 It works great in Chrome, Firefox, Edge, and Safari and encodes audio at 3x real time.
 It does not run fast in Internet Explorer because that browser does not have the [ams.js](http://asmjs.org) optimizations.
 For Internet Explorer, see the ActionScript version [Encoder.swc](/encoder/as3/README.md).
