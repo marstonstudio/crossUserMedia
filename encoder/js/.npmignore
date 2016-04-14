@@ -1,5 +1,5 @@
-build.sh
-interface.js
-ffmpeg/
+dist/
 spec/
-tmp/
+build.sh
+post.js
+pre.js

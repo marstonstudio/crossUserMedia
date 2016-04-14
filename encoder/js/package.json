@@ -1,7 +1,7 @@
 {
   "name": "encoderjs",
   "version": "3.0.0",
-  "description": "Port of FFmpeg with Emscripten optimized to only support WAV->AAC conversion",
+  "description": "Port of FFmpeg with Emscripten optimized to only support PCM->AAC conversion",
   "main": "./index.js",
   "repository": {
     "type": "git",
