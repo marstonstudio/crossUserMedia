@@ -2,8 +2,8 @@
 
 ## Implementation
 
-Encoder.js uses the [emscripten crosscompiler](http://kripken.github.io/emscripten-site) to compile custom C code,
-underlying libraries, and a javascript wrapper into [ams.js](http://asmjs.org) code which can be run in a browser.
+Encoder.js uses the [emscripten crosscompiler](http://kripken.github.io/emscripten-site) to compile [encoder.c](/encoder/c/encoder.c),
+underlying FFMPEG libraries, and a javascript wrapper into [ams.js](http://asmjs.org) code which can be run in a browser.
 It works great in Chrome, Firefox, Edge, and Safari and encodes audio at 3x real time.
 It does not run fast in Internet Explorer because that browser does not have the [ams.js](http://asmjs.org) optimizations.
 For Internet Explorer, see the ActionScript version [Encoder.swc](/encoder/as3/README.md).
@@ -13,12 +13,12 @@ The JavaScript cross compiled version of the encoder is bundled as an npm packag
 The [build.sh](/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` encoder, and the `mp4` muxer.
 Change the `./configure` options in the [build.sh](/encoder/js/build.sh) script to support different encoders or output file formats.
 
-The encoder has a custom C wrapper around the libav libraries from ffmpeg and does not use the actual ffmpeg program.
+The encoder has a custom C wrapper around the libav libraries from FFMPEG and does not use the actual `ffmpeg` program.
 In [assets/draft/jsencoder/ffmpegwrapper.js](/assets/draft/jsencoder/ffmpegwrapper.js)
 you can see an earlier implementation which used the `ffmpeg` program, `Module['arguments']`,
 and the emscripten filesystem to pass audio in and out of the encoder.
 Note that using this approach also requires making to the `./configure` options in [build.sh](/encoder/js/build.sh)
-to build the ffmpeg program and use the `.bc` suffix.
+to build the `ffmpeg` program and use the `.bc` suffix.
 See the [ffmpeg.js](https://github.com/Kagami/ffmpeg.js) project for a great example of this alternative approach.
 
 Raw PCM data from the getUserMedia() microphone is passed to the worker as a `Float32Array.buffer`.
@@ -68,7 +68,7 @@ You should see no errors in the emscripten sanity check output.
 
 ## Building the npm package
 
-Now execute the full build which compiles the base ffmpeg libraries, compiles the encoder.js wrapper,
+Now execute the full build which compiles the base FFMPEG libraries, compiles the encoder.js wrapper,
 and installs the output into the node_modules/encoderjs folder in the frontend project.
 Run the [build.sh](/encoder/js/build.sh) script in the `encoder/js/` folder.
 ```
@@ -76,7 +76,7 @@ Run the [build.sh](/encoder/js/build.sh) script in the `encoder/js/` folder.
 ```
 
 This will take a long time.
-The full build only needs to be done once to install the base ffmpeg libraries into the dist folder.
+The full build only needs to be done once to install the base FFMPEG libraries into the dist folder.
 When doing development on the encoder, you can do faster compilation of just the custom encoder.c, pre.js, and post.js code by running:
 ```
 make clean
