@@ -86,10 +86,10 @@ make
 make install
 ```
 
+## TODO:
+- [ ] Get Jasmine test functioning with Web Worker implementation, blocked by [node-webworker ArrayBuffer bug](https://github.com/audreyt/node-webworker-threads/issues/60)
+
 ## Inspired by
 * https://github.com/Kagami/ffmpeg.js
 * https://github.com/bgrins/videoconverter.js
 * https://github.com/mattdiamond/Recorderjs
-
-## TODO:
-- [ ] Get Jasmine test functioning with Web Worker implementation, blocked by [bug with node-webworker ability to pass binary data](https://github.com/audreyt/node-webworker-threads/issues/60)
