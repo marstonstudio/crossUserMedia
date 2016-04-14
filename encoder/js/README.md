@@ -66,6 +66,8 @@ emcc -v
 
 You should see no errors in the emscripten sanity check output.
 
+## Building the npm package
+
 Now execute the full build which compiles the base ffmpeg libraries, compiles the encoder.js wrapper,
 and installs the output into the node_modules/encoderjs folder in the frontend project.
 Run the [build.sh](/encoder/js/build.sh) script in the `encoder/js/` folder.
