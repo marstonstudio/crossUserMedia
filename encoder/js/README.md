@@ -1,14 +1,16 @@
 #encoder.js environment setup and build
 
-The JavaScript cross compiled version of the encoder is bundled as a npm package and is intended to run in a
+The JavaScript cross compiled version of the encoder is bundled as an npm package and is intended to run in a
 [web worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) thread.
-The [encoder/js/build.sh](/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` encoder, and the `mp4` muxer.
+The [build.sh](/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` encoder, and the `mp4` muxer.
 Change the `./configure` options in the [build.sh](/encoder/js/build.sh) script to support different encoders or output file formats.
 
 The encoder has a custom c wrapper around the libraries from ffmpeg and does not use the actual ffmpeg program.
-In [assets/draft/jsencoder/ffmpegwrapper.js](/draft/jsencoder/ffmpegwrapper.js)
-you can see an earlier implementation which used the ffmpeg program
+In [assets/draft/jsencoder/ffmpegwrapper.js](/assets/draft/jsencoder/ffmpegwrapper.js)
+you can see an earlier implementation which used the `ffmpeg` program, `Module['arguments']`
 and the emscripten filesystem to pass audio in and out of the encoder.
+Note that using this approach also requires making to the `./configure` options in [build.sh](/encoder/js/build.sh)
+to build the ffmpeg program and use the `.bc` suffix.
 
 Raw PCM data from the getUserMedia() microphone is passed to the worker as a `Float32Array.buffer`,
 output is a `Uint8Array.buffer` which can be loaded into a `Blob` and played in the browser using the `Audio` element.
