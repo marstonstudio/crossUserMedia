@@ -6,30 +6,31 @@ Encoder.js uses the [emscripten crosscompiler](http://kripken.github.io/emscript
 underlying [FFMPEG](https://ffmpeg.org) libraries, and the [pre.js](/encoder/js/pre.js) and [post.js](/encoder/js/post.js) javascript wrappers
 into [ams.js](http://asmjs.org) code which can be run in a browser.
 It works great in Chrome, Firefox, Edge, and Safari and encodes audio at 3x real time.
-It does not run fast in Internet Explorer because that browser does not have the [ams.js](http://asmjs.org) optimizations.
-For Internet Explorer, see the ActionScript version [Encoder.swc](/encoder/as3/README.md).
+It runs sloooowly in Internet Explorer (1/6 real time) because that browser does not have the [ams.js](http://asmjs.org) optimizations.
+For Internet Explorer, see the ActionScript version [Encoder.swc](/encoder/as3/README.md) instead.
 
 The JavaScript cross compiled version of the encoder is bundled as an npm package and is intended to run in a
 [web worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) thread.
-The [build.sh](/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` encoder, and the `mp4` muxer.
-Change the `./configure` options in the [build.sh](/encoder/js/build.sh) script to support different encoders or output file formats.
+The [build.sh](/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` codec, and the `mp4` format muxer.
+Change the `./configure` options in the [build.sh](/encoder/js/build.sh) script to support output codecs and file formats.
 
-The encoder has a custom C wrapper around the libav libraries from FFMPEG and does not use the actual `ffmpeg` program.
+The encoder has a [custom C wrapper](/encoder/c/encoder.c) around the libav libraries from FFMPEG and does not use the actual `ffmpeg` program.
 In [assets/draft/jsencoder/ffmpegwrapper.js](/assets/draft/jsencoder/ffmpegwrapper.js)
 you can see an earlier implementation which used the `ffmpeg` program, `Module['arguments']`,
-and the emscripten filesystem to pass audio in and out of the encoder.
-Note that using this approach also requires making to the `./configure` options in [build.sh](/encoder/js/build.sh)
+and the [emscripten filesystem](http://kripken.github.io/emscripten-site/docs/api_reference/Filesystem-API.html)
+to pass audio in and out of the encoder.
+Note that using this approach also requires changing the `./configure` options in [build.sh](/encoder/js/build.sh)
 to build the `ffmpeg` program and use the `.bc` suffix.
 See the [ffmpeg.js](https://github.com/Kagami/ffmpeg.js) project for a great example of this alternative approach.
+I went with a custom C wrapper because it was an easier way to stream the PCM data into the encoder that way instead of using `stdin`
+or the FFMPEG `pipe` protocol.
 
-Raw PCM data from the getUserMedia() microphone is passed to the worker as a `Float32Array.buffer`.
+Raw PCM data from the getUserMedia() microphone is passed to the JavaScript worker as a `Float32Array.buffer`.
 Output from the worker is a `Uint8Array.buffer` which can be loaded into a `Blob` and played in the browser using the `Audio` element.
 See [frontend/scripts/factories/EncoderFactory.js](/frontend/scripts/factories/EncoderFactory.js)
 for usage and examples of the JSON objects used to transfer messages and data back and forth from the web worker.
 
 ## Environment setup and installing emscripten
-
-
 
 You can follow instructions on the [emscripten website](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)
 or use [homebrew](http://brew.sh) to install emscripten.
