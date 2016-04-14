@@ -41,13 +41,13 @@ brew install emscripten node yuicompressor
 emcc -v
 ```
 
-If you get errors which say "python2 not found", try setting up a link to python2.
+If you get errors which say `python2 not found`, try setting up a link to python2.
 Skip this step if you have no error.
 ```
 ln -sf /usr/bin/python2.7 /usr/local/bin/python2
 ```
 
-If you get errors which say "emcc.py not found", then you may need to manually create symlinks for the emcc executables.
+If you get errors which say `emcc.py not found`, then you may need to manually create symlinks for the emcc executables.
 Skip this step if you have no error.
 ```
 ln -s /usr/local/opt/emscripten/libexec/em++ /usr/local/opt/emscripten/libexec/em++.py
@@ -58,8 +58,8 @@ ln -s /usr/local/opt/emscripten/libexec/emconfigure /usr/local/opt/emscripten/li
 ln -s /usr/local/opt/emscripten/libexec/emmake /usr/local/opt/emscripten/libexec/emmake.py
 ```
 
-Now follow instructions which appeared in the homebrew installation message about editing the path to LLVM in the ~/.emscripten config file.
-Change the LLVM_ROOT property in ~/.emscripten from '/usr/bin' to be '/usr/local/opt/emscripten/libexec/llvm/bin'.
+Now follow instructions which appeared in the homebrew installation message about editing the path to LLVM in the `~/.emscripten` config file.
+Change the LLVM_ROOT property in `~/.emscripten` from `/usr/bin` to be `/usr/local/opt/emscripten/libexec/llvm/bin`.
 Confirm emscripten properly installed by running the sanity check.
 
 ```
@@ -88,7 +88,5 @@ make install
 
 ## Inspired by
 * https://github.com/Kagami/ffmpeg.js
-* https://github.com/fluent-ffmpeg/node-fluent-ffmpeg
 * https://github.com/bgrins/videoconverter.js
 * https://github.com/mattdiamond/Recorderjs
-* http://qiita.com/ukyo/items/60b2e55f65eb525ce51c
