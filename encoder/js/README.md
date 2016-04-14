@@ -2,17 +2,17 @@
 
 The JavaScript cross compiled version of the encoder is bundled as a npm package and is intended to run in a
 [web worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) thread.
-The [encoder/js/build.sh](/crossUserMedia/blob/master/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` encoder, and the `mp4` muxer.
-Change the `./configure` options in the [build.sh](/crossUserMedia/blob/master/encoder/js/build.sh) script to support different encoders or output file formats.
+The [encoder/js/build.sh](/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` encoder, and the `mp4` muxer.
+Change the `./configure` options in the [build.sh](/encoder/js/build.sh) script to support different encoders or output file formats.
 
 The encoder has a custom c wrapper around the libraries from ffmpeg and does not use the actual ffmpeg program.
-In [assets/draft/jsencoder/ffmpegwrapper.js](/crossUserMedia/blob/master/draft/jsencoder/ffmpegwrapper.js)
+In [assets/draft/jsencoder/ffmpegwrapper.js](/draft/jsencoder/ffmpegwrapper.js)
 you can see an earlier implementation which used the ffmpeg program
 and the emscripten filesystem to pass audio in and out of the encoder.
 
 Raw PCM data from the getUserMedia() microphone is passed to the worker as a `Float32Array.buffer`,
 output is a `Uint8Array.buffer` which can be loaded into a `Blob` and played in the browser using the `Audio` element.
-See [frontend/scripts/factories/EncoderFactory.js](/crossUserMedia/blob/master/frontend/scripts/factories/EncoderFactory.js)
+See [frontend/scripts/factories/EncoderFactory.js](/frontend/scripts/factories/EncoderFactory.js)
 for usage and examples of the JSON objects used to transfer message back and forth from the web worker.
 
 ## Install emscripten
@@ -21,14 +21,14 @@ You can follow instructions on the [emscripten website](http://kripken.github.io
 or use [homebrew](http://brew.sh) to install emscripten.
 
 If installing using homebrew on OS X, do the following to install and generate the ~/.emscripten config file:
-```{r, engine='bash', count_lines}
+```
 brew install emscripten node yuicompressor
 emcc -v
 ```
 
 If you get errors which say "python2 not found", try setting up a link to python2.
 Skip this step if you have no error.
-```{r, engine='bash', count_lines}
+```
 ln -sf /usr/bin/python2.7 /usr/local/bin/python2
 ```
 
@@ -55,7 +55,7 @@ You should see no errors in the emscripten sanity check output.
 
 Now execute the full build which compiles the base ffmpeg libraries, compiles the encoder.js wrapper,
 and installs the output into the node_modules/encoderjs folder in the frontend project.
-Run the [build.sh](/crossUserMedia/blob/master/encoder/js/build.sh) script in the `encoder/js/` folder.
+Run the [build.sh](/encoder/js/build.sh) script in the `encoder/js/` folder.
 ```
 ./build.sh
 ```
