@@ -2,14 +2,20 @@
 
 ## Implementation
 
+Encoder.js uses the [emscripten crosscompiler](http://kripken.github.io/emscripten-site) to compile custom C code,
+underlying libraries, and a javascript wrapper into [ams.js](http://asmjs.org) code which can be run in a browser.
+It works great in Chrome, Firefox, Edge, and Safari and encodes audio at 3x real time.
+It does not run fast in Internet Explorer because that browser does not have the [ams.js](http://asmjs.org) optimizations.
+For Internet Explorer, see the ActionScript version [Encoder.swc](/encoder/as3/README.md).
+
 The JavaScript cross compiled version of the encoder is bundled as an npm package and is intended to run in a
 [web worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) thread.
 The [build.sh](/encoder/js/build.sh) script only enables the `pcm_f32le` decoder for raw microphone input, the `aac` encoder, and the `mp4` muxer.
 Change the `./configure` options in the [build.sh](/encoder/js/build.sh) script to support different encoders or output file formats.
 
-The encoder has a custom C wrapper around the libav libraries from ffmpeg and does not use the actual ffmpeg program itself.
+The encoder has a custom C wrapper around the libav libraries from ffmpeg and does not use the actual ffmpeg program.
 In [assets/draft/jsencoder/ffmpegwrapper.js](/assets/draft/jsencoder/ffmpegwrapper.js)
-you can see an earlier implementation which used the `ffmpeg` program, `Module['arguments']`
+you can see an earlier implementation which used the `ffmpeg` program, `Module['arguments']`,
 and the emscripten filesystem to pass audio in and out of the encoder.
 Note that using this approach also requires making to the `./configure` options in [build.sh](/encoder/js/build.sh)
 to build the ffmpeg program and use the `.bc` suffix.
@@ -22,8 +28,7 @@ for usage and examples of the JSON objects used to transfer messages and data ba
 
 ## Environment setup and installing emscripten
 
-The encoder.js library uses the [emscripten crosscompiler](http://kripken.github.io/emscripten-site) to compile the C code and
-underlying libraries into [ams.js]() which can be run in a browser.
+
 
 You can follow instructions on the [emscripten website](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)
 or use [homebrew](http://brew.sh) to install emscripten.
