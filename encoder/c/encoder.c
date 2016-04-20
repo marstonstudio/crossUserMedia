@@ -91,19 +91,21 @@ SwrContext *resample_context;
 int input_frame_size;
 uint8_t *input_frame_buffer;
 
-AVPacket *input_packet;
 AVFrame *input_frame;
 AVFrame *output_frame;
 
 #define INTERNAL_ERROR 1
 #define NO_ERROR 0
 #define ERROR_CODE int
+#define LOG(x) fprintf(stdout,"%s\n",x)
+#define LOG1(x,y) fprintf(stdout,"%s = %d\n",x,y)
 #define CHK_NULL(x) { fprintf(stdout,"%s\n",#x); if(!(x)) { fprintf(stderr,"%s FAILED",#x); return; }}
 #define CHK_POS(x) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<0) { fprintf(stderr,"%s FAILED code=%d %s\n",#x,err,get_error_text(err)); return; }}
 #define CHK_GE(x,y) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<y) { fprintf(stderr,"%s FAILED %d < %d\n",#x,err,y); return; }}
+#define CHK_VOID(x) { fprintf(stdout,"%s\n",#x); x; }
 
 int main(int argc, char **argv) {
-    fprintf(stdout, "%s\n", "main");
+    fprintf(stdout,"%s\n", "main");
 
     #ifdef __EMSCRIPTEN__
     emscripten_exit_with_live_runtime();
@@ -163,7 +165,7 @@ void init(const char *i_format, int input_sample_rate, const char *o_format, int
 
     /* Use the encoder's desired frame size for processing. */
     input_frame_size = output_codec_context->frame_size;
-    fprintf(stdout,"input_frame_size = %d\n",input_frame_size);
+    LOG1("input_frame_size",input_frame_size);
 
     CHK_NULL(input_frame = av_frame_alloc());
 
@@ -191,12 +193,6 @@ void init(const char *i_format, int input_sample_rate, const char *o_format, int
     CHK_NULL(input_fifo = av_audio_fifo_alloc(
         output_codec_context->sample_fmt,
         output_codec_context->channels, 1));
-
-    /* Allocate Packet to hold input to Codec */
-    CHK_NULL(input_packet=av_packet_alloc());
-
-    /* Allocate Frame to hold output from Codec */
-    CHK_NULL(output_frame=av_frame_alloc());
 
     /* Write the Header to the output Container */
 }
@@ -251,7 +247,7 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
     The AAC Frame is written to the AAC Stream of the output
 */
 void load(uint8_t *i_data, int i_length) {
-    fprintf(stdout, "load (i_length:%u)\n", i_length);
+    LOG1("load i_length", i_length);
 
     int input_samples_size = i_length / sizeof(float);
     int frame_samples_size = input_frame_size / sizeof(float);
@@ -260,32 +256,55 @@ void load(uint8_t *i_data, int i_length) {
     * Make the FIFO as large as it needs to be to hold both,
     * the old and the new samples.
     */
-    fprintf(stdout,"  before fifo space = %d\n",av_audio_fifo_space(input_fifo));
-    fprintf(stdout,"    input_samples_size = %d\n",input_samples_size);
+    LOG1("  before fifo space = %d\n",av_audio_fifo_space(input_fifo));
+    LOG1("    input_samples_size = %d\n",input_samples_size);
     CHK_POS(av_audio_fifo_realloc(input_fifo, av_audio_fifo_size(input_fifo) + input_samples_size));
-    fprintf(stdout,"  after fifo space = %d\n",av_audio_fifo_space(input_fifo));
+    LOG1("  after fifo space = %d\n",av_audio_fifo_space(input_fifo));
 
     /** Store the new samples in the FIFO buffer. */
-    fprintf(stdout,"  before fifo size = %d\n",av_audio_fifo_size(input_fifo));
+    LOG1("  before fifo size = %d\n",av_audio_fifo_size(input_fifo));
     CHK_GE(av_audio_fifo_write(input_fifo, (void **)&i_data, input_samples_size), input_samples_size);
-    fprintf(stdout,"  after fifo size = %d\n",av_audio_fifo_size(input_fifo));
+    LOG1("  after fifo size = %d\n",av_audio_fifo_size(input_fifo));
 
     int finished               = 0;
     int amount_read            = 0;
+    AVPacket *output_packet;
+    CHK_NULL(output_packet=av_packet_alloc());
     /**
      * While there is at least one Frame's worth of data in the Fifo,
      * encode the Frame and write it to the output Container
      */
     while (av_audio_fifo_size(input_fifo) >= frame_samples_size) {
-        fprintf(stdout,"  before fifo size = %d\n",av_audio_fifo_size(input_fifo));
+        LOG1("  before fifo size",av_audio_fifo_size(input_fifo));
         CHK_POS( amount_read = av_audio_fifo_read(input_fifo,(void**)&input_frame_buffer,frame_samples_size));
-        fprintf(stdout,"  read %d from fifo\n",amount_read);
-        fprintf(stdout,"  after fifo size = %d\n",av_audio_fifo_size(input_fifo));
+        LOG1("  read from fifo",amount_read);
+        LOG1("  after fifo size",av_audio_fifo_size(input_fifo));
+
+        int got_output = 0;
+        CHK_POS(avcodec_encode_audio2(output_codec_context, output_packet, input_frame, &got_output));
+        LOG1("  got_output",got_output);
+        if(got_output) {
+            LOG1("    packet size",output_packet->size);
+            CHK_VOID(av_packet_unref(output_packet));
+        }
     }
 }
 
 uint8_t *flush() {
-    fprintf(stdout, "flush\n");
+    LOG("flush");
+
+    /** Get all the delayed frames */
+    AVPacket *output_packet;
+    CHK_NULL(output_packet=av_packet_alloc());
+    int got_output = 1;
+    while (got_output) {
+        CHK_POS(avcodec_encode_audio2(output_codec_context, output_packet, NULL, &got_output));
+        LOG1("  got_output",got_output);
+        if(got_output) {
+            LOG1("    packet size",output_packet->size);
+            CHK_VOID(av_packet_unref(output_packet));
+        }
+    }
 }
 
 /**
@@ -293,7 +312,7 @@ uint8_t *flush() {
  */
 void dispose(int status) {
 
-    fprintf(stdout, "dispose\n");
+    LOG("dispose\n");
 
     /* If there is a partial Frame left over in the Fifo, process it */
 
@@ -392,17 +411,17 @@ cleanup:
 }
 
 int get_output_sample_rate() {
-    //fprintf(stdout, "get_output_sample_rate (%u)\n", output_sample_rate);
+    //LOG("get_output_sample_rate (%u)\n", output_sample_rate);
     return 0; //output_sample_rate;
 }
 
 char *get_output_format() {
-    fprintf(stdout, "get_output_format (%s)\n", output_format);
+    fprintf(stdout,"get_output_format (%s)\n", output_format);
     return output_format;
 }
 
 int get_output_length() {
-    fprintf(stdout, "get_output_length (%u)\n", output_length);
+    LOG1("get_output_length", output_length);
     return output_length;
 }
 
