@@ -27,6 +27,74 @@
 
 /** File related stuff taken from encoder.c */
 
+void init_resampler() {
+     /**
+      * Create a resampler context for the conversion.
+      * Set the conversion parameters.
+      * Default channel layouts based on the number of channels
+      * are assumed for simplicity (they are sometimes not detected
+      * properly by the demuxer and/or decoder).
+      */
+     CHK_NULL(resample_context = swr_alloc_set_opts(NULL,
+                                               av_get_default_channel_layout(output_codec_context->channels),
+                                               output_codec_context->sample_fmt,
+                                               output_codec_context->sample_rate,
+                                               av_get_default_channel_layout(input_codec_context->channels),
+                                               input_codec_context->sample_fmt,
+                                               input_codec_context->sample_rate,
+                                               0, NULL));
+
+     /**
+      * Perform a sanity check so that the number of converted samples is
+      * not greater than the number of samples to be converted.
+      * If the sample rates differ, this case has to be handled differently
+      */
+     av_assert0(output_codec_context->sample_rate == input_codec_context->sample_rate);
+
+     /** Open the resampler with the specified parameters. */
+     CHK_POS(swr_init(resample_context));
+}
+
+  /**
+   * Load one audio frame from the FIFO buffer, encode and write it to the
+   * output file.
+   */
+static int load_encode_and_write()
+{
+    /** Temporary storage of the output samples of the frame written to the file. */
+    AVFrame *output_frame;
+    /**
+     * Use the maximum number of possible samples per frame.
+     * If there is less than the maximum possible frame size in the FIFO
+     * buffer use this number. Otherwise, use the maximum possible frame size
+     */
+    const int frame_size = FFMIN(av_audio_fifo_size(fifo), output_codec_context->frame_size);
+    int data_written;
+
+    /** Initialize temporary storage for one output frame. */
+    if (init_output_frame(&output_frame, output_codec_context, frame_size))
+        return AVERROR_EXIT;
+
+    /**
+     * Read as many samples from the FIFO buffer as required to fill the frame.
+     * The samples are stored in the frame temporarily.
+     */
+    if (av_audio_fifo_read(fifo, (void **)output_frame->data, frame_size) < frame_size) {
+        fprintf(stderr, "Could not read data from FIFO\n");
+        av_frame_free(&output_frame);
+        return AVERROR_EXIT;
+    }
+
+    /** Encode one frame worth of audio samples. */
+    if (encode_audio_frame(output_frame, output_format_context,
+                           output_codec_context, &data_written)) {
+        av_frame_free(&output_frame);
+        return AVERROR_EXIT;
+    }
+    av_frame_free(&output_frame);
+    return 0;
+}
+
 /** Open an input file and the required decoder. */
 static int open_input_file(const char *filename,
                            AVFormatContext **input_format_context,
