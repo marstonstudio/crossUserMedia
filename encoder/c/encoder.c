@@ -77,7 +77,6 @@ AVAudioFifo *input_fifo;
 //int input_sample_rate = 44100;
 enum AVSampleFormat input_sample_fmt = AV_SAMPLE_FMT_FLTP;
 
-//int output_sample_rate = 44100;
 int output_bit_rate = 100;
 int output_channels = 1;
 char *output_format = NULL;
@@ -89,6 +88,9 @@ AVFormatContext *output_format_context; // args specifying Output Container
 
 SwrContext *resample_context;
 
+int input_frame_size;
+uint8_t *input_frame_buffer;
+
 AVPacket *input_packet;
 AVFrame *input_frame;
 AVFrame *output_frame;
@@ -97,9 +99,8 @@ AVFrame *output_frame;
 #define NO_ERROR 0
 #define ERROR_CODE int
 #define CHK_NULL(x) { fprintf(stdout,"%s\n",#x); if(!(x)) { fprintf(stderr,"%s FAILED",#x); return; }}
-#define CHK_ERROR(x) { fprintf(stdout,"%s\n",#x); int err=(x); if(err!=0) { fprintf(stderr,"%s FAILED code=%d",#x,err); return; }}
-#define CHK_POS(x) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<0) { fprintf(stderr,"%s FAILED code=%d",#x,err); return; }}
-#define CHK_GE(x,y) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<y) { fprintf(stderr,"%s FAILED %d < %d",#x,err,y); return; }}
+#define CHK_POS(x) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<0) { fprintf(stderr,"%s FAILED code=%d %s\n",#x,err,get_error_text(err)); return; }}
+#define CHK_GE(x,y) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<y) { fprintf(stderr,"%s FAILED %d < %d\n",#x,err,y); return; }}
 
 int main(int argc, char **argv) {
     fprintf(stdout, "%s\n", "main");
@@ -145,7 +146,7 @@ void init(const char *i_format, int input_sample_rate, const char *o_format, int
     /** Create a new codec context. */
     CHK_NULL(output_codec_context = avcodec_alloc_context3(output_codec));
 
-    /** Check that codec can handle Signed 16 bit integer input */
+    /** Check that codec can handle the input */
     CHK_NULL(check_sample_fmt(output_codec, input_sample_fmt));
     CHK_NULL(check_sample_rate(output_codec, input_sample_rate));
 
@@ -160,17 +161,39 @@ void init(const char *i_format, int input_sample_rate, const char *o_format, int
     /** Open the Codec */
     CHK_POS(avcodec_open2(output_codec_context, output_codec, NULL));
 
+    /* Use the encoder's desired frame size for processing. */
+    input_frame_size = output_codec_context->frame_size;
+    fprintf(stdout,"input_frame_size = %d\n",input_frame_size);
+
+    CHK_NULL(input_frame = av_frame_alloc());
+
+    input_frame->nb_samples     = output_codec_context->frame_size;
+    input_frame->format         = output_codec_context->sample_fmt;
+    input_frame->channel_layout = output_codec_context->channel_layout;
+
+        /* the codec gives us the frame size, in samples,
+         * we calculate the size of the samples buffer in bytes */
+    CHK_POS(input_frame_size = av_samples_get_buffer_size(NULL,
+        output_codec_context->channels,
+        output_codec_context->frame_size,
+        output_codec_context->sample_fmt, 0));
+
+    CHK_NULL(input_frame_buffer = av_malloc(input_frame_size));
+
+        /* setup the data pointers in the AVFrame */
+    CHK_POS( avcodec_fill_audio_frame(input_frame,
+        output_codec_context->channels,
+        output_codec_context->sample_fmt,
+        (const uint8_t*)input_frame_buffer,
+        input_frame_size, 0));
 
     /** Create the input FIFO buffer based on the Codec input format */
-    CHK_NULL(input_fifo = av_audio_fifo_alloc(output_codec_context->sample_fmt, output_codec_context->channels, 1));
+    CHK_NULL(input_fifo = av_audio_fifo_alloc(
+        output_codec_context->sample_fmt,
+        output_codec_context->channels, 1));
 
     /* Allocate Packet to hold input to Codec */
     CHK_NULL(input_packet=av_packet_alloc());
-
-    /* Allocate Packet to hold input to Codec */
-    CHK_NULL(input_frame=av_frame_alloc());
-
-
 
     /* Allocate Frame to hold output from Codec */
     CHK_NULL(output_frame=av_frame_alloc());
@@ -230,41 +253,36 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 void load(uint8_t *i_data, int i_length) {
     fprintf(stdout, "load (i_length:%u)\n", i_length);
 
-    /* add the new data to the fifo */
-    CHK_ERROR( add_samples_to_fifo(input_fifo,i_data,i_length) );
+    int input_samples_size = i_length / sizeof(float);
+    int frame_samples_size = input_frame_size / sizeof(float);
 
-    /* Use the encoder's desired frame size for processing. */
-    const int input_frame_size = output_codec_context->frame_size;
+  /**
+    * Make the FIFO as large as it needs to be to hold both,
+    * the old and the new samples.
+    */
+    fprintf(stdout,"  before fifo space = %d\n",av_audio_fifo_space(input_fifo));
+    fprintf(stdout,"    input_samples_size = %d\n",input_samples_size);
+    CHK_POS(av_audio_fifo_realloc(input_fifo, av_audio_fifo_size(input_fifo) + input_samples_size));
+    fprintf(stdout,"  after fifo space = %d\n",av_audio_fifo_space(input_fifo));
+
+    /** Store the new samples in the FIFO buffer. */
+    fprintf(stdout,"  before fifo size = %d\n",av_audio_fifo_size(input_fifo));
+    CHK_GE(av_audio_fifo_write(input_fifo, (void **)&i_data, input_samples_size), input_samples_size);
+    fprintf(stdout,"  after fifo size = %d\n",av_audio_fifo_size(input_fifo));
+
     int finished               = 0;
-
+    int amount_read            = 0;
     /**
      * While there is at least one Frame's worth of data in the Fifo,
      * encode the Frame and write it to the output Container
      */
-    //while (av_audio_fifo_size(input_fifo) >= input_frame_size) {
-      
-    //}
+    while (av_audio_fifo_size(input_fifo) >= frame_samples_size) {
+        fprintf(stdout,"  before fifo size = %d\n",av_audio_fifo_size(input_fifo));
+        CHK_POS( amount_read = av_audio_fifo_read(input_fifo,(void**)&input_frame_buffer,frame_samples_size));
+        fprintf(stdout,"  read %d from fifo\n",amount_read);
+        fprintf(stdout,"  after fifo size = %d\n",av_audio_fifo_size(input_fifo));
+    }
 }
-
-/** Add converted input audio samples to the FIFO buffer for later processing. */
-int add_samples_to_fifo(AVAudioFifo *fifo,
-                        uint8_t *samples,
-                        const int samples_size )
-{
-    fprintf(stdout, "add_samples_to_fifo (samples_size:%u)\n", samples_size);
-
-    /**
-     * Make the FIFO as large as it needs to be to hold both,
-     * the old and the new samples.
-     */
-  CHK_POS(av_audio_fifo_realloc(fifo, av_audio_fifo_size(fifo) + samples_size));
-
-    /** Store the new samples in the FIFO buffer. */
-  CHK_GE(av_audio_fifo_write(fifo, (void **)&samples, samples_size), samples_size);
-
-  return NO_ERROR;
-}
-
 
 uint8_t *flush() {
     fprintf(stdout, "flush\n");
