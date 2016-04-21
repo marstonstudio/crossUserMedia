@@ -88,11 +88,17 @@ AVFormatContext *output_format_context; // args specifying Output Container
 
 SwrContext *resample_context;
 
+int input_sample_rate;
+int output_sample_rate;
+
 int input_frame_size;
 uint8_t *input_frame_buffer;
 
 AVFrame *input_frame;
 AVFrame *output_frame;
+
+AVIOContext *output_io_context = NULL;
+AVStream *output_stream        = NULL;
 
 #define INTERNAL_ERROR 1
 #define NO_ERROR 0
@@ -128,17 +134,7 @@ static const char *get_error_text(const ERROR_CODE error)
     return error_buffer;
 }
 
-/**
-    Set up input to accept samples PCM float 44.1k for now
-
-    Create MP4 AAC output Container to be returned by flush()
-*/
-void init(const char *i_format, int input_sample_rate, const char *o_format, int output_sample_rate, int o_bit_rate) {
-    fprintf(stdout,"init(%s,%d,%s,%d,%d)\n",i_format,input_sample_rate,o_format,output_sample_rate,o_bit_rate);
-
-    /** Register all codecs and formats so that they can be used. */
-    av_register_all();
-
+void init_codec() {
     /** Create a new format context for the output container format. */
     CHK_NULL(output_format_context = avformat_alloc_context());
 
@@ -193,6 +189,45 @@ void init(const char *i_format, int input_sample_rate, const char *o_format, int
     CHK_NULL(input_fifo = av_audio_fifo_alloc(
         output_codec_context->sample_fmt,
         output_codec_context->channels, 1));
+}
+
+void init_container() {
+
+    /** Open the output file to write to it. */
+    CHK_POS(avio_open_dyn_buf(&output_io_context));
+
+    /** Create a new format context for the output container format. */
+    CHK_NULL(output_format_context = avformat_alloc_context());
+
+    /** Associate the output file (pointer) with the container format context. */
+    output_format_context->pb = output_io_context;
+
+    /** Set the container format to MP4 */
+    CHK_NULL(output_format_context->oformat = av_guess_format("mp4", NULL, NULL));
+
+    /** Create a new audio stream in the output file container. */
+    CHK_NULL(output_stream = avformat_new_stream(output_format_context, output_codec));
+}
+
+
+/**
+    Set up input to accept samples PCM float 44.1k for now
+
+    Create MP4 AAC output Container to be returned by flush()
+*/
+void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
+
+    input_sample_rate = i_sample_rate;
+    output_sample_rate = o_sample_rate;
+
+    fprintf(stdout,"init(%s,%d,%s,%d,%d)\n",i_format,input_sample_rate,o_format,output_sample_rate,o_bit_rate);
+
+    /** Register all codecs and formats so that they can be used. */
+    av_register_all();
+
+    init_codec();
+
+    init_container();
 
     /* Write the Header to the output Container */
 }
