@@ -83,7 +83,7 @@ char *output_format = NULL;
 int output_length = 0;
 
 AVCodec *output_codec;
-AVCodecContext *output_codec_context;  // args specifying Codec
+AVCodecContext *output_codec_context;   // args specifying Codec
 AVFormatContext *output_format_context; // args specifying Output Container
 
 SwrContext *resample_context;
@@ -106,7 +106,7 @@ AVStream *output_stream        = NULL;
 #define LOG(x) fprintf(stdout,"%s\n",x)
 #define LOG1(x,y) fprintf(stdout,"%s = %d\n",x,y)
 #define CHK_NULL(x) { fprintf(stdout,"%s\n",#x); if(!(x)) { fprintf(stderr,"%s FAILED",#x); return; }}
-#define CHK_POS(x) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<0) { fprintf(stderr,"%s FAILED code=%d %s\n",#x,err,get_error_text(err)); return; }}
+#define CHK_ERROR(x) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<0) { fprintf(stderr,"%s FAILED code=%d %s\n",#x,err,get_error_text(err)); return; }}
 #define CHK_GE(x,y) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<y) { fprintf(stderr,"%s FAILED %d < %d\n",#x,err,y); return; }}
 #define CHK_VOID(x) { fprintf(stdout,"%s\n",#x); x; }
 
@@ -157,7 +157,7 @@ void init_codec() {
     //output_codec_context->bit_rate       = output_bit_rate;
 
     /** Open the Codec */
-    CHK_POS(avcodec_open2(output_codec_context, output_codec, NULL));
+    CHK_ERROR(avcodec_open2(output_codec_context, output_codec, NULL));
 
     /* Use the encoder's desired frame size for processing. */
     input_frame_size = output_codec_context->frame_size;
@@ -171,7 +171,7 @@ void init_codec() {
 
         /* the codec gives us the frame size, in samples,
          * we calculate the size of the samples buffer in bytes */
-    CHK_POS(input_frame_size = av_samples_get_buffer_size(NULL,
+    CHK_ERROR(input_frame_size = av_samples_get_buffer_size(NULL,
         output_codec_context->channels,
         output_codec_context->frame_size,
         output_codec_context->sample_fmt, 0));
@@ -179,7 +179,7 @@ void init_codec() {
     CHK_NULL(input_frame_buffer = av_malloc(input_frame_size));
 
         /* setup the data pointers in the AVFrame */
-    CHK_POS( avcodec_fill_audio_frame(input_frame,
+    CHK_ERROR( avcodec_fill_audio_frame(input_frame,
         output_codec_context->channels,
         output_codec_context->sample_fmt,
         (const uint8_t*)input_frame_buffer,
@@ -194,10 +194,7 @@ void init_codec() {
 void init_container() {
 
     /** Open the output file to write to it. */
-    CHK_POS(avio_open_dyn_buf(&output_io_context));
-
-    /** Create a new format context for the output container format. */
-    CHK_NULL(output_format_context = avformat_alloc_context());
+    CHK_ERROR(avio_open_dyn_buf(&output_io_context));
 
     /** Associate the output file (pointer) with the container format context. */
     output_format_context->pb = output_io_context;
@@ -207,6 +204,8 @@ void init_container() {
 
     /** Create a new audio stream in the output file container. */
     CHK_NULL(output_stream = avformat_new_stream(output_format_context, output_codec));
+    
+    CHK_ERROR(avformat_write_header(output_format_context, NULL));
 }
 
 
@@ -293,7 +292,7 @@ void load(uint8_t *i_data, int i_length) {
     */
     LOG1("  before fifo space = %d\n",av_audio_fifo_space(input_fifo));
     LOG1("    input_samples_size = %d\n",input_samples_size);
-    CHK_POS(av_audio_fifo_realloc(input_fifo, av_audio_fifo_size(input_fifo) + input_samples_size));
+    CHK_ERROR(av_audio_fifo_realloc(input_fifo, av_audio_fifo_size(input_fifo) + input_samples_size));
     LOG1("  after fifo space = %d\n",av_audio_fifo_space(input_fifo));
 
     /** Store the new samples in the FIFO buffer. */
@@ -311,12 +310,12 @@ void load(uint8_t *i_data, int i_length) {
      */
     while (av_audio_fifo_size(input_fifo) >= frame_samples_size) {
         LOG1("  before fifo size",av_audio_fifo_size(input_fifo));
-        CHK_POS( amount_read = av_audio_fifo_read(input_fifo,(void**)&input_frame_buffer,frame_samples_size));
+        CHK_ERROR( amount_read = av_audio_fifo_read(input_fifo,(void**)&input_frame_buffer,frame_samples_size));
         LOG1("  read from fifo",amount_read);
         LOG1("  after fifo size",av_audio_fifo_size(input_fifo));
 
         int got_output = 0;
-        CHK_POS(avcodec_encode_audio2(output_codec_context, output_packet, input_frame, &got_output));
+        CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, input_frame, &got_output));
         LOG1("  got_output",got_output);
         if(got_output) {
             LOG1("    packet size",output_packet->size);
@@ -333,13 +332,15 @@ uint8_t *flush() {
     CHK_NULL(output_packet=av_packet_alloc());
     int got_output = 1;
     while (got_output) {
-        CHK_POS(avcodec_encode_audio2(output_codec_context, output_packet, NULL, &got_output));
+        CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, NULL, &got_output));
         LOG1("  got_output",got_output);
         if(got_output) {
             LOG1("    packet size",output_packet->size);
             CHK_VOID(av_packet_unref(output_packet));
         }
     }
+
+    CHK_ERROR(av_write_trailer(output_format_context));
 }
 
 /**
