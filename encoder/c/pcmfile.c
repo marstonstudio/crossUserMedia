@@ -739,3 +739,88 @@ cleanup:
 
     return ret;
 }
+
+
+/**
+ * Open an output file and the required encoder.
+ * Also set some basic encoder parameters.
+ * Some of these parameters are based on the input file's parameters.
+ */
+static int open_output_file(const char *filename,
+                            AVCodecContext *input_codec_context,
+                            AVFormatContext **output_format_context,
+                            AVCodecContext **output_codec_context)
+{
+    AVIOContext *output_io_context = NULL;
+    AVStream *stream               = NULL;
+    AVCodec *output_codec          = NULL;
+    int error;
+    /** Open the output file to write to it. */
+    if ((error = avio_open(&output_io_context, filename,
+                           AVIO_FLAG_WRITE)) < 0) {
+        fprintf(stderr, "Could not open output file '%s' (error '%s')\n",
+                filename, get_error_text(error));
+        return error;
+    }
+    /** Create a new format context for the output container format. */
+    if (!(*output_format_context = avformat_alloc_context())) {
+        fprintf(stderr, "Could not allocate output format context\n");
+        return AVERROR(ENOMEM);
+    }
+    /** Associate the output file (pointer) with the container format context. */
+    (*output_format_context)->pb = output_io_context;
+    /** Guess the desired container format based on the file extension. */
+    if (!((*output_format_context)->oformat = av_guess_format(NULL, filename,
+                                                              NULL))) {
+        fprintf(stderr, "Could not find output file format\n");
+        goto cleanup;
+    }
+    av_strlcpy((*output_format_context)->filename, filename,
+               sizeof((*output_format_context)->filename));
+    /** Find the encoder to be used by its name. */
+    if (!(output_codec = avcodec_find_encoder(AV_CODEC_ID_AAC))) {
+        fprintf(stderr, "Could not find an AAC encoder.\n");
+        goto cleanup;
+    }
+    /** Create a new audio stream in the output file container. */
+    if (!(stream = avformat_new_stream(*output_format_context, output_codec))) {
+        fprintf(stderr, "Could not create new stream\n");
+        error = AVERROR(ENOMEM);
+        goto cleanup;
+    }
+    /** Save the encoder context for easier access later. */
+    *output_codec_context = stream->codec;
+    /**
+     * Set the basic encoder parameters.
+     * The input file's sample rate is used to avoid a sample rate conversion.
+     */
+    (*output_codec_context)->channels       = output_channels;
+    (*output_codec_context)->channel_layout = av_get_default_channel_layout(output_channels);
+    (*output_codec_context)->sample_rate    = input_codec_context->sample_rate;
+    (*output_codec_context)->sample_fmt     = output_codec->sample_fmts[0];
+    (*output_codec_context)->bit_rate       = output_bit_rate;
+    /** Allow the use of the experimental AAC encoder */
+    (*output_codec_context)->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
+    /** Set the sample rate for the container. */
+    stream->time_base.den = input_codec_context->sample_rate;
+    stream->time_base.num = 1;
+    /**
+     * Some container formats (like MP4) require global headers to be present
+     * Mark the encoder so that it behaves accordingly.
+     */
+    if ((*output_format_context)->oformat->flags & AVFMT_GLOBALHEADER)
+        (*output_codec_context)->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    /** Open the encoder for the audio stream to use it later. */
+    if ((error = avcodec_open2(*output_codec_context, output_codec, NULL)) < 0) {
+        fprintf(stderr, "Could not open output codec (error '%s')\n",
+                get_error_text(error));
+        goto cleanup;
+    }
+    return 0;
+cleanup:
+    avio_closep(&(*output_format_context)->pb);
+    avformat_free_context(*output_format_context);
+    *output_format_context = NULL;
+    return error < 0 ? error : AVERROR_EXIT;
+}
+

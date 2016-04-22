@@ -72,33 +72,18 @@ const int max_input_length = (32000 / 8) * 30;
 // max of 30 seconds at 44100khz
 const int max_output_length = 44100 * 4 * 30;
 
-AVAudioFifo *input_fifo;
+AVAudioFifo *fifo;
 
-//int input_sample_rate = 44100;
-enum AVSampleFormat input_sample_fmt = AV_SAMPLE_FMT_FLTP;
-
-int output_bit_rate = 100;
-int output_channels = 1;
-char *output_format = NULL;
-int output_length = 0;
-
-AVCodec *output_codec;
-AVCodecContext *output_codec_context;   // args specifying Codec
-AVFormatContext *output_format_context; // args specifying Output Container
-
-SwrContext *resample_context;
-
-int input_sample_rate;
-int output_sample_rate;
-
-int input_frame_size;
 uint8_t *input_frame_buffer;
-
 AVFrame *input_frame;
-AVFrame *output_frame;
 
-AVIOContext *output_io_context = NULL;
-AVStream *output_stream        = NULL;
+uint8_t *output_buffer;
+int output_buffer_length;
+int output_buffer_pos;
+
+AVCodecContext *codec_context;
+AVFormatContext *output_format_context;
+AVIOContext *io_context = NULL;
 
 #define INTERNAL_ERROR 1
 #define NO_ERROR 0
@@ -134,80 +119,84 @@ static const char *get_error_text(const ERROR_CODE error)
     return error_buffer;
 }
 
-void init_codec() {
-    /** Create a new format context for the output container format. */
-    CHK_NULL(output_format_context = avformat_alloc_context());
+AVCodecContext *init_codec(int input_sample_rate) {
+    AVCodec *codec;
+    AVCodecContext *codec_context;
+    enum AVSampleFormat input_sample_fmt = AV_SAMPLE_FMT_FLTP;
+
+    int output_bit_rate = 96000;
+    int output_channels = 1;
 
     /** Get the AAC encoder */
-    CHK_NULL(output_codec = avcodec_find_encoder(AV_CODEC_ID_AAC));
+    CHK_NULL(codec = avcodec_find_encoder(AV_CODEC_ID_AAC));
 
     /** Create a new codec context. */
-    CHK_NULL(output_codec_context = avcodec_alloc_context3(output_codec));
+    CHK_NULL(codec_context = avcodec_alloc_context3(codec));
 
     /** Check that codec can handle the input */
-    CHK_NULL(check_sample_fmt(output_codec, input_sample_fmt));
-    CHK_NULL(check_sample_rate(output_codec, input_sample_rate));
+    CHK_NULL(check_sample_fmt(codec, input_sample_fmt));
+    CHK_NULL(check_sample_rate(codec, input_sample_rate));
 
     /** Parameters for AAC */
-    output_codec_context->sample_fmt     = input_sample_fmt;
-    output_codec_context->sample_rate    = input_sample_rate;
-    output_codec_context->channels       = output_channels;
-    output_codec_context->channel_layout = av_get_default_channel_layout(1);
-    //output_codec_context->sample_fmt     = output_codec->sample_fmts[0];
-    //output_codec_context->bit_rate       = output_bit_rate;
+    codec_context->sample_fmt     = input_sample_fmt;
+    codec_context->sample_rate    = input_sample_rate;
+    codec_context->channels       = output_channels;
+    codec_context->channel_layout = av_get_default_channel_layout(1);
+    codec_context->bit_rate       = output_bit_rate;
 
     /** Open the Codec */
-    CHK_ERROR(avcodec_open2(output_codec_context, output_codec, NULL));
+    CHK_ERROR(avcodec_open2(codec_context, codec, NULL));
+
+    return codec_context;
+}
+
+AVFrame *init_input_frame(AVCodecContext *codec_context) {
+
+    AVFrame *frame;
 
     /* Use the encoder's desired frame size for processing. */
-    input_frame_size = output_codec_context->frame_size;
-    LOG1("input_frame_size",input_frame_size);
+    int frame_size = codec_context->frame_size;
+    LOG1("frame_size",frame_size);
 
-    CHK_NULL(input_frame = av_frame_alloc());
+    CHK_NULL(frame = av_frame_alloc());
 
-    input_frame->nb_samples     = output_codec_context->frame_size;
-    input_frame->format         = output_codec_context->sample_fmt;
-    input_frame->channel_layout = output_codec_context->channel_layout;
+    frame->nb_samples     = codec_context->frame_size;
+    frame->format         = codec_context->sample_fmt;
+    frame->channel_layout = codec_context->channel_layout;
 
         /* the codec gives us the frame size, in samples,
          * we calculate the size of the samples buffer in bytes */
-    CHK_ERROR(input_frame_size = av_samples_get_buffer_size(NULL,
-        output_codec_context->channels,
-        output_codec_context->frame_size,
-        output_codec_context->sample_fmt, 0));
+    CHK_ERROR(frame_size = av_samples_get_buffer_size(NULL,
+        codec_context->channels,
+        codec_context->frame_size,
+        codec_context->sample_fmt, 0));
 
-    CHK_NULL(input_frame_buffer = av_malloc(input_frame_size));
+    CHK_NULL(input_frame_buffer = av_malloc(frame_size));
 
-        /* setup the data pointers in the AVFrame */
-    CHK_ERROR( avcodec_fill_audio_frame(input_frame,
-        output_codec_context->channels,
-        output_codec_context->sample_fmt,
+    /* setup the data pointers in the AVFrame */
+    CHK_ERROR( avcodec_fill_audio_frame(frame,
+        codec_context->channels,
+        codec_context->sample_fmt,
         (const uint8_t*)input_frame_buffer,
-        input_frame_size, 0));
+        frame_size, 0));
 
-    /** Create the input FIFO buffer based on the Codec input format */
-    CHK_NULL(input_fifo = av_audio_fifo_alloc(
-        output_codec_context->sample_fmt,
-        output_codec_context->channels, 1));
+    return frame;
 }
 
-void init_container() {
-
-    /** Open the output file to write to it. */
-    CHK_ERROR(avio_open_dyn_buf(&output_io_context));
-
-    /** Associate the output file (pointer) with the container format context. */
-    output_format_context->pb = output_io_context;
-
-    /** Set the container format to MP4 */
-    CHK_NULL(output_format_context->oformat = av_guess_format("mp4", NULL, NULL));
-
-    /** Create a new audio stream in the output file container. */
-    CHK_NULL(output_stream = avformat_new_stream(output_format_context, output_codec));
-    
-    CHK_ERROR(avformat_write_header(output_format_context, NULL));
+int ReadFunc(void* ptr, uint8_t* buf, int buf_size) {
+    LOG1("ReadFunc",buf_size);
+    return buf_size;
 }
 
+int WriteFunc(void* ptr, uint8_t* buf, int buf_size) {
+    LOG1("WriteFunc",buf_size);
+    return buf_size;
+}
+
+int64_t SeekFunc(void* ptr, int64_t pos, int whence) {
+   LOG1("SeekFunc",whence);
+   return pos;
+}
 
 /**
     Set up input to accept samples PCM float 44.1k for now
@@ -216,19 +205,60 @@ void init_container() {
 */
 void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
 
-    input_sample_rate = i_sample_rate;
-    output_sample_rate = o_sample_rate;
-
-    fprintf(stdout,"init(%s,%d,%s,%d,%d)\n",i_format,input_sample_rate,o_format,output_sample_rate,o_bit_rate);
+    fprintf(stdout,"init(%s,%d,%s,%d,%d)\n",i_format,i_sample_rate,o_format,o_sample_rate,o_bit_rate);
 
     /** Register all codecs and formats so that they can be used. */
     av_register_all();
 
-    init_codec();
+    CHK_NULL(codec_context = init_codec(i_sample_rate));
+    CHK_NULL(input_frame   = init_input_frame(codec_context));
 
-    init_container();
+    /** Create the input FIFO buffer based on the Codec input format */
+    CHK_NULL(fifo = av_audio_fifo_alloc(
+        codec_context->sample_fmt,
+        codec_context->channels, 1));
 
-    /* Write the Header to the output Container */
+    int output_buffer_size = 1000000;
+    CHK_NULL( output_buffer = av_malloc(output_buffer_size));
+    output_buffer_length = 0;
+    output_buffer_pos = 0;
+
+    // Allocate the AVIOContext:
+    // The fourth parameter (pStream) is a user parameter which will be passed to our callback functions
+    CHK_NULL(io_context = avio_alloc_context(output_buffer, output_buffer_size,  // internal Buffer and its size
+                                             1,     // bWriteable (1=true,0=false)
+                                             (void*)123,   // user data ; will be passed to our callback functions
+                                             ReadFunc,
+                                             WriteFunc,
+                                             SeekFunc));
+
+    /** Create a new format context for the output container format. */
+    CHK_NULL(output_format_context = avformat_alloc_context());
+
+    /** Associate the output file (pointer) with the container format context. */
+    output_format_context->pb = io_context;
+
+    /** Set the container format to MP4 */
+    CHK_NULL(output_format_context->oformat = av_guess_format("mp4", NULL, NULL));
+
+    /**
+     * Some container formats (like MP4) require global headers to be present
+     * Mark the encoder so that it behaves accordingly.
+     */
+    if (output_format_context->oformat->flags & AVFMT_GLOBALHEADER)
+        codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+    /** Create a new audio stream in the output file container. */
+    AVStream *output_stream;
+    CHK_NULL(output_stream = avformat_new_stream(output_format_context, codec_context->codec));
+
+    /** Set the sample rate for the container. */
+    output_stream->time_base.den = codec_context->sample_rate;
+    output_stream->time_base.num = 1;
+
+    LOG1("output_format_context->audio_codec",output_format_context->audio_codec);
+    LOG1("output_format_context->streams[0]->codec->sample_rate",output_format_context->streams[0]->codec->sample_rate);
+    //CHK_ERROR(avformat_write_header(output_format_context, NULL));    /* Write the Header to the output Container */
 }
 
 /* check that a given sample format is supported by the encoder */
@@ -249,10 +279,10 @@ int check_sample_fmt(AVCodec *codec, enum AVSampleFormat sample_fmt)
 /* check that a given sample format is supported by the encoder */
 int check_sample_rate(AVCodec *codec, int sample_rate)
 {
-    fprintf(stdout,"check_sample_rate(%d)\n",sample_rate);
+    LOG1("check_sample_rate",sample_rate);
     const int *p = codec->supported_samplerates;
     while (*p != 0) {
-        fprintf(stdout," available %d\n",*p);
+        LOG1(" available",*p);
 
         if (*p == sample_rate)
             return 1;
@@ -280,25 +310,29 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 
     The AAC Frame is written to the AAC Stream of the output
 */
+void load1(uint8_t *i_data, int i_length) {
+}
+
 void load(uint8_t *i_data, int i_length) {
     LOG1("load i_length", i_length);
 
+    int frame_size = codec_context->frame_size;
     int input_samples_size = i_length / sizeof(float);
-    int frame_samples_size = input_frame_size / sizeof(float);
+    int frame_samples_size = frame_size / sizeof(float);
 
   /**
     * Make the FIFO as large as it needs to be to hold both,
     * the old and the new samples.
     */
-    LOG1("  before fifo space = %d\n",av_audio_fifo_space(input_fifo));
-    LOG1("    input_samples_size = %d\n",input_samples_size);
-    CHK_ERROR(av_audio_fifo_realloc(input_fifo, av_audio_fifo_size(input_fifo) + input_samples_size));
-    LOG1("  after fifo space = %d\n",av_audio_fifo_space(input_fifo));
+    LOG1("  before fifo space",av_audio_fifo_space(fifo));
+    LOG1("    input_samples_size",input_samples_size);
+    CHK_ERROR(av_audio_fifo_realloc(fifo, av_audio_fifo_size(fifo) + input_samples_size));
+    LOG1("  after fifo space",av_audio_fifo_space(fifo));
 
     /** Store the new samples in the FIFO buffer. */
-    LOG1("  before fifo size = %d\n",av_audio_fifo_size(input_fifo));
-    CHK_GE(av_audio_fifo_write(input_fifo, (void **)&i_data, input_samples_size), input_samples_size);
-    LOG1("  after fifo size = %d\n",av_audio_fifo_size(input_fifo));
+    LOG1("  before fifo size",av_audio_fifo_size(fifo));
+    CHK_GE(av_audio_fifo_write(fifo, (void **)&i_data, input_samples_size), input_samples_size);
+    LOG1("  after fifo size",av_audio_fifo_size(fifo));
 
     int finished               = 0;
     int amount_read            = 0;
@@ -308,17 +342,17 @@ void load(uint8_t *i_data, int i_length) {
      * While there is at least one Frame's worth of data in the Fifo,
      * encode the Frame and write it to the output Container
      */
-    while (av_audio_fifo_size(input_fifo) >= frame_samples_size) {
-        LOG1("  before fifo size",av_audio_fifo_size(input_fifo));
-        CHK_ERROR( amount_read = av_audio_fifo_read(input_fifo,(void**)&input_frame_buffer,frame_samples_size));
-        LOG1("  read from fifo",amount_read);
-        LOG1("  after fifo size",av_audio_fifo_size(input_fifo));
+    while (av_audio_fifo_size(fifo) >= frame_samples_size) {
+        LOG1("  before fifo size",av_audio_fifo_size(fifo));
+        CHK_ERROR( amount_read = av_audio_fifo_read(fifo,(void**)&input_frame_buffer,frame_samples_size));
+        LOG1("  amount_read",amount_read);
+        LOG1("  after fifo size",av_audio_fifo_size(fifo));
 
         int got_output = 0;
-        CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, input_frame, &got_output));
+        CHK_ERROR(avcodec_encode_audio2(codec_context, output_packet, input_frame, &got_output));
         LOG1("  got_output",got_output);
         if(got_output) {
-            LOG1("    packet size",output_packet->size);
+            LOG1("    output_packet size",output_packet->size);
             CHK_VOID(av_packet_unref(output_packet));
         }
     }
@@ -332,15 +366,15 @@ uint8_t *flush() {
     CHK_NULL(output_packet=av_packet_alloc());
     int got_output = 1;
     while (got_output) {
-        CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, NULL, &got_output));
+        CHK_ERROR(avcodec_encode_audio2(codec_context, output_packet, NULL, &got_output));
         LOG1("  got_output",got_output);
         if(got_output) {
-            LOG1("    packet size",output_packet->size);
+            LOG1("    output_packet size",output_packet->size);
             CHK_VOID(av_packet_unref(output_packet));
         }
     }
 
-    CHK_ERROR(av_write_trailer(output_format_context));
+    //CHK_ERROR(av_write_trailer(output_format_context));
 }
 
 /**
@@ -363,102 +397,19 @@ void dispose(int status) {
     exit(status);
 }
 
-/**
- * Open an output file and the required encoder.
- * Also set some basic encoder parameters.
- * Some of these parameters are based on the input file's parameters.
- */
-static int open_output_file(const char *filename,
-                            AVCodecContext *input_codec_context,
-                            AVFormatContext **output_format_context,
-                            AVCodecContext **output_codec_context)
-{
-    AVIOContext *output_io_context = NULL;
-    AVStream *stream               = NULL;
-    AVCodec *output_codec          = NULL;
-    int error;
-    /** Open the output file to write to it. */
-    if ((error = avio_open(&output_io_context, filename,
-                           AVIO_FLAG_WRITE)) < 0) {
-        fprintf(stderr, "Could not open output file '%s' (error '%s')\n",
-                filename, get_error_text(error));
-        return error;
-    }
-    /** Create a new format context for the output container format. */
-    if (!(*output_format_context = avformat_alloc_context())) {
-        fprintf(stderr, "Could not allocate output format context\n");
-        return AVERROR(ENOMEM);
-    }
-    /** Associate the output file (pointer) with the container format context. */
-    (*output_format_context)->pb = output_io_context;
-    /** Guess the desired container format based on the file extension. */
-    if (!((*output_format_context)->oformat = av_guess_format(NULL, filename,
-                                                              NULL))) {
-        fprintf(stderr, "Could not find output file format\n");
-        goto cleanup;
-    }
-    av_strlcpy((*output_format_context)->filename, filename,
-               sizeof((*output_format_context)->filename));
-    /** Find the encoder to be used by its name. */
-    if (!(output_codec = avcodec_find_encoder(AV_CODEC_ID_AAC))) {
-        fprintf(stderr, "Could not find an AAC encoder.\n");
-        goto cleanup;
-    }
-    /** Create a new audio stream in the output file container. */
-    if (!(stream = avformat_new_stream(*output_format_context, output_codec))) {
-        fprintf(stderr, "Could not create new stream\n");
-        error = AVERROR(ENOMEM);
-        goto cleanup;
-    }
-    /** Save the encoder context for easier access later. */
-    *output_codec_context = stream->codec;
-    /**
-     * Set the basic encoder parameters.
-     * The input file's sample rate is used to avoid a sample rate conversion.
-     */
-    (*output_codec_context)->channels       = output_channels;
-    (*output_codec_context)->channel_layout = av_get_default_channel_layout(output_channels);
-    (*output_codec_context)->sample_rate    = input_codec_context->sample_rate;
-    (*output_codec_context)->sample_fmt     = output_codec->sample_fmts[0];
-    (*output_codec_context)->bit_rate       = output_bit_rate;
-    /** Allow the use of the experimental AAC encoder */
-    (*output_codec_context)->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
-    /** Set the sample rate for the container. */
-    stream->time_base.den = input_codec_context->sample_rate;
-    stream->time_base.num = 1;
-    /**
-     * Some container formats (like MP4) require global headers to be present
-     * Mark the encoder so that it behaves accordingly.
-     */
-    if ((*output_format_context)->oformat->flags & AVFMT_GLOBALHEADER)
-        (*output_codec_context)->flags |= CODEC_FLAG_GLOBAL_HEADER;
-    /** Open the encoder for the audio stream to use it later. */
-    if ((error = avcodec_open2(*output_codec_context, output_codec, NULL)) < 0) {
-        fprintf(stderr, "Could not open output codec (error '%s')\n",
-                get_error_text(error));
-        goto cleanup;
-    }
-    return 0;
-cleanup:
-    avio_closep(&(*output_format_context)->pb);
-    avformat_free_context(*output_format_context);
-    *output_format_context = NULL;
-    return error < 0 ? error : AVERROR_EXIT;
-}
-
 int get_output_sample_rate() {
     //LOG("get_output_sample_rate (%u)\n", output_sample_rate);
     return 0; //output_sample_rate;
 }
 
 char *get_output_format() {
-    fprintf(stdout,"get_output_format (%s)\n", output_format);
-    return output_format;
+    //fprintf(stdout,"get_output_format (%s)\n", output_format);
+    return NULL; //output_format;
 }
 
 int get_output_length() {
-    LOG1("get_output_length", output_length);
-    return output_length;
+    //LOG1("get_output_length", output_length);
+    return 0; //output_length;
 }
 
 
