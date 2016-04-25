@@ -82,8 +82,11 @@ int output_buffer_length;
 int output_buffer_pos;
 
 AVCodecContext *codec_context;
-AVFormatContext *output_format_context;
-AVIOContext *io_context = NULL;
+AVFormatContext *output_context;
+
+enum AVSampleFormat input_sample_fmt = AV_SAMPLE_FMT_FLTP;
+int output_bit_rate = 96000;
+int output_channels = 1;
 
 #define INTERNAL_ERROR 1
 #define NO_ERROR 0
@@ -122,10 +125,6 @@ static const char *get_error_text(const ERROR_CODE error)
 AVCodecContext *init_codec(int input_sample_rate) {
     AVCodec *codec;
     AVCodecContext *codec_context;
-    enum AVSampleFormat input_sample_fmt = AV_SAMPLE_FMT_FLTP;
-
-    int output_bit_rate = 96000;
-    int output_channels = 1;
 
     /** Get the AAC encoder */
     CHK_NULL(codec = avcodec_find_encoder(AV_CODEC_ID_AAC));
@@ -141,7 +140,7 @@ AVCodecContext *init_codec(int input_sample_rate) {
     codec_context->sample_fmt     = input_sample_fmt;
     codec_context->sample_rate    = input_sample_rate;
     codec_context->channels       = output_channels;
-    codec_context->channel_layout = av_get_default_channel_layout(1);
+    codec_context->channel_layout = av_get_default_channel_layout(output_channels);
     codec_context->bit_rate       = output_bit_rate;
 
     /** Open the Codec */
@@ -183,34 +182,22 @@ AVFrame *init_input_frame(AVCodecContext *codec_context) {
     return frame;
 }
 
-int ReadFunc(void* ptr, uint8_t* buf, int buf_size) {
-    LOG1("ReadFunc",buf_size);
+int read_packet(void* ptr, uint8_t* buf, int buf_size) {
+    fprintf(stdout,"read_packet(%lx %lx %d)\n",ptr,buf,buf_size);
     return buf_size;
 }
 
-int WriteFunc(void* ptr, uint8_t* buf, int buf_size) {
-    LOG1("WriteFunc",buf_size);
+int write_packet(void* ptr, uint8_t* buf, int buf_size) {
+    fprintf(stdout,"write_packet(%lx %lx %d)\n",ptr,buf,buf_size);
     return buf_size;
 }
 
-int64_t SeekFunc(void* ptr, int64_t pos, int whence) {
-   LOG1("SeekFunc",whence);
-   return pos;
+int64_t seek(void* ptr, int64_t offset, int whence) {
+   fprintf(stdout,"write_packet(%lx %ld %d)\n",ptr,offset,whence);
+   return offset;
 }
 
-/**
-    Set up input to accept samples PCM float 44.1k for now
-
-    Create MP4 AAC output Container to be returned by flush()
-*/
-void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
-
-    fprintf(stdout,"init(%s,%d,%s,%d,%d)\n",i_format,i_sample_rate,o_format,o_sample_rate,o_bit_rate);
-
-    /** Register all codecs and formats so that they can be used. */
-    av_register_all();
-
-    CHK_NULL(codec_context = init_codec(i_sample_rate));
+AVIOContext *init_io(AVCodecContext *codec_context) {
     CHK_NULL(input_frame   = init_input_frame(codec_context));
 
     /** Create the input FIFO buffer based on the Codec input format */
@@ -225,40 +212,76 @@ void init(const char *i_format, int i_sample_rate, const char *o_format, int o_s
 
     // Allocate the AVIOContext:
     // The fourth parameter (pStream) is a user parameter which will be passed to our callback functions
-    CHK_NULL(io_context = avio_alloc_context(output_buffer, output_buffer_size,  // internal Buffer and its size
+    AVIOContext *io;
+    CHK_NULL(io = avio_alloc_context(output_buffer, output_buffer_size,  // internal Buffer and its size
                                              1,     // bWriteable (1=true,0=false)
-                                             (void*)123,   // user data ; will be passed to our callback functions
-                                             ReadFunc,
-                                             WriteFunc,
-                                             SeekFunc));
+                                             (void*)0x123,   // user data ; will be passed to our callback functions
+                                             read_packet,
+                                             write_packet,
+                                             seek));
+    return io;
+}
+
+AVFormatContext *init_output(int input_sample_rate, AVIOContext *io_context) {
+    AVFormatContext *output_context;
 
     /** Create a new format context for the output container format. */
-    CHK_NULL(output_format_context = avformat_alloc_context());
+    CHK_NULL(output_context = avformat_alloc_context());
 
     /** Associate the output file (pointer) with the container format context. */
-    output_format_context->pb = io_context;
+    output_context->pb = io_context;
 
     /** Set the container format to MP4 */
-    CHK_NULL(output_format_context->oformat = av_guess_format("mp4", NULL, NULL));
+    CHK_NULL(output_context->oformat = av_guess_format("mp4", NULL, NULL));
 
     /**
      * Some container formats (like MP4) require global headers to be present
      * Mark the encoder so that it behaves accordingly.
      */
-    if (output_format_context->oformat->flags & AVFMT_GLOBALHEADER)
+    if (output_context->oformat->flags & AVFMT_GLOBALHEADER)
         codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     /** Create a new audio stream in the output file container. */
     AVStream *output_stream;
-    CHK_NULL(output_stream = avformat_new_stream(output_format_context, codec_context->codec));
+    CHK_NULL(output_stream = avformat_new_stream(output_context, codec_context->codec));
+
+    output_stream->codec->sample_fmt     = codec_context->sample_fmt;
+    output_stream->codec->sample_rate    = codec_context->sample_rate;
+    output_stream->codec->channels       = codec_context->channels;
+    output_stream->codec->channel_layout = codec_context->channel_layout;
+    output_stream->codec->bit_rate       = codec_context->bit_rate;
+    output_stream->codec->frame_size     = codec_context->frame_size;
+    output_stream->codec->flags          = codec_context->flags;
 
     /** Set the sample rate for the container. */
-    output_stream->time_base.den = codec_context->sample_rate;
+    output_stream->time_base.den = output_stream->codec->sample_rate;
     output_stream->time_base.num = 1;
 
-    LOG1("output_format_context->audio_codec",output_format_context->audio_codec);
-    LOG1("output_format_context->streams[0]->codec->sample_rate",output_format_context->streams[0]->codec->sample_rate);
-    //CHK_ERROR(avformat_write_header(output_format_context, NULL));    /* Write the Header to the output Container */
+    CHK_ERROR(avformat_write_header(output_context, NULL));    /* Write the Header to the output Container */
+
+    return output_context;
+}
+
+
+
+/**
+    Set up input to accept samples PCM float 44.1k for now
+
+    Create MP4 AAC output Container to be returned by flush()
+*/
+void init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
+    AVIOContext *io_context;
+
+    fprintf(stdout,"init(%s,%d,%s,%d,%d)\n",i_format,i_sample_rate,o_format,o_sample_rate,o_bit_rate);
+
+    /** Register all codecs and formats so that they can be used. */
+    av_register_all();
+
+    CHK_NULL(codec_context = init_codec(i_sample_rate));
+
+    CHK_NULL(io_context = init_io(codec_context));
+
+    CHK_NULL(output_context = init_output(i_sample_rate, io_context))
 }
 
 /* check that a given sample format is supported by the encoder */
@@ -310,9 +333,6 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 
     The AAC Frame is written to the AAC Stream of the output
 */
-void load1(uint8_t *i_data, int i_length) {
-}
-
 void load(uint8_t *i_data, int i_length) {
     LOG1("load i_length", i_length);
 
@@ -353,6 +373,8 @@ void load(uint8_t *i_data, int i_length) {
         LOG1("  got_output",got_output);
         if(got_output) {
             LOG1("    output_packet size",output_packet->size);
+            LOG1("    output_context->frame_size",)
+            CHK_ERROR(av_write_frame(output_context,output_packet));
             CHK_VOID(av_packet_unref(output_packet));
         }
     }
@@ -364,17 +386,16 @@ uint8_t *flush() {
     /** Get all the delayed frames */
     AVPacket *output_packet;
     CHK_NULL(output_packet=av_packet_alloc());
-    int got_output = 1;
-    while (got_output) {
+    int got_output = 0;
+    do {
         CHK_ERROR(avcodec_encode_audio2(codec_context, output_packet, NULL, &got_output));
         LOG1("  got_output",got_output);
         if(got_output) {
             LOG1("    output_packet size",output_packet->size);
             CHK_VOID(av_packet_unref(output_packet));
         }
-    }
-
-    //CHK_ERROR(av_write_trailer(output_format_context));
+    } while(got_output);
+    CHK_ERROR(av_write_trailer(output_context));
 }
 
 /**
