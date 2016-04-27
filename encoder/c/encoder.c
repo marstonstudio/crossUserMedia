@@ -282,6 +282,8 @@ void init(const char *i_format, int i_sample_rate, const char *o_format, int o_s
 
     fprintf(stdout,"init(%s,%d,%s,%d,%d)\n",i_format,i_sample_rate,o_format,o_sample_rate,o_bit_rate);
 
+    output_format = o_format;
+
     /** Register all codecs and formats so that they can be used. */
     av_register_all();
 
