@@ -87,16 +87,20 @@ AVFormatContext *output_context;
 enum AVSampleFormat input_sample_fmt = AV_SAMPLE_FMT_FLTP;
 int output_bit_rate = 96000;
 int output_channels = 1;
+int output_sample_rate = 0;
+char *output_format = 0;
 
 #define INTERNAL_ERROR 1
 #define NO_ERROR 0
 #define ERROR_CODE int
 #define LOG(x) fprintf(stdout,"%s\n",x)
+#define ERROR0(s,x) fprintf(stderr,s,x)
+#define ERROR2(s,x,y,z) fprintf(stderr,s,x,y,z)
 #define LOG1(x,y) fprintf(stdout,"%s = %d\n",x,y)
-#define CHK_NULL(x) { fprintf(stdout,"%s\n",#x); if(!(x)) { fprintf(stderr,"%s FAILED",#x); return; }}
-#define CHK_ERROR(x) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<0) { fprintf(stderr,"%s FAILED code=%d %s\n",#x,err,get_error_text(err)); return; }}
-#define CHK_GE(x,y) { fprintf(stdout,"%s\n",#x); int err=(x); if(err<y) { fprintf(stderr,"%s FAILED %d < %d\n",#x,err,y); return; }}
-#define CHK_VOID(x) { fprintf(stdout,"%s\n",#x); x; }
+#define CHK_NULL(x) { LOG(#x); if(!(x)) { ERROR0("%s FAILED",#x); return; }}
+#define CHK_ERROR(x) { LOG(#x); int err=(x); if(err<0) { ERROR2("%s FAILED code=%d %s\n",#x,err,get_error_text(err)); return; }}
+#define CHK_GE(x,y) { LOG(#x); int err=(x); if(err<y) { ERROR2("%s FAILED %d < %d\n",#x,err,y); return; }}
+#define CHK_VOID(x) { LOG(#x); x; }
 
 int main(int argc, char **argv) {
     fprintf(stdout,"%s\n", "main");
@@ -135,6 +139,8 @@ AVCodecContext *init_codec(int input_sample_rate) {
     /** Check that codec can handle the input */
     CHK_NULL(check_sample_fmt(codec, input_sample_fmt));
     CHK_NULL(check_sample_rate(codec, input_sample_rate));
+
+    output_sample_rate = input_sample_rate;
 
     /** Parameters for AAC */
     codec_context->sample_fmt     = input_sample_fmt;
@@ -189,6 +195,9 @@ int read_packet(void* ptr, uint8_t* buf, int buf_size) {
 
 int write_packet(void* ptr, uint8_t* buf, int buf_size) {
     fprintf(stdout,"write_packet(%lx %lx %d)\n",ptr,buf,buf_size);
+    memcpy(output_buffer+output_buffer_pos,buf,buf_size);
+    output_buffer_pos += buf_size;
+    LOG1("  output_buffer_pos",output_buffer_pos);
     return buf_size;
 }
 
@@ -205,15 +214,14 @@ AVIOContext *init_io(AVCodecContext *codec_context) {
         codec_context->sample_fmt,
         codec_context->channels, 1));
 
-    int output_buffer_size = 1000000;
-    CHK_NULL( output_buffer = av_malloc(output_buffer_size));
-    output_buffer_length = 0;
+    output_buffer_length = 1000000;
+    CHK_NULL( output_buffer = av_malloc(output_buffer_length));
     output_buffer_pos = 0;
 
     // Allocate the AVIOContext:
     // The fourth parameter (pStream) is a user parameter which will be passed to our callback functions
     AVIOContext *io;
-    CHK_NULL(io = avio_alloc_context(output_buffer, output_buffer_size,  // internal Buffer and its size
+    CHK_NULL(io = avio_alloc_context(output_buffer, output_buffer_length,  // internal Buffer and its size
                                              1,     // bWriteable (1=true,0=false)
                                              (void*)0x123,   // user data ; will be passed to our callback functions
                                              read_packet,
@@ -354,10 +362,17 @@ void load(uint8_t *i_data, int i_length) {
     CHK_GE(av_audio_fifo_write(fifo, (void **)&i_data, input_samples_size), input_samples_size);
     LOG1("  after fifo size",av_audio_fifo_size(fifo));
 
-    int finished               = 0;
-    int amount_read            = 0;
     AVPacket *output_packet;
     CHK_NULL(output_packet=av_packet_alloc());
+    CHK_VOID(av_init_packet(output_packet));
+    /** Set the packet data and size so that it is recognized as being empty. */
+    output_packet->data = NULL;
+    output_packet->size = 0;
+    output_packet->pts = 0;
+
+    int finished               = 0;
+    int amount_read            = 0;
+
     /**
      * While there is at least one Frame's worth of data in the Fifo,
      * encode the Frame and write it to the output Container
@@ -372,8 +387,6 @@ void load(uint8_t *i_data, int i_length) {
         CHK_ERROR(avcodec_encode_audio2(codec_context, output_packet, input_frame, &got_output));
         LOG1("  got_output",got_output);
         if(got_output) {
-            LOG1("    output_packet size",output_packet->size);
-            LOG1("    output_context->frame_size",)
             CHK_ERROR(av_write_frame(output_context,output_packet));
             CHK_VOID(av_packet_unref(output_packet));
         }
@@ -396,6 +409,7 @@ uint8_t *flush() {
         }
     } while(got_output);
     CHK_ERROR(av_write_trailer(output_context));
+    return output_buffer;
 }
 
 /**
@@ -419,18 +433,18 @@ void dispose(int status) {
 }
 
 int get_output_sample_rate() {
-    //LOG("get_output_sample_rate (%u)\n", output_sample_rate);
-    return 0; //output_sample_rate;
+    LOG1("get_output_sample_rate", output_sample_rate);
+    return output_sample_rate;
 }
 
 char *get_output_format() {
-    //fprintf(stdout,"get_output_format (%s)\n", output_format);
-    return NULL; //output_format;
+    fprintf(stdout,"get_output_format (%s)\n", output_format);
+    return output_format;
 }
 
 int get_output_length() {
-    //LOG1("get_output_length", output_length);
-    return 0; //output_length;
+    LOG1("get_output_length", output_buffer_pos);
+    return output_buffer_pos;
 }
 
 
