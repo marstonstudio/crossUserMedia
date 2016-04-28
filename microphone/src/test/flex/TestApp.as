@@ -43,6 +43,8 @@ public class TestApp {
             var audioPcmAsset:ByteArrayAsset = new AudioPcm();
             assertTrue("embedded bytesAvailable", audioPcmAsset.bytesAvailable > 0);
 
+            var inputLength:int = audioPcmAsset.bytesAvailable;
+
             assertNotNull(container.stage);
             var rootSprite:Sprite = new Sprite();
             container.addChild(rootSprite);
@@ -60,8 +62,8 @@ public class TestApp {
 
             assertTrue("outputFormat set to " + outputFormat, encoder.getOutputFormat() == outputFormat);
             assertTrue("outputSampleRate set to " + outputSampleRate, encoder.getOutputSampleRate() == outputSampleRate);
-            assertTrue("outputLength = audioPcmAsset.length = " + audioPcmAsset.length, encoder.getOutputLength() == audioPcmAsset.length);
-            assertTrue("output.length = audioPcmAsset.length = " + audioPcmAsset.length, output.length == audioPcmAsset.length);
+            assertTrue("outputLength > 0 outputLength= " + encoder.getOutputLength(), encoder.getOutputLength() > 0);
+            assertTrue("outputLength < inputLength/5 inputLength= " + inputLength, encoder.getOutputLength() < inputLength/5);
 
             encoder.dispose(0);
         }

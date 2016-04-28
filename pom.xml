@@ -3,7 +3,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.marstonstudio.crossusermedia</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>crossUserMedia</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>crossUserMedia Parent</name>
