@@ -3,13 +3,13 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.marstonstudio.crossusermedia</groupId>
-    <artifactId>crossUserMedia</artifactId>
+    <artifactId>parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>crossUserMedia Parent</name>
 
     <prerequisites>
-        <maven>3.3.0</maven>
+        <maven>3.2.0</maven>
     </prerequisites>
 
     <modules>
