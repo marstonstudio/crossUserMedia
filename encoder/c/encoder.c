@@ -92,14 +92,14 @@ bool passthru_encoding = false;
 #define INTERNAL_ERROR 1
 #define NO_ERROR 0
 #define ERROR_CODE int
-#define LOG(x) fprintf(stdout,"%s\n",x)
-#define ERROR0(s,x) fprintf(stderr,s,x)
-#define ERROR2(s,x,y,z) fprintf(stderr,s,x,y,z)
-#define LOG1(x,y) fprintf(stdout,"%s = %d\n",x,y)
-#define CHK_NULL(x) { LOG(#x); if(!(x)) { ERROR0("%s FAILED",#x); return; }}
-#define CHK_ERROR(x) { LOG(#x); int err=(x); if(err<0) { ERROR2("%s FAILED code=%d %s\n",#x,err,get_error_text(err)); return; }}
-#define CHK_GE(x,y) { LOG(#x); int err=(x); if(err<y) { ERROR2("%s FAILED %d < %d\n",#x,err,y); return; }}
-#define CHK_VOID(x) { LOG(#x); x; }
+#define LOG(x) fprintf(stdout,"%s\n", x)
+#define LOG1(x, y) fprintf(stdout,"%s = %d\n", x, y)
+#define ERROR0(s, x) fprintf(stderr, s, x)
+#define ERROR2(s, x, y, z) fprintf(stderr, s, x, y, z)
+#define CHK_NULL(x)  { LOG(#x); if(!(x)) { ERROR0("%s FAILED", #x); exit(1); }}
+#define CHK_ERROR(x) { LOG(#x); int err=(x); if(err<0) { ERROR2("%s FAILED code=%d %s\n", #x, err, get_error_text(err)); exit(1); }}
+#define CHK_GE(x, y) { LOG(#x); int err=(x); if(err<y) { ERROR2("%s FAILED %d < %d\n", #x, err, y); exit(1); }}
+#define CHK_VOID(x)  { LOG(#x); x; }
 
 /**
  * Convert an error code into a text message.
@@ -225,7 +225,7 @@ AVIOContext *init_io(AVCodecContext *i_codec_context, AVCodecContext *o_codec_co
     return io;
 }
 
-AVFormatContext *init_output(AVIOContext *io_context, char *o_format) {
+AVFormatContext *init_output(AVIOContext *io_context, const char *o_format) {
     AVFormatContext *o_context;
 
     /** Create a new format context for the output container format. */
@@ -433,7 +433,7 @@ int get_output_sample_rate() {
 
 char *get_output_format() {
     fprintf(stdout,"get_output_format name:%s\n", output_context->oformat->name);
-    return output_context->oformat->name;
+    return (char *)output_context->oformat->name;
 }
 
 int get_output_length() {
