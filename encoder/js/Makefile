@@ -2,7 +2,7 @@ CC = emcc
 
 SOURCES = ../c/encoder.c
 TARGET = dist/encoder.js
-INSTALL_DIR = ../../frontend/node_modules/encoderjs
+INSTALL_DIR = ../../frontend/node_modules/pcmencoder
 
 LDFLAGS = -L./dist/lib
 

@@ -1,4 +1,4 @@
-module.exports = function ($log, $q, encoderjs) {
+module.exports = function ($log, $q, pcmencoder) {
 
     var Service = {};
 

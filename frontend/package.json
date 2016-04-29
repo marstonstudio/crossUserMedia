@@ -17,7 +17,7 @@
     "angular-animate": "global:angular-animate",
     "angular-aria": "global:angular-aria",
     "angular-material": "global:angular-material",
-    "encoderjs": "global:encoderjs"
+    "pcmencoder": "global:pcmencoder"
   },
   "dependencies": {
     "angular": "^1.4.4",

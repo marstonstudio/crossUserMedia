@@ -81,7 +81,7 @@ gulp.task('analyzeScripts', ['clean'], function(){
 });
 
 gulp.task('copyEncoderJs', ['clean'], function(){
-    return gulp.src(['node_modules/encoderjs/encoder.*'])
+    return gulp.src(['node_modules/pcmencoder/encoder.*'])
         .pipe(gulp.dest('dist/js/'));
 });
 

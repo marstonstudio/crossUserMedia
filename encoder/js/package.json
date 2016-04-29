@@ -1,5 +1,5 @@
 {
-  "name": "encoderjs",
+  "name": "pcmencoder",
   "version": "3.0.0",
   "description": "Port of FFmpeg with Emscripten optimized to only support PCM->AAC conversion",
   "main": "./index.js",

@@ -9,21 +9,25 @@
 
 void as3_init() __attribute__((
         used,
-        annotate("as3sig:public function init(inputFormat:String, inputSampleRate:int, outputFormat:String, outputSampleRate:int, outputBitRate:int):void"),
+        annotate("as3sig:public function init(inputFormat:String, inputSampleRate:int, inputChannels:int, outputCodec:String, outputFormat:String, outputSampleRate:int, outputChannels:int, outputBitRate:int):void"),
         annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
-void as3_init(const char *i_format, int i_sample_rate, const char *o_format, int o_sample_rate, int o_bit_rate) {
+void as3_init(const char *i_format, int i_sample_rate, int i_channels, const char *o_codec, const char *o_format, int o_sample_rate, int o_channels, int o_bit_rate) {
 
     AS3_MallocString(i_format, inputFormat);
     AS3_GetScalarFromVar(i_sample_rate, inputSampleRate);
+    AS3_GetScalarFromVar(i_channels, inputChannels);
+    AS3_MallocString(o_codec, outputCodec);
     AS3_MallocString(o_format, outputFormat);
     AS3_GetScalarFromVar(o_sample_rate, outputSampleRate);
+    AS3_GetScalarFromVar(o_channels, outputChannels);
     AS3_GetScalarFromVar(o_bit_rate, outputBitRate);
 
-    init(i_format, i_sample_rate, o_format, o_sample_rate, o_bit_rate);
+    init(i_format, i_sample_rate, i_channels, o_codec, o_format, o_sample_rate, o_channels, o_bit_rate);
 
     free((char*)i_format);
+    free((char*)o_codec);
     free((char*)o_format);
 }
 
