@@ -1,4 +1,4 @@
-CC = gcc
+CC = $(FLASCC_BIN_PATH)/gcc
 
 GROUP = com.marstonstudio.crossusermedia
 PACKAGE = $(GROUP).encoder
@@ -36,7 +36,7 @@ prepare: checkenv
 
 checkenv:
 ifndef FLASCC
-	$(error FLASCC is undefined. execute '. setenv.sh' to define environment variables)
+	$(error FLASCC is undefined. execute 'source setenv.sh' to define environment variables)
 endif
 
 install:

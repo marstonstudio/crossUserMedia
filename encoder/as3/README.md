@@ -1,4 +1,4 @@
-Inspired by
+## Inspired by
 * http://blog.elliotblackburn.co.uk/ffmpeg-with-flascccrossbridge/
 * http://stackoverflow.com/questions/13690290/how-to-compile-ffmpeg-with-the-new-flascc-compiler
 * http://flashywrappers.com
@@ -16,10 +16,24 @@ Inspired by
 * https://github.com/soywiz/as3libwebp
 * https://github.com/claus/libtess2.swc
 
+## Setup
 
 https://helpx.adobe.com/air/kb/archived-air-sdk-version.html
 
-download air sdk 18.0
+Download air sdk 18.0
 
-replace  {}/{} with 18.0 in flex-config.xml
+Navigate to `frameworks/flex-config.xml` and at about line 46, replace as follows:
 
+From
+```
+<external-library-path>
+ <path-element>libs/player/{targetPlayerMajorVersion}.{targetPlayerMinorVersion}/playerglobal.swc</path-element>
+</e xternal-library-path>
+```
+
+To
+```
+<external-library-path>
+ <path-element>libs/player/18.0/playerglobal.swc</path-element>
+</e xternal-library-path>
+```
