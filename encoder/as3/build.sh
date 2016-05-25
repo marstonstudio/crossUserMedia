@@ -7,9 +7,17 @@ mkdir dist
 
 cd ../ffmpeg
 
-make clean
+#Only perform the make clean beforehand if the configure script has been called before
+# This can be easily identified by checking for the existance of "config.mak"
+if [ -f "config.mak" ]
+then
+    echo "Cleaning past configuration"
+    make clean
+    echo "Cleaned past configuration"
+fi
 
-emconfigure ./configure \
+echo "Starting ffmpeg configuration"
+./configure \
     --prefix=../as3/dist \
 \
     --disable-runtime-cpudetect \
@@ -57,6 +65,9 @@ emconfigure ./configure \
     --arch=x86_64 \
     --cpu=generic \
     --enable-cross-compile \
+    `#This is a little hack that forces ffmpeg to build using the compiler tools` \
+    `# found in $FLASCC_BIN_PATH/ by using it as their common prefix` \
+    --cross-prefix=$FLASCC_BIN_PATH/ \
     --target-os=none \
 \
     --disable-asm \
@@ -64,6 +75,8 @@ emconfigure ./configure \
 \
     --disable-debug \
     --disable-stripping
+
+echo "Finished ffmpeg configuration"
 
 make
 make install
