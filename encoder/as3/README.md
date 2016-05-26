@@ -1,3 +1,30 @@
+
+## Setup
+
+1. Ensure that you are running on either a Cygwin or Mac environment.
+
+2. Download air sdk 18.0 from https://helpx.adobe.com/air/kb/archived-air-sdk-version.html
+
+3. Navigate to `frameworks/flex-config.xml` and at about line 46, replace as follows:
+
+   From
+   ```
+   <external-library-path>
+    <path-element>libs/player/{targetPlayerMajorVersion}.{targetPlayerMinorVersion}/playerglobal.swc</path-element>
+   </e xternal-library-path>
+   ```
+   
+   To
+   ```
+   <external-library-path>
+    <path-element>libs/player/18.0/playerglobal.swc</path-element>
+   </e xternal-library-path>
+   ```
+
+4. Run `build.sh` either from Cygwin or from a Mac terminal window.
+
+   Note: On Cygwin, the internal call to make may fail on building sha512.o due to an error: "Couldn't fork: Resource temporarily unavailable". In such case, make sure that there are no other Cygwin or Cygwin-related processes running except the current terminal window; close/terminate them if they exists and rerun `build.sh`.
+
 ## Inspired by
 * http://blog.elliotblackburn.co.uk/ffmpeg-with-flascccrossbridge/
 * http://stackoverflow.com/questions/13690290/how-to-compile-ffmpeg-with-the-new-flascc-compiler
@@ -15,25 +42,3 @@
 * https://github.com/normanzb/encoder-mp3
 * https://github.com/soywiz/as3libwebp
 * https://github.com/claus/libtess2.swc
-
-## Setup
-
-https://helpx.adobe.com/air/kb/archived-air-sdk-version.html
-
-Download air sdk 18.0
-
-Navigate to `frameworks/flex-config.xml` and at about line 46, replace as follows:
-
-From
-```
-<external-library-path>
- <path-element>libs/player/{targetPlayerMajorVersion}.{targetPlayerMinorVersion}/playerglobal.swc</path-element>
-</e xternal-library-path>
-```
-
-To
-```
-<external-library-path>
- <path-element>libs/player/18.0/playerglobal.swc</path-element>
-</e xternal-library-path>
-```

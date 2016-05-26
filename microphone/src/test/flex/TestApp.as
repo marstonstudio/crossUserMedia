@@ -157,8 +157,10 @@ public class TestApp {
             var encoder:Encoder = new Encoder(rootSprite);
             encoder.init(inputCodec, inputSampleRate, inputChannels, outputCodec, outputFormat, outputSampleRate, outputChannels, outputBitRate);
             encoder.load(audioPcmAsset);
-            var output:ByteArray = encoder.flush();
-            var outputBytesAvailable:int = output.bytesAvailable;
+            //ADDED
+            //var output:ByteArray = encoder.flush();
+            //var outputBytesAvailable:int = output.bytesAvailable;
+            var outputBytesAvailable:int = encoder.getOutputLength();
 
             var encoderOutputFormat:String = encoder.getOutputFormat();
             var encoderOutputSampleRate:int = encoder.getOutputSampleRate();

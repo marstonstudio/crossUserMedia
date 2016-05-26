@@ -202,7 +202,7 @@ int64_t seek(void* ptr, int64_t offset, int whence) {
 }
 
 AVIOContext *init_io(AVCodecContext *i_codec_context, AVCodecContext *o_codec_context) {
-    CHK_NULL(input_frame   = init_input_frame(i_codec_context, o_codec_context));
+    CHK_NULL(input_frame = init_input_frame(i_codec_context, o_codec_context));
 
     /** Create the input FIFO buffer based on the Codec input format */
     CHK_NULL(fifo = av_audio_fifo_alloc(
@@ -269,10 +269,10 @@ AVFormatContext *init_output(AVIOContext *io_context, const char *o_format) {
 /* check that a given sample format is supported by the encoder */
 int check_sample_rate(AVCodec *codec, int sample_rate)
 {
-    LOG1("check_sample_rate",sample_rate);
+    LOG1("check_sample_rate", sample_rate);
     const int *p = codec->supported_samplerates;
     while (*p != 0) {
-        LOG1(" available",*p);
+        LOG1(" available", *p);
 
         if (*p == sample_rate)
             return 1;
@@ -286,8 +286,12 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 
     Create MP4 AAC output Container to be returned by flush()
 */
-void init(const char *i_codec_name, int i_sample_rate, int i_channels, const char *o_codec_name, const char *o_format, int o_sample_rate, int o_channels, int o_bit_rate) {
-    fprintf(stdout,"init(%s,%d,%d,%s,%s,%d,%d,%d)\n",i_codec_name,i_sample_rate,i_channels,o_codec_name,o_format,o_sample_rate,o_channels,o_bit_rate);
+void init(const char *i_codec_name, int i_sample_rate, int i_channels, const char *o_codec_name,
+          const char *o_format, int o_sample_rate, int o_channels, int o_bit_rate)
+{
+    fprintf(stdout, "init(%s,%d,%d,%s,%s,%d,%d,%d)\n",
+            i_codec_name, i_sample_rate, i_channels, o_codec_name,
+            o_format, o_sample_rate, o_channels, o_bit_rate);
 
     passthru_encoding = strcmp(i_codec_name, o_codec_name);
 
@@ -308,7 +312,7 @@ void init(const char *i_codec_name, int i_sample_rate, int i_channels, const cha
     CHK_NULL(output_context = init_output(io_context, o_format));
 }
 
-//Peter: we are actually, not using FDK AAC Codec, we are using the new ffmpeg native codec
+//Peter: we are actually not using FDK AAC Codec; we are using the new ffmpeg native codec
 
 /**
     Load some more input samples
@@ -343,18 +347,15 @@ void load(uint8_t *i_data, int i_length) {
     int frame_samples_size = frame_size / sizeof(float);
 
   /**
-    * Make the FIFO as large as it needs to be to hold both,
-    * the old and the new samples.
+    * Store the new samples in the FIFO buffer. The write function
+    * internally automatically reallocates as needed.
     */
-    LOG1("  before fifo space",av_audio_fifo_space(fifo));
-    LOG1("    input_samples_size",input_samples_size);
-    CHK_ERROR(av_audio_fifo_realloc(fifo, av_audio_fifo_size(fifo) + input_samples_size));
-    LOG1("  after fifo space",av_audio_fifo_space(fifo));
-
-    /** Store the new samples in the FIFO buffer. */
-    LOG1("  before fifo size",av_audio_fifo_size(fifo));
+    LOG1("  before fifo space", av_audio_fifo_space(fifo));
+    LOG1("    input_samples_size", input_samples_size);
+    LOG1("  before fifo size", av_audio_fifo_size(fifo));
     CHK_GE(av_audio_fifo_write(fifo, (void **)&i_data, input_samples_size), input_samples_size);
-    LOG1("  after fifo size",av_audio_fifo_size(fifo));
+    LOG1("  after fifo space", av_audio_fifo_space(fifo));
+    LOG1("  after fifo size", av_audio_fifo_size(fifo));
 
     AVPacket *output_packet;
     CHK_NULL(output_packet=av_packet_alloc());
@@ -364,22 +365,22 @@ void load(uint8_t *i_data, int i_length) {
     output_packet->size = 0;
     output_packet->pts = 0;
 
-    int finished               = 0;
-    int amount_read            = 0;
+    int finished = 0;
+    int amount_read = 0;
 
     /**
-     * While there is at least one Frame's worth of data in the Fifo,
-     * encode the Frame and write it to the output Container
+     * While there is at least one frame's worth of data in `fifo`,
+     * encode the frame and write it to the output container
      */
     while (av_audio_fifo_size(fifo) >= frame_samples_size) {
-        LOG1("  before fifo size",av_audio_fifo_size(fifo));
+        LOG1("  before fifo size", av_audio_fifo_size(fifo));
         CHK_ERROR( amount_read = av_audio_fifo_read(fifo,(void**)&input_frame_buffer,frame_samples_size));
-        LOG1("  amount_read",amount_read);
-        LOG1("  after fifo size",av_audio_fifo_size(fifo));
+        LOG1("  amount_read", amount_read);
+        LOG1("  after fifo size", av_audio_fifo_size(fifo));
 
         int got_output = 0;
         CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, input_frame, &got_output));
-        LOG1("  got_output",got_output);
+        LOG1("  got_output", got_output);
         if(got_output) {
             CHK_ERROR(av_write_frame(output_context, output_packet));
             CHK_VOID(av_packet_unref(output_packet));
