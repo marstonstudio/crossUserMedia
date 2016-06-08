@@ -45,8 +45,8 @@ package com.marstonstudio.crossusermedia.encoder {
             }
         }
 
-        public function init(inputFormat:String, inputSampleRate:int, inputChannels:int, outputCodec:String, outputFormat:String, outputSampleRate:int, outputChannels:int, outputBitRate:int):void {
-            com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputSampleRate, inputChannels, outputCodec, outputFormat, outputSampleRate, outputChannels, outputBitRate);
+        public function init(inputFormat:String, inputCodec:String, inputSampleRate:int, inputChannels:int, outputCodec:String, outputFormat:String, outputSampleRate:int, outputChannels:int, outputBitRate:int):void {
+            com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputCodec, outputFormat, outputSampleRate, outputChannels, outputBitRate);
         }
 
         public function load(input:ByteArray):void {

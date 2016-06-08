@@ -1,5 +1,5 @@
 /**
-  * User: jon, peter
+  * User: Jon, Peter, Damian
   * Date: 4/18/16
   * Time: 8:48 AM
   * Copyright English Central Inc. 2016
@@ -156,16 +156,18 @@ AVFrame *init_input_frame(AVCodecContext *i_codec_context, AVCodecContext *o_cod
 
     /* Use the encoder's desired frame size for processing. */
     int frame_size = o_codec_context->frame_size;
-    LOG1("frame_size",frame_size);
+    LOG1("frame_size", frame_size);
 
     CHK_NULL(frame = av_frame_alloc());
 
     frame->nb_samples     = o_codec_context->frame_size;
     frame->format         = o_codec_context->sample_fmt;
     frame->channel_layout = o_codec_context->channel_layout;
+    //ADDED
+    //frame->sample_rate    = o_codec_context->sample_rate;
 
-        /* the codec gives us the frame size, in samples,
-         * we calculate the size of the samples buffer in bytes */
+    /* the codec gives us the frame size, in samples,
+     * we calculate the size of the samples buffer in bytes */
     CHK_ERROR(frame_size = av_samples_get_buffer_size(NULL,
         o_codec_context->channels,
         o_codec_context->frame_size,
@@ -173,13 +175,17 @@ AVFrame *init_input_frame(AVCodecContext *i_codec_context, AVCodecContext *o_cod
 
     CHK_NULL(input_frame_buffer = av_malloc(frame_size));
 
-    /* setup the data pointers in the AVFrame */
-    CHK_ERROR( avcodec_fill_audio_frame(frame,
+    //ADDED comment
+    /* setup the data pointers in the AVFrame */ 
+    CHK_ERROR(avcodec_fill_audio_frame(frame,
         o_codec_context->channels,
         o_codec_context->sample_fmt,
         (const uint8_t*)input_frame_buffer,
         frame_size, 0));
-
+                                                 
+    //ADDED
+    //av_frame_get_buffer(frame, 0);
+    
     return frame;
 }
 
@@ -189,15 +195,15 @@ int read_packet(void* ptr, uint8_t* buf, int buf_size) {
 }
 
 int write_packet(void* ptr, uint8_t* buf, int buf_size) {
-    fprintf(stdout,"write_packet(%p %s %d)\n",ptr, buf, buf_size);
-    memcpy(output_buffer+output_buffer_pos, buf, buf_size);
+    fprintf(stdout,"write_packet(%p %s %d)\n", ptr, buf, buf_size);
+    memcpy(output_buffer + output_buffer_pos, buf, buf_size);
     output_buffer_pos += buf_size;
     LOG1("  output_buffer_pos", output_buffer_pos);
     return buf_size;
 }
 
 int64_t seek(void* ptr, int64_t offset, int whence) {
-   fprintf(stdout,"write_packet(%p %lld %d)\n",ptr,(long long)offset,whence);
+   fprintf(stdout, "seek_packet(%p %lld %d)\n", ptr, (long long)offset, whence);
    return offset;
 }
 
@@ -209,8 +215,9 @@ AVIOContext *init_io(AVCodecContext *i_codec_context, AVCodecContext *o_codec_co
         o_codec_context->sample_fmt,
         o_codec_context->channels, 1));
 
+    //Initialize an arbitrary size `output_buffer`
     output_buffer_length = 1000000;
-    CHK_NULL( output_buffer = av_malloc(output_buffer_length));
+    CHK_NULL(output_buffer = av_malloc(output_buffer_length));
     output_buffer_pos = 0;
 
     // Allocate the AVIOContext:
@@ -218,14 +225,15 @@ AVIOContext *init_io(AVCodecContext *i_codec_context, AVCodecContext *o_codec_co
     AVIOContext *io;
     CHK_NULL(io = avio_alloc_context(output_buffer, output_buffer_length,  // internal Buffer and its size
                                              1,     // bWriteable (1=true,0=false)
-                                             (void*)0x123,   // user data ; will be passed to our callback functions
+                                             (void*)0xdeadbeef,   // user data ; will be passed to our callback functions
                                              read_packet,
                                              write_packet,
                                              seek));
     return io;
 }
 
-AVFormatContext *init_output(AVIOContext *io_context, const char *o_format) {
+AVFormatContext *init_output(AVIOContext *io_context, const char *o_format)
+{
     AVFormatContext *o_context;
 
     /** Create a new format context for the output container format. */
@@ -282,15 +290,14 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 }
 
 /**
-    Set up input to accept samples PCM float 44.1k for now
-
     Create MP4 AAC output Container to be returned by flush()
 */
-void init(const char *i_codec_name, int i_sample_rate, int i_channels, const char *o_codec_name,
-          const char *o_format, int o_sample_rate, int o_channels, int o_bit_rate)
+void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
+          int i_channels, const char *o_codec_name, const char *o_format,
+          int o_sample_rate, int o_channels, int o_bit_rate)
 {
-    fprintf(stdout, "init(%s,%d,%d,%s,%s,%d,%d,%d)\n",
-            i_codec_name, i_sample_rate, i_channels, o_codec_name,
+    fprintf(stdout, "init(%s, %s, %d, %d, %s, %s, %d, %d, %d)\n",
+            i_format_name, i_codec_name, i_sample_rate, i_channels, o_codec_name,
             o_format, o_sample_rate, o_channels, o_bit_rate);
 
     passthru_encoding = strcmp(i_codec_name, o_codec_name);
@@ -306,7 +313,7 @@ void init(const char *i_codec_name, int i_sample_rate, int i_channels, const cha
     CHK_NULL(o_codec = avcodec_find_encoder_by_name(o_codec_name));
     CHK_NULL(output_codec_context = init_codec_context(o_codec, o_sample_rate, o_channels, o_bit_rate));
 
-    AVIOContext *io_context;
+    AVIOContext *io_context = NULL;
     CHK_NULL(io_context = init_io(input_codec_context, output_codec_context));
 
     CHK_NULL(output_context = init_output(io_context, o_format));
@@ -338,7 +345,7 @@ void load(uint8_t *i_data, int i_length) {
 
 /*
     if(passthru_encoding) {
-        write_packet((void*)0x123, i_data, i_length);
+        write_packet((void*)0xdeadbeef, i_data, i_length);
         return;
     }
 */
@@ -346,6 +353,10 @@ void load(uint8_t *i_data, int i_length) {
     int input_samples_size = i_length / sizeof(float);
     int frame_samples_size = frame_size / sizeof(float);
 
+    //ADDED
+    //input_samples_size = i_length;
+    //frame_samples_size = frame_size;
+    
   /**
     * Store the new samples in the FIFO buffer. The write function
     * internally automatically reallocates as needed.
@@ -353,10 +364,10 @@ void load(uint8_t *i_data, int i_length) {
     LOG1("  before fifo space", av_audio_fifo_space(fifo));
     LOG1("    input_samples_size", input_samples_size);
     LOG1("  before fifo size", av_audio_fifo_size(fifo));
-    CHK_GE(av_audio_fifo_write(fifo, (void **)&i_data, input_samples_size), input_samples_size);
+    CHK_GE(av_audio_fifo_write(fifo, (void**)&i_data, input_samples_size), input_samples_size);
     LOG1("  after fifo space", av_audio_fifo_space(fifo));
     LOG1("  after fifo size", av_audio_fifo_size(fifo));
-
+    
     AVPacket *output_packet;
     CHK_NULL(output_packet=av_packet_alloc());
     CHK_VOID(av_init_packet(output_packet));
@@ -365,22 +376,28 @@ void load(uint8_t *i_data, int i_length) {
     output_packet->size = 0;
     output_packet->pts = 0;
 
-    int finished = 0;
-    int amount_read = 0;
-
+    int amount_read = 0; 
+   
     /**
      * While there is at least one frame's worth of data in `fifo`,
      * encode the frame and write it to the output container
      */
-    while (av_audio_fifo_size(fifo) >= frame_samples_size) {
+    while(av_audio_fifo_size(fifo) >= frame_samples_size) {
+        fprintf(stdout, "BEFORE %p %p\n", input_frame_buffer, &input_frame_buffer);
+      
         LOG1("  before fifo size", av_audio_fifo_size(fifo));
-        CHK_ERROR( amount_read = av_audio_fifo_read(fifo,(void**)&input_frame_buffer,frame_samples_size));
+        CHK_ERROR(amount_read = av_audio_fifo_read(fifo, (void**)input_frame->data, frame_samples_size));
         LOG1("  amount_read", amount_read);
         LOG1("  after fifo size", av_audio_fifo_size(fifo));
 
+        fprintf(stdout, "AFTER %p %p %p %p %lld\n", input_frame_buffer, &input_frame_buffer, input_frame->data, input_frame->extended_data, input_frame->pts);
+
+        LOG1("  output packet before size", output_packet->size);
+        
         int got_output = 0;
         CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, input_frame, &got_output));
         LOG1("  got_output", got_output);
+        LOG1("  output packet size", output_packet->size);
         if(got_output) {
             CHK_ERROR(av_write_frame(output_context, output_packet));
             CHK_VOID(av_packet_unref(output_packet));

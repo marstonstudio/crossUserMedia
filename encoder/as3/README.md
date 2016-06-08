@@ -25,6 +25,14 @@
 
    Note: On Cygwin, the internal call to make may fail on building sha512.o due to an error: "Couldn't fork: Resource temporarily unavailable". In such case, make sure that there are no other Cygwin or Cygwin-related processes running except the current terminal window; close/terminate them if they exists and rerun `build.sh`.
 
+5. Once `build.sh` has built, which configures and compiles ffmpeg internally, you can compile just your project by running:
+
+   ```
+   source setenv.sh
+   make
+   make install
+   ```
+
 ## Inspired by
 * http://blog.elliotblackburn.co.uk/ffmpeg-with-flascccrossbridge/
 * http://stackoverflow.com/questions/13690290/how-to-compile-ffmpeg-with-the-new-flascc-compiler
