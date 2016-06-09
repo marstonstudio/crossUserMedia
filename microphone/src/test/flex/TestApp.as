@@ -145,8 +145,8 @@ public class TestApp {
             var rootSprite:Sprite = new Sprite();
             container.addChild(rootSprite);
 
-            const inputFormat:String = 'f32be';
             const inputCodec:String = 'pcm_f32be';
+            const inputFormat:String = 'f32be';
             const inputSampleRate:int = 16000;
             const inputChannels:int = 1;
             const outputCodec:String = 'aac';
