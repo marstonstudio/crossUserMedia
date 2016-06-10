@@ -70,13 +70,6 @@ This API
 #include <emscripten.h>
 #endif
 
-//Max of 30 seconds at 32k bits/sec
-const int max_input_length = (32000 / 8) * 30;
-
-//ADDED comment
-//uint8_t *input_frame_buffer = NULL;
-//AVFrame *input_frame = NULL;
-
 //Initialize the global input and output contexts
 AVCodecContext *input_codec_context = NULL;
 AVInputFormat *input_format = NULL;
@@ -238,37 +231,6 @@ int64_t output_seek(void *ptr, int64_t offset, int whence)
     return offset;
 }
 
-/* //TODO
-AVIOContext *init_io(AVCodecContext *i_codec_context, AVCodecContext *o_codec_context)
-{
-    ERROR_CODE _error = NO_ERROR;
-    
-    CHK_NULL(input_frame = init_input_frame(i_codec_context, o_codec_context));
-
-    // Create the input FIFO buffer based on the Codec input format
-    CHK_NULL(fifo = av_audio_fifo_alloc(
-        o_codec_context->sample_fmt,
-        o_codec_context->channels, 1));
-
-    //Initialize an arbitrary size `output_buffer`
-    output_buffer_length = 1000000;
-    CHK_NULL(output_buffer = av_malloc(output_buffer_length));
-    output_buffer_pos = 0;
-
-    //Allocate the AVIOContext:
-    // The fourth parameter (pStream) is a user parameter which will be passed to our callback functions
-    AVIOContext *io;
-    CHK_NULL(io = avio_alloc_context(output_buffer, output_buffer_length, //Internal Buffer and its size
-                                     1, // bWriteable (1=true,0=false)
-                                     (void*)0xdeadbeef, //User data, will be passed to our callback functions
-                                     output_read,
-                                     output_write,
-                                     output_seek));
-cleanup:    
-    return io;
-    }
-*/
-
 AVCodecContext *init_codec_context(AVCodec *codec, int sample_rate, int channels, int bit_rate)
 {
     ERROR_CODE _error = NO_ERROR;
@@ -356,44 +318,6 @@ cleanup:
     
     return r_context;
 }
-
-/* ADDED comment
-AVFrame *init_input_frame(AVCodecContext *i_codec_context, AVCodecContext *o_codec_context)
-{
-    ERROR_CODE _error = NO_ERROR;
-    
-    AVFrame *frame;
-
-    //Use the encoder's desired frame size for processing
-    int frame_size = o_codec_context->frame_size;
-    LOG("frame_size: %s", frame_size);
-
-    CHK_NULL(frame = av_frame_alloc());
-
-    frame->nb_samples     = o_codec_context->frame_size;
-    frame->format         = o_codec_context->sample_fmt;
-    frame->channel_layout = o_codec_context->channel_layout;
-    //ADDED
-    //frame->sample_rate    = o_codec_context->sample_rate;
-
-    //The codec gives us the frame size, in samples, calculate the size of the samples buffer in bytes
-    CHK_ERROR(frame_size = av_samples_get_buffer_size(NULL, o_codec_context->channels,
-                                                      o_codec_context->frame_size,
-                                                      o_codec_context->sample_fmt, 0));
-
-    CHK_NULL(input_frame_buffer = av_malloc(frame_size));
-
-    //Setup the data pointers in the AVFrame
-    CHK_ERROR(avcodec_fill_audio_frame(frame,
-        o_codec_context->channels,
-        o_codec_context->sample_fmt,
-        (const uint8_t*)input_frame_buffer,
-        frame_size, 0));
-                                                 
-cleanup: //TODO    
-    return frame;
-}
-*/
 
 AVIOContext *init_io(void *internal_data, int write_flag,
                         int(*read_packet)(void*, uint8_t*, int),
@@ -564,7 +488,8 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 // once the function exits, yet they still persist. Consider creating a function and registering
 // it on exit if the entire execution passes such that if something later on fails,
 // they still will be counted for.
-//
+
+
 //Create MP4 AAC output Container to be returned by `flush`
 void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
           int i_channels, const char *o_codec_name, const char *o_format_name,
@@ -823,7 +748,7 @@ ERROR_CODE encode_audio_frame(AVFrame *frame, AVFormatContext *o_format_context,
     init_packet(&output_packet);
 
     //Set a timestamp based on the sample rate for the container.
-    if (frame)
+    if(frame)
     {
         frame->pts = pts;
         pts += frame->nb_samples;
@@ -913,9 +838,6 @@ void load(uint8_t *i_data, int i_length)
     else
         input_format_context->pb->opaque = &input_bd;
     
-    //ADDED
-    //CHK_NULL(NULL);
-
     if(passthru_encoding)
     {
         //As a pass through, simply write to the output buffer data, cleanup, and exit
@@ -927,8 +849,8 @@ void load(uint8_t *i_data, int i_length)
     const int output_frame_size = output_codec_context->frame_size;
     int finished = 0;
 
-    //Loop as long as there is input to read or output to write
-    for(;;)
+    //Loop as long as the transcoding process has not finished
+    while(!finished)
     {
         //Make sure that there is one frame worth of samples in the FIFO
         // buffer so that the encoder can do its work.
@@ -956,21 +878,7 @@ void load(uint8_t *i_data, int i_length)
             // encode it and write it to the output container.
             CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));
         }
-        
-        //If the end of the input is reached and all of the samples have been encoded, it is safe to exit
-        if(finished)
-        {
-            int data_written;
-            //Flush the encoder as it may have delayed frames.
-            do {
-                CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
-            } while(data_written);
-            break;
-        }        
     }
-
-    //Write the trailer of the output file container
-    CHK_ERROR(av_write_trailer(output_format_context));
 
     //ADDED
     goto cleanup;
@@ -1035,7 +943,7 @@ void load(uint8_t *i_data, int i_length)
     }
     */
     
-cleanup: //TODO
+cleanup: 
     //If there were an error, cleanup accordingly
     if(_error != NO_ERROR)
     {
@@ -1055,9 +963,19 @@ uint8_t *flush()
     
     LOG("Started");
 
-    /** Get all the delayed frames */
+    int data_written;
+    //Flush the encoder as it may have delayed frames.
+    do {
+        CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
+    } while(data_written);
+
+    //Write the trailer of the output file container
+    CHK_ERROR(av_write_trailer(output_format_context));
+    
+    /* ADDED comments
+    //Get all the delayed frames
     AVPacket *output_packet;
-    CHK_NULL(output_packet=av_packet_alloc());
+    CHK_NULL(output_packet = av_packet_alloc());
     int got_output = 0;
     do {
         CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, NULL, &got_output));
@@ -1068,6 +986,7 @@ uint8_t *flush()
         }
     } while(got_output);
     CHK_ERROR(av_write_trailer(output_format_context));
+    */
 
 cleanup: //TODO
 
