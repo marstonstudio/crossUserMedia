@@ -102,7 +102,9 @@ struct buffer_data {
 #define INTERNAL_ERROR -1
 
 #define LOG(M, ...) fprintf(stdout, "LOG :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
-#define ERROR(M, ...) fprintf(stderr, ":: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+#define WARNING(M, ...) fprintf(stdout, "WARNING :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+//The stream `stderr` already prints a prepended "ERROR :: " to its output text
+#define ERROR(M, ...) fprintf(stderr, "%s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 
 #define CHK_VOID(x)                             \
     {                                           \
@@ -195,13 +197,13 @@ int input_read(void *ptr, uint8_t *buf, int buf_size)
 {
     struct buffer_data *bd = (struct buffer_data*)ptr;
     const int data_left = bd->size - bd->offset;
-    LOG("%p %d %d %d", bd->ptr, bd->offset, data_left, buf_size);
+    LOG("bd->ptr: %p bd->offset: %d data_left: %d buf_size: %d", bd->ptr, bd->offset, data_left, buf_size);
 
     //Overflow protection
     if(buf_size > data_left)
     {
         buf_size = data_left;
-        ERROR("Read overflow encountered");
+        WARNING("Read overflow encountered");
     }
     
     //Copy internal buffer data to `buf`
@@ -210,36 +212,29 @@ int input_read(void *ptr, uint8_t *buf, int buf_size)
     return buf_size;
 }
 
-//TODO: does output really need this read
-int output_read(void *ptr, uint8_t *buf, int buf_size)
-{
-    LOG("%p %p %d", ptr, buf, buf_size);
-    return buf_size;
-}
-
 int output_write(void *ptr, uint8_t *buf, int buf_size)
 {
     struct buffer_data *bd = (struct buffer_data*)ptr;
     const int space_left = bd->size - bd->offset;    
-    LOG("%p %d %d", bd->ptr, space_left, buf_size);
+    LOG("bd->ptr: %p bd->size: %d bd->offset: %d space_left: %d buf_size: %d",
+        bd->ptr, bd->size, bd->offset, space_left, buf_size);
 
     //Overflow protection
     if(buf_size > space_left)
     {
         buf_size = space_left;
-        ERROR("Write overflow encountered");
+        WARNING("Write overflow encountered");
     }
     
     memcpy(bd->ptr + bd->offset, buf, buf_size);
     bd->offset += buf_size;
-    LOG(" bd->offset: %s", bd->offset);
+    LOG("bd->offset: %d", bd->offset);
     return buf_size;
 }
 
-//TODO: does output really need this seek
 int64_t output_seek(void *ptr, int64_t offset, int whence)
 {
-    LOG("%p %lld %d", ptr, offset, whence);
+    LOG("ptr: %p offset: %lld whence: %d", ptr, offset, whence);
     return offset;
 }
 
@@ -414,7 +409,7 @@ AVIOContext *init_io(void *internal_data, int write_flag,
 
     //Initialize the custom io
     AVIOContext *avioContext = NULL;
-    CHK_NULL(avioContext = avio_alloc_context(ioBuffer, ioBufferSize, write_flag, &internal_data,
+    CHK_NULL(avioContext = avio_alloc_context(ioBuffer, ioBufferSize, write_flag, internal_data,
                                               read_packet, write_packet, seek));
 
 cleanup:
@@ -482,12 +477,14 @@ AVFormatContext *init_output_format_context(const char *o_format)
     
     //Initialize the internal input buffer data for its custom io
     struct buffer_data *output_bd = NULL;
-    CHK_NULL(output_bd = (struct buffer_data*)av_malloc(sizeof(struct buffer_data)));    
+    CHK_NULL(output_bd = (struct buffer_data*)av_malloc(sizeof(struct buffer_data)));
     *output_bd = (struct buffer_data){.ptr = output_data, .size = (size_t)max_output_length, .offset = 0};
+    LOG("output_bd: ptr: %p, size: %d, offset %d", output_bd->ptr, output_bd->size, output_bd->offset);
+    
     
     //Initialize the output's custom io
     AVIOContext *output_io_context = NULL;
-    CHK_NULL(output_io_context = init_io(output_bd, 1, output_read, output_write, output_seek));
+    CHK_NULL(output_io_context = init_io(output_bd, 1, NULL, output_write, output_seek));
     
     //Create a new format context for the output container format.
     CHK_NULL(o_context = avformat_alloc_context());
@@ -498,10 +495,8 @@ AVFormatContext *init_output_format_context(const char *o_format)
     //Set the container format to output_format
     CHK_NULL(o_context->oformat = av_guess_format(o_format, NULL, NULL));
 
-    /**
-     * Some container formats (like MP4) require global headers to be present
-     * Mark the encoder so that it behaves accordingly.
-     */
+    //Some container formats (like MP4) require global headers to be present
+    // Mark the encoder so that it behaves accordingly.
     if (o_context->oformat->flags & AVFMT_GLOBALHEADER)
         output_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
@@ -569,7 +564,7 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 // once the function exits, yet they still persist. Consider creating a function and registering
 // it on exit if the entire execution passes such that if something later on fails,
 // they still will be counted for.
-
+//
 //Create MP4 AAC output Container to be returned by `flush`
 void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
           int i_channels, const char *o_codec_name, const char *o_format_name,
@@ -581,7 +576,9 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
         i_format_name, i_codec_name, i_sample_rate, i_channels, o_codec_name,
         o_format_name, o_sample_rate, o_channels, o_bit_rate);
 
-    passthru_encoding = strcmp(i_codec_name, o_codec_name);
+    //Enable the `passthru_encoding` if both the input and output codec names are the same
+    passthru_encoding = !strcmp(i_codec_name, o_codec_name);
+    LOG("passthru_encoding: %s", passthru_encoding ? "true" : "false");
 
     //Register all codecs and formats so that they can be used.
     av_register_all();
@@ -711,10 +708,12 @@ ERROR_CODE decode_audio_frame(AVFrame *frame, AVFormatContext *i_format_context,
     // will still be empty which will flush the decoder below
     if((_error = av_read_frame(i_format_context, &input_packet)) < 0)
     {
+        //If this is an end of file error, it will not be treated as an error, only a signal
         if(_error == AVERROR_EOF)
-            *finished = 1;
-        else
         {
+            *finished = 1;
+            _error = NO_ERROR; //Clear the end of file error
+        }else{
             ERROR("Could not read frame ('%s')", get_error_text(_error));
             goto cleanup; //ADDED changed from: return _error;
         }
