@@ -67,6 +67,7 @@ package com.marstonstudio.crossusermedia.encoder {
             var outputLength:int = com.marstonstudio.crossusermedia.encoder.flascc.getOutputLength();
             output = new ByteArray();
             CModule.readBytes(outputPointer, outputLength, output);
+            output.position = 0; //Reset the output's position back to the begging of the buffer
             return output;
         }
 
