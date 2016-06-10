@@ -144,20 +144,20 @@ public class TestApp {
             assertNotNull(container.stage);
             var rootSprite:Sprite = new Sprite();
             container.addChild(rootSprite);
-
-            const inputCodec:String = 'pcm_f32be';
+            
             const inputFormat:String = 'f32be';
+            const inputCodec:String = 'pcm_f32be';
             const inputSampleRate:int = 16000;
             const inputChannels:int = 1;
-            const outputCodec:String = 'aac';
             const outputFormat:String = 'mp4';
+            const outputCodec:String = 'aac';
             const outputSampleRate:int = 16000;
             const outputChannels:int = 1;
             const outputBitRate:int = 32000;
 
             var encoder:Encoder = new Encoder(rootSprite);
-            encoder.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputCodec,
-                outputFormat, outputSampleRate, outputChannels, outputBitRate);
+            encoder.init(inputFormat, inputCodec, inputSampleRate, inputChannels,
+                    outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate);
             encoder.load(audioPcmAsset);
             var output:ByteArray = encoder.flush();
             var outputBytesAvailable:int = output.bytesAvailable;

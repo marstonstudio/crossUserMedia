@@ -41,8 +41,8 @@ module.exports = function ($log, $q, pcmencoder) {
         $log.error('EncoderFactory.js :: listener error ' + e.filename + ' line:' + e.lineno + ' ' + e.message);
     };
 
-    Service.init = function (inputFormat, inputSampleRate, outputFormat) {
-        $log.log('EncoderFactory.js :: init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
+    Service.init = function (inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate) {
+        //$log.log('EncoderFactory.js :: init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
 
         //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker
         // https://github.com/substack/webworkify
@@ -51,15 +51,19 @@ module.exports = function ($log, $q, pcmencoder) {
         encoder = new Worker('/js/encoder.js');
         encoder.onmessage = workerOnMessage;
         encoder.onerror = workerOnError;
-
+     
         deferred = $q.defer();
         encoder.postMessage({
             'cmd':'init', 
-            'inputFormat': inputFormat, 
-            'inputSampleRate': inputSampleRate, 
+            'inputFormat': inputFormat,
+            'inputCodec': inputCodec,
+            'inputSampleRate': inputSampleRate,
+            'inputChannels': inputChannels,
             'outputFormat': outputFormat,
-            'outputSampleRate': inputSampleRate,
-            'outputBitRate': 32000
+            'outputCodec': outputCodec,
+            'outputSampleRate': outputSampleRate,
+            'outputChannels': outputChannels,
+            'outputBitRate': outputBitRate
         });
         return deferred.promise;
     };

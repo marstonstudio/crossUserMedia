@@ -3,7 +3,7 @@ this.onmessage = function(e) {
     switch(e.data.cmd) {
 
         case 'init':
-            init(e.data.inputFormat, e.data.inputSampleRate, e.data.outputFormat, e.data.outputSampleRate, e.data.outputBitRate);
+            init(e.data.inputFormat, e.data.inputCodec, e.data.inputSampleRate, e.data.inputChannels, e.data.outputFormat, e.data.outputCodec, e.data.outputSampleRate, e.data.outputChannels, e.data.outputBitRate);
             break;
         
         case 'load':
@@ -27,14 +27,15 @@ this.onerror = function(e) {
     console.error('encoder.js worker error: ' + e);
 }
 
-var init = function(inputFormat, inputSampleRate, outputFormat, outputSampleRate, outputBitRate) {
-    console.log('encoder.js init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat + ', outputSampleRate:' + outputSampleRate + ', outputBitRate:' + outputBitRate);
+var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate) {
+    console.log('encoder.js init inputFormat:' + inputFormat + ', inputCodec:' + inputCodec + ', inputSampleRate:' + inputSampleRate + ', inputChannels:' + inputChannels 
+                            + ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec +', outputSampleRate:' + outputSampleRate + ', outputChannels:' + outputChannels + ', outputBitRate:' + outputBitRate);
 
     Module.ccall(
         'init',
         null,
-        ['string', 'number', 'string', 'number', 'number'],
-        [inputFormat, inputSampleRate, outputFormat, outputSampleRate,  outputBitRate]
+        ['string', 'string', 'number', 'number', 'string', 'string', 'number', 'number', 'number'],
+        [inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate]
     );
 
     self.postMessage({'cmd':'initComplete'});

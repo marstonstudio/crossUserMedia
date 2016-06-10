@@ -3,8 +3,13 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
     // http://typedarray.org/from-microphone-to-wav-to-server/
     // https://github.com/MicrosoftEdge/Demos/blob/master/webaudiotuner/scripts/demo.js
 
+    var PCM_CODEC = 'pcm_f32le';
     var PCM_FORMAT = 'f32le';
-    var OUTPUT_FORMAT = 'f32le';  //'f32le' for passthru, 'mp4' for encoding
+    var OUTPUT_CODEC = 'aac';
+    var OUTPUT_FORMAT = 'mp4';
+    var OUTPUT_BITRATE = 32000;
+    var CHANNELS = 1;
+
     var BUFFER_SIZE = 2048;
 
     var audioStream = null;
@@ -78,7 +83,7 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
                 }).catch(logException);
         };
 
-        Encoder.init(PCM_FORMAT, audioContext.sampleRate, OUTPUT_FORMAT)
+        Encoder.init(PCM_FORMAT, PCM_CODEC, audioContext.sampleRate, CHANNELS, OUTPUT_FORMAT, OUTPUT_CODEC, audioContext.sampleRate, CHANNELS, OUTPUT_BITRATE)
             .then(function(){
                 audioVolume.connect(audioRecorder);
                 audioRecorder.connect(audioContext.destination);
