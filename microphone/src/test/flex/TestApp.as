@@ -146,6 +146,7 @@ public class TestApp {
             container.addChild(rootSprite);
 
             const inputCodec:String = 'pcm_f32be';
+            const inputFormat:String = 'f32be';
             const inputSampleRate:int = 16000;
             const inputChannels:int = 1;
             const outputCodec:String = 'aac';
@@ -155,10 +156,12 @@ public class TestApp {
             const outputBitRate:int = 32000;
 
             var encoder:Encoder = new Encoder(rootSprite);
-            encoder.init(inputCodec, inputSampleRate, inputChannels, outputCodec, outputFormat, outputSampleRate, outputChannels, outputBitRate);
+            encoder.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputCodec,
+                outputFormat, outputSampleRate, outputChannels, outputBitRate);
             encoder.load(audioPcmAsset);
             var output:ByteArray = encoder.flush();
             var outputBytesAvailable:int = output.bytesAvailable;
+            //ADDED var outputBytesAvailable:int = encoder.getOutputLength();
 
             var encoderOutputFormat:String = encoder.getOutputFormat();
             var encoderOutputSampleRate:int = encoder.getOutputSampleRate();

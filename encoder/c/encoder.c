@@ -1,10 +1,11 @@
 /**
-  * User: jon, peter
+  * User: Jon, Peter, Damian
   * Date: 4/18/16
   * Time: 8:48 AM
   * Copyright English Central Inc. 2016
   */
-  /*
+
+/*
 FFMpeg Primer
 
     Files are Containers
@@ -32,16 +33,18 @@ This API
     A Fifo is used to compact buffers into Frames
 
     All entry points return an integer error code
-    0 = no error, otherwise get_error_text returns a friendly message
+    0 = no error, otherwise get_error_text returns a user friendly message
 
     In this application the input is buffers of PCM Doubles
     The output is a buffer containing an MP4 file with an AAC stream
 
-    To write the output Container to memory instead of a file
-    we implement Custom IO for the output FormatContext
+    To read from/write to the containers in memory instead of a file
+    there is are custom IO's for the respective format contexts
+
     http://www.codeproject.com/Tips/489450/Creating-Custom-FFmpeg-IO-Context
     http://miphol.com/muse/2014/03/custom-io-with-ffmpeg.html
-  */
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -67,40 +70,97 @@ This API
 #include <emscripten.h>
 #endif
 
-// max of 30 seconds at 32k bits/sec
-const int max_input_length = (32000 / 8) * 30;
+//Initialize the global input and output contexts
+AVCodecContext *input_codec_context = NULL;
+AVInputFormat *input_format = NULL;
+AVFormatContext *input_format_context = NULL;
 
-// max of 30 seconds at 44100khz
-const int max_output_length = 44100 * 4 * 30;
+AVCodecContext *output_codec_context = NULL;
+AVFormatContext *output_format_context = NULL;
 
-AVAudioFifo *fifo;
-
-uint8_t *input_frame_buffer;
-AVFrame *input_frame;
-
-AVCodecContext *input_codec_context;
-
-uint8_t *output_buffer;
-int output_buffer_length;
-int output_buffer_pos;
-
-AVCodecContext *output_codec_context;
-AVFormatContext *output_context;
+SwrContext *resample_context = NULL;
+AVAudioFifo *fifo = NULL;
 
 bool passthru_encoding = false;
+bool load_locked = false;
 
-#define INTERNAL_ERROR 1
-#define NO_ERROR 0
+struct buffer_data {
+    uint8_t *ptr;
+    size_t size;
+    int offset;
+};
+
 #define ERROR_CODE int
-#define LOG(x) fprintf(stdout,"%s\n", x)
-#define LOG1(x, y) fprintf(stdout,"%s = %d\n", x, y)
-#define ERROR0(s, x) fprintf(stderr, s, x)
-#define ERROR2(s, x, y, z) fprintf(stderr, s, x, y, z)
-#define CHK_NULL(x)  { LOG(#x); if(!(x)) { ERROR0("%s FAILED", #x); exit(1); }}
-#define CHK_ERROR(x) { LOG(#x); int err=(x); if(err<0) { ERROR2("%s FAILED code=%d %s\n", #x, err, get_error_text(err)); exit(1); }}
-#define CHK_GE(x, y) { LOG(#x); int err=(x); if(err<y) { ERROR2("%s FAILED %d < %d\n", #x, err, y); exit(1); }}
-#define CHK_VOID(x)  { LOG(#x); x; }
+#define NO_ERROR 0
+#define INTERNAL_ERROR -1
 
+#define LOG(M, ...) fprintf(stdout, "LOG :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+#define WARNING(M, ...) fprintf(stdout, "WARNING :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+//The stream `stderr` already prints a prepended "ERROR :: " to its output text
+#define ERROR(M, ...) fprintf(stderr, "%s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+
+#define CHK_VOID(x)                             \
+    {                                           \
+        LOG(#x);                                \
+        x;                                      \
+    }
+
+//Important Note:
+//In order to use these error checking macros, the following fields must be defined in
+// the containing function to ensure proper operation:
+//
+// ERROR_CODE _error = NO_ERROR; //To be defined at the very top of the function
+//  
+// cleanup: //A goto tag to be placed at the very end of the function where the various cleanup routines are contained
+//  //Cleanup routines here
+//  
+#define CHK_NULL(x)                                             \
+    do {                                                        \
+        LOG(#x);                                                \
+        if(!(x))                                                \
+        {                                                       \
+            ERROR("%s FAILED", #x);                          \
+            _error = INTERNAL_ERROR; /*There was an error!*/    \
+            goto cleanup;                                       \
+        }                                                       \
+    } while(0)
+
+#define CHK_ERROR(x)                                                    \
+    do {                                                                \
+        LOG(#x);                                                        \
+        int _tmp = (x);                                                 \
+        if(_tmp < 0)                                                    \
+        {                                                               \
+            ERROR("%s FAILED code=%d %s", #x, _tmp, get_error_text(_tmp)); \
+            _error = INTERNAL_ERROR; /*There was an error!*/            \
+            goto cleanup;                                               \
+        }                                                               \
+    } while(0)
+
+#define CHK_GE(x, y)                                                    \
+    do {                                                                \
+        LOG(#x);                                                        \
+        int _tmp = (x);                                                 \
+        if(_tmp < y)                                                    \
+        {                                                               \
+            ERROR("%s FAILED %d < %d", #x, _tmp, y);                    \
+            _error = INTERNAL_ERROR; /*There was an error!*/            \
+            goto cleanup;                                               \
+        }                                                               \
+    } while(0)
+
+#define CHK_EQ(x, y)                                                    \
+    do {                                                                \
+        LOG(#x);                                                        \
+        int _tmp = (x);                                                 \
+        if(_tmp != y)                                                   \
+        {                                                               \
+            ERROR("%s FAILED %d != %d", #x, _tmp, y);                   \
+            _error = INTERNAL_ERROR; /*There was an error!*/            \
+            goto cleanup;                                               \
+        }                                                               \
+    } while(0)
+          
 /**
  * Convert an error code into a text message.
  * @param error Error code to be converted
@@ -113,8 +173,9 @@ static const char *get_error_text(const ERROR_CODE error)
     return error_buffer;
 }
 
-int main(int argc, char **argv) {
-    fprintf(stdout,"%s\n", "main");
+int main(int argc, char **argv)
+{
+    LOG("Started");
 
     #ifdef __EMSCRIPTEN__
     emscripten_exit_with_live_runtime();
@@ -125,126 +186,245 @@ int main(int argc, char **argv) {
     #endif
 }
 
-AVCodecContext *init_codec_context(AVCodec *codec, int sample_rate, int channels, int bit_rate) {
+int input_read(void *ptr, uint8_t *buf, int buf_size)
+{
+    struct buffer_data *bd = (struct buffer_data*)ptr;
+    const int data_left = bd->size - bd->offset;
+    LOG("bd->ptr: %p bd->offset: %d data_left: %d buf_size: %d", bd->ptr, bd->offset, data_left, buf_size);
 
-    AVCodecContext *codec_context;
+    //Overflow protection
+    if(buf_size > data_left)
+    {
+        buf_size = data_left;
+        WARNING("Read overflow encountered");
+    }
+    
+    //Copy internal buffer data to `buf`
+    memcpy(buf, bd->ptr + bd->offset, buf_size);
+    bd->offset += buf_size;
+    return buf_size;
+}
 
-    /** Create a new codec context. */
+int output_write(void *ptr, uint8_t *buf, int buf_size)
+{
+    struct buffer_data *bd = (struct buffer_data*)ptr;
+    const int space_left = bd->size - bd->offset;    
+    LOG("bd->ptr: %p bd->size: %d bd->offset: %d space_left: %d buf_size: %d",
+        bd->ptr, bd->size, bd->offset, space_left, buf_size);
+
+    //Overflow protection
+    if(buf_size > space_left)
+    {
+        buf_size = space_left;
+        WARNING("Write overflow encountered");
+    }
+    
+    memcpy(bd->ptr + bd->offset, buf, buf_size);
+    bd->offset += buf_size;
+    LOG("bd->offset: %d", bd->offset);
+    return buf_size;
+}
+
+int64_t output_seek(void *ptr, int64_t offset, int whence)
+{
+    LOG("ptr: %p offset: %lld whence: %d", ptr, offset, whence);
+    return offset;
+}
+
+AVCodecContext *init_codec_context(AVCodec *codec, int sample_rate, int channels, int bit_rate)
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    AVCodecContext *codec_context = NULL;
+
+    //Create a new codec context.
     CHK_NULL(codec_context = avcodec_alloc_context3(codec));
 
-    /** Check that codec can handle the input */
-    //CHK_NULL(check_sample_rate(codec, sample_rate)); //TODO:pcm decoders have no sample rates . . . .
+    //PCM decoders have no set sample rates, so no need to check it
 
-    /** Parameters for codec */
-    codec_context->sample_fmt     = codec->sample_fmts[0];
-    codec_context->sample_rate    = sample_rate;
-    codec_context->channels       = channels;
+    //Set the parameters for the codec
+    codec_context->sample_fmt = codec->sample_fmts[0];
+    codec_context->sample_rate = sample_rate;
+    codec_context->channels = channels;
     codec_context->channel_layout = av_get_default_channel_layout(channels);
-    if(bit_rate > 0) {
-        codec_context->bit_rate       = bit_rate;
-    }
-
-    /** Open the Codec */
+    
+    if(bit_rate > 0)
+        codec_context->bit_rate = bit_rate;
+    
+    //Open up the codec
     CHK_ERROR(avcodec_open2(codec_context, codec, NULL));
 
+cleanup:
+    //If there were an error, cleanup accordingly    
+    if(_error != NO_ERROR)
+    {
+        if(codec_context)
+            avcodec_free_context(&codec_context);
+
+        //Return NULL on error
+        return NULL;
+    }
+    
     return codec_context;
 }
 
-AVFrame *init_input_frame(AVCodecContext *i_codec_context, AVCodecContext *o_codec_context) {
-
-    AVFrame *frame;
-
-    /* Use the encoder's desired frame size for processing. */
-    int frame_size = o_codec_context->frame_size;
-    LOG1("frame_size",frame_size);
-
-    CHK_NULL(frame = av_frame_alloc());
-
-    frame->nb_samples     = o_codec_context->frame_size;
-    frame->format         = o_codec_context->sample_fmt;
-    frame->channel_layout = o_codec_context->channel_layout;
-
-        /* the codec gives us the frame size, in samples,
-         * we calculate the size of the samples buffer in bytes */
-    CHK_ERROR(frame_size = av_samples_get_buffer_size(NULL,
-        o_codec_context->channels,
-        o_codec_context->frame_size,
-        o_codec_context->sample_fmt, 0));
-
-    CHK_NULL(input_frame_buffer = av_malloc(frame_size));
-
-    /* setup the data pointers in the AVFrame */
-    CHK_ERROR( avcodec_fill_audio_frame(frame,
-        o_codec_context->channels,
-        o_codec_context->sample_fmt,
-        (const uint8_t*)input_frame_buffer,
-        frame_size, 0));
-
-    return frame;
+//Initialize one data packet for reading or writing.
+void init_packet(AVPacket *packet)
+{
+    av_init_packet(packet);
+    //Set the packet data and size so that it is recognized as being empty.
+    packet->data = NULL;
+    packet->size = 0;
 }
 
-int read_packet(void* ptr, uint8_t* buf, int buf_size) {
-    fprintf(stdout,"read_packet(%p %s %d)\n", ptr, buf, buf_size);
-    return buf_size;
+//Initialize the audio resampler based on the input and output codec settings.
+// If the input and output sample formats differ, a conversion is required
+// libswresample takes care of this, but requires initialization.
+SwrContext *init_resampler(AVCodecContext *i_codec_context, AVCodecContext *o_codec_context)
+{
+    ERROR_CODE _error = NO_ERROR;
+
+    SwrContext *r_context = NULL;
+    
+    //Create a resampler context for the conversion.
+    // Set the conversion parameters.
+    // Default channel layouts based on the number of channels
+    // are assumed for simplicity (they are sometimes not detected
+    // properly by the demuxer and/or decoder).
+    CHK_NULL(r_context = swr_alloc_set_opts(NULL, av_get_default_channel_layout(o_codec_context->channels),
+                                            o_codec_context->sample_fmt, o_codec_context->sample_rate,
+                                            av_get_default_channel_layout(i_codec_context->channels),
+                                            i_codec_context->sample_fmt, i_codec_context->sample_rate,
+                                            0, NULL));
+    
+    //Perform a sanity check so that the number of converted samples is
+    // not greater than the number of samples to be converted.
+    // If the sample rates differ, this case has to be handled differently
+    CHK_EQ(o_codec_context->sample_rate == i_codec_context->sample_rate, true);
+
+    //Open the resampler with the specified parameters.
+    CHK_ERROR(swr_init(r_context));
+    
+cleanup:
+    //If there were an error, cleanup accordingly
+    if(_error != NO_ERROR)
+    {
+        if(r_context)
+            swr_free(&r_context);
+
+        //Return NULL on error
+        return NULL;
+    }
+    
+    return r_context;
 }
 
-int write_packet(void* ptr, uint8_t* buf, int buf_size) {
-    fprintf(stdout,"write_packet(%p %s %d)\n",ptr, buf, buf_size);
-    memcpy(output_buffer+output_buffer_pos, buf, buf_size);
-    output_buffer_pos += buf_size;
-    LOG1("  output_buffer_pos", output_buffer_pos);
-    return buf_size;
+AVIOContext *init_io(void *internal_data, int write_flag,
+                        int(*read_packet)(void*, uint8_t*, int),
+                        int(*write_packet)(void*, uint8_t*, int),
+                        int64_t(*seek)(void*, int64_t, int))
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    //Allocate space for the custom io's internal buffer
+    const int ioBufferSize = 4096;
+    uint8_t *ioBuffer = NULL;
+    CHK_NULL(ioBuffer = (uint8_t*)av_malloc(ioBufferSize));
+
+    //Initialize the custom io
+    AVIOContext *avioContext = NULL;
+    CHK_NULL(avioContext = avio_alloc_context(ioBuffer, ioBufferSize, write_flag, internal_data,
+                                              read_packet, write_packet, seek));
+
+cleanup:
+    //If there were an error, cleanup accordingly
+    if(_error != NO_ERROR)
+    {
+        if(ioBuffer)
+            av_free(ioBuffer);
+
+        //There is no need to handle `avioContext` because if it passed, as it is the last
+        // operation in this function, then this error cleanup routine would never be executed        
+        
+        //Return NULL on error
+        return NULL;
+    }
+       
+    return avioContext;
 }
 
-int64_t seek(void* ptr, int64_t offset, int whence) {
-   fprintf(stdout,"write_packet(%p %lld %d)\n",ptr,(long long)offset,whence);
-   return offset;
+AVFormatContext *init_input_format_context(struct buffer_data *input_bd)
+{
+    ERROR_CODE _error = NO_ERROR;
+
+    AVFormatContext *i_context = NULL;
+    
+    //Initialize the input's custom io
+    AVIOContext *input_io_context = NULL;
+    CHK_NULL(input_io_context = init_io(input_bd, 0, &input_read, NULL, NULL));
+    
+    //Allocate some space for the input format context and connect the custom io to it
+    CHK_NULL(i_context = avformat_alloc_context());
+    i_context->pb = input_io_context;
+
+    //Initialize the input format context without an input file, but with a custom io and a manually set input format
+    CHK_ERROR(avformat_open_input(&i_context, NULL, input_format, NULL));
+    CHK_ERROR(avformat_find_stream_info(i_context, NULL));
+
+cleanup:
+    //If there were an error, cleanup accordingly
+    if(_error != NO_ERROR)
+    {
+        if(input_io_context)
+            av_free(input_io_context);
+        if(i_context)
+            avformat_free_context(i_context);
+        
+        //Return NULL on error
+        return NULL;
+    }
+
+    return i_context;
 }
 
-AVIOContext *init_io(AVCodecContext *i_codec_context, AVCodecContext *o_codec_context) {
-    CHK_NULL(input_frame   = init_input_frame(i_codec_context, o_codec_context));
+AVFormatContext *init_output_format_context(const char *o_format)
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    AVFormatContext *o_context = NULL;
 
-    /** Create the input FIFO buffer based on the Codec input format */
-    CHK_NULL(fifo = av_audio_fifo_alloc(
-        o_codec_context->sample_fmt,
-        o_codec_context->channels, 1));
-
-    output_buffer_length = 1000000;
-    CHK_NULL( output_buffer = av_malloc(output_buffer_length));
-    output_buffer_pos = 0;
-
-    // Allocate the AVIOContext:
-    // The fourth parameter (pStream) is a user parameter which will be passed to our callback functions
-    AVIOContext *io;
-    CHK_NULL(io = avio_alloc_context(output_buffer, output_buffer_length,  // internal Buffer and its size
-                                             1,     // bWriteable (1=true,0=false)
-                                             (void*)0x123,   // user data ; will be passed to our callback functions
-                                             read_packet,
-                                             write_packet,
-                                             seek));
-    return io;
-}
-
-AVFormatContext *init_output(AVIOContext *io_context, const char *o_format) {
-    AVFormatContext *o_context;
-
-    /** Create a new format context for the output container format. */
+    //Allocate space for the buffer to contain the output data
+    //TODO: is the output really at 44100 khz
+    const int max_output_length = 44100 * 4 * 30; //Max of 30 seconds at 44100khz
+    uint8_t *output_data = NULL;
+    CHK_NULL(output_data = (uint8_t*)av_malloc(max_output_length));
+    
+    //Initialize the internal input buffer data for its custom io
+    struct buffer_data *output_bd = NULL;
+    CHK_NULL(output_bd = (struct buffer_data*)av_malloc(sizeof(struct buffer_data)));
+    *output_bd = (struct buffer_data){.ptr = output_data, .size = (size_t)max_output_length, .offset = 0};
+    LOG("output_bd: ptr: %p, size: %d, offset %d", output_bd->ptr, output_bd->size, output_bd->offset);
+    
+    
+    //Initialize the output's custom io
+    AVIOContext *output_io_context = NULL;
+    CHK_NULL(output_io_context = init_io(output_bd, 1, NULL, output_write, output_seek));
+    
+    //Create a new format context for the output container format.
     CHK_NULL(o_context = avformat_alloc_context());
 
-    /** Associate the output file (pointer) with the container format context. */
-    o_context->pb = io_context;
+    //Associate the output file (pointer) with the container format context.
+    o_context->pb = output_io_context;
 
-    /** Set the container format to output_format */
+    //Set the container format to output_format
     CHK_NULL(o_context->oformat = av_guess_format(o_format, NULL, NULL));
 
-    /**
-     * Some container formats (like MP4) require global headers to be present
-     * Mark the encoder so that it behaves accordingly.
-     */
+    //Some container formats (like MP4) require global headers to be present
+    // Mark the encoder so that it behaves accordingly.
     if (o_context->oformat->flags & AVFMT_GLOBALHEADER)
         output_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-    /** Create a new audio stream in the output file container. */
+    //Create a new audio stream in the output file container.
     AVStream *output_stream;
     CHK_NULL(output_stream = avformat_new_stream(o_context, output_codec_context->codec));
 
@@ -256,23 +436,45 @@ AVFormatContext *init_output(AVIOContext *io_context, const char *o_format) {
     output_stream->codec->frame_size     = output_codec_context->frame_size;
     output_stream->codec->flags          = output_codec_context->flags;
 
-    /** Set the sample rate for the container. */
+    //Set the sample rate for the container.
     output_stream->time_base.den = output_stream->codec->sample_rate;
     output_stream->time_base.num = 1;
 
-    CHK_ERROR(avformat_write_header(o_context, NULL));    /* Write the Header to the output Container */
+    //Write the Header to the output container
+    CHK_ERROR(avformat_write_header(o_context, NULL));
 
+cleanup:
+    //If there were an error, cleanup accordingly
+    if(_error != NO_ERROR)
+    {
+        if(output_data)
+            av_free(output_data);
+        if(output_bd)
+            av_free(output_bd);
+        if(output_io_context)
+            av_free(output_io_context);        
+        if(o_context)
+            avformat_free_context(o_context);
+
+        //The `output_stream` gets free'd by clearing the output's codec and format contexts. Eventually, by
+        // the end of this error handling pipeline, both of those will be clears, indirectly also
+        // clearing the `output_stream`
+
+        //Return NULL on error
+        return NULL;
+    }
+    
     return o_context;
 }
 
 
-/* check that a given sample format is supported by the encoder */
+//Check that a given sample format is supported by the encoder
 int check_sample_rate(AVCodec *codec, int sample_rate)
 {
-    LOG1("check_sample_rate",sample_rate);
+    LOG("sample_rate: %d", sample_rate);
     const int *p = codec->supported_samplerates;
     while (*p != 0) {
-        LOG1(" available",*p);
+        LOG(" available: %d", *p);
 
         if (*p == sample_rate)
             return 1;
@@ -281,34 +483,320 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
     return 0;
 }
 
-/**
-    Set up input to accept samples PCM float 44.1k for now
 
-    Create MP4 AAC output Container to be returned by flush()
-*/
-void init(const char *i_codec_name, int i_sample_rate, int i_channels, const char *o_codec_name, const char *o_format, int o_sample_rate, int o_channels, int o_bit_rate) {
-    fprintf(stdout,"init(%s,%d,%d,%s,%s,%d,%d,%d)\n",i_codec_name,i_sample_rate,i_channels,o_codec_name,o_format,o_sample_rate,o_channels,o_bit_rate);
+//TODO: There are containers allocated in init_io for example that have no error handling
+// once the function exits, yet they still persist. Consider creating a function and registering
+// it on exit if the entire execution passes such that if something later on fails,
+// they still will be counted for.
 
-    passthru_encoding = strcmp(i_codec_name, o_codec_name);
 
-    /** Register all codecs and formats so that they can be used. */
+//Create MP4 AAC output Container to be returned by `flush`
+void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
+          int i_channels, const char *o_codec_name, const char *o_format_name,
+          int o_sample_rate, int o_channels, int o_bit_rate)
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    LOG("(%s, %s, %d, %d, %s, %s, %d, %d, %d)",
+        i_format_name, i_codec_name, i_sample_rate, i_channels, o_codec_name,
+        o_format_name, o_sample_rate, o_channels, o_bit_rate);
+
+    //Enable the `passthru_encoding` if both the input and output codec names are the same
+    passthru_encoding = !strcmp(i_codec_name, o_codec_name);
+    LOG("passthru_encoding: %s", passthru_encoding ? "true" : "false");
+
+    //Register all codecs and formats so that they can be used.
     av_register_all();
 
-    AVCodec *i_codec;
+    //
+    //Initialize input contexts
+    //
+    
+    //Create an input codec context given the input header information
+    AVCodec *i_codec = NULL;
     CHK_NULL(i_codec = avcodec_find_decoder_by_name(i_codec_name));
     CHK_NULL(input_codec_context = init_codec_context(i_codec, i_sample_rate, i_channels, -1));
-
-    AVCodec *o_codec;
+    
+    //Since the input audio data is header-less, manually set its input format to a global variable
+    CHK_NULL(input_format = av_find_input_format(i_format_name));
+    
+    //
+    //Initialize output contexts
+    //
+    
+    //Create an output codec context given the output header information
+    AVCodec *o_codec = NULL;
     CHK_NULL(o_codec = avcodec_find_encoder_by_name(o_codec_name));
     CHK_NULL(output_codec_context = init_codec_context(o_codec, o_sample_rate, o_channels, o_bit_rate));
+    
+    //Initialize the output format context
+    CHK_NULL(output_format_context = init_output_format_context(o_format_name));
 
-    AVIOContext *io_context;
-    CHK_NULL(io_context = init_io(input_codec_context, output_codec_context));
+    //
+    //Resampler
+    //
+    CHK_NULL(resample_context = init_resampler(input_codec_context, output_codec_context));
+    
+    //
+    //FIFO
+    //
 
-    CHK_NULL(output_context = init_output(io_context, o_format));
+    //Create the input FIFO buffer based on the Codec input format
+    CHK_NULL(fifo = av_audio_fifo_alloc(output_codec_context->sample_fmt, output_codec_context->channels, 1));
+    
+cleanup:    
+    //If there were an error, cleanup accordingly
+    if(_error != NO_ERROR)
+    {
+        if(input_codec_context)
+            avcodec_free_context(&input_codec_context);
+        if(output_codec_context)
+            avcodec_free_context(&output_codec_context);
+        if(output_format_context)
+            avformat_free_context(output_format_context);
+        if(resample_context)
+            swr_free(&resample_context);
+        
+        //There is no need to handle `fifo` because if it passed, as it is the last operation in
+        // this function, then this error cleanup routine would never be executed
+        
+        //Exit on error
+        exit(1);
+    }
 }
 
-//Peter: we are actually, not using FDK AAC Codec, we are using the new ffmpeg native codec
+//Add converted input audio samples to the FIFO buffer for later processing.
+ERROR_CODE add_samples_to_fifo(AVAudioFifo *audio_fifo, uint8_t **converted_input_samples, const int frame_size)
+{
+    ERROR_CODE _error = NO_ERROR;
+
+    //Make the FIFO as large as it needs to be to hold both the old and the new samples.
+    CHK_ERROR(av_audio_fifo_realloc(audio_fifo, av_audio_fifo_size(fifo) + frame_size));
+
+    //Store the new samples in the FIFO buffer.
+    CHK_GE(av_audio_fifo_write(audio_fifo, (void**)converted_input_samples, frame_size), frame_size); 
+    
+cleanup:
+    return _error;
+}
+
+//Convert the input audio samples into the output sample format. The conversion happens
+// on a per-frame basis, the size of which is specified by frame_size.
+ERROR_CODE convert_samples(const uint8_t **input_data, uint8_t **converted_data,
+                           const int frame_size, SwrContext *r_context)
+{
+    ERROR_CODE _error = NO_ERROR;
+
+    //Convert the samples using the resampler
+    CHK_ERROR(swr_convert(r_context, converted_data, frame_size, input_data, frame_size));
+
+cleanup:    
+    return _error;
+}
+
+//Initialize a temporary storage for the specified number of audio samples.
+// The conversion requires temporary storage due to the different format.
+// The number of audio samples to be allocated is specified in frame_size.
+//
+// The cleaning of `*converted_input_samples` is to be handled by the calling function
+ERROR_CODE init_converted_samples(uint8_t ***converted_input_samples, AVCodecContext *o_codec_context, int frame_size)
+{
+    ERROR_CODE _error = NO_ERROR;
+
+    //Allocate as many pointers as there are audio channels.
+    // Each pointer will later point to the audio samples of the corresponding
+    // channels (although it may be NULL for interleaved formats).
+    CHK_NULL(*converted_input_samples = calloc(o_codec_context->channels, sizeof(**converted_input_samples)));
+
+    //Allocate memory for the samples of all channels in one consecutive block for convenience.
+    CHK_ERROR(av_samples_alloc(*converted_input_samples, NULL, o_codec_context->channels,
+                               frame_size, o_codec_context->sample_fmt, 0));
+
+cleanup:
+    //Cleaning `*converted_input_samples` is handled one level up in the calling function
+    return _error;
+}
+
+//Decode one audio frame from the input file.
+ERROR_CODE decode_audio_frame(AVFrame *frame, AVFormatContext *i_format_context,
+                              AVCodecContext *i_codec_context, int *data_present,
+                              int *finished)
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    //Packet used for temporary storage
+    AVPacket input_packet;
+    init_packet(&input_packet);
+    
+    //Read one audio frame from the input file into a temporary packet until
+    // the end of the input is reached. Once the input is exhausted, `input_packet`
+    // will still be empty which will flush the decoder below
+    if((_error = av_read_frame(i_format_context, &input_packet)) < 0)
+    {
+        //If this is an end of file error, it will not be treated as an error, only a signal
+        if(_error == AVERROR_EOF)
+        {
+            *finished = 1;
+            _error = NO_ERROR; //Clear the end of file error
+        }else{
+            ERROR("Could not read frame ('%s')", get_error_text(_error));
+            goto cleanup; //ADDED changed from: return _error;
+        }
+    }
+
+    //Decode the audio frame stored in the temporary packet. An empty `input_packet` will flush the decoder.
+    CHK_ERROR(avcodec_decode_audio4(i_codec_context, frame, data_present, &input_packet));
+
+    //If the decoder has not been flushed completely, then this function is not completely finished.
+    if(*finished && *data_present)
+        *finished = 0;
+
+cleanup:
+    av_packet_unref(&input_packet);
+    return _error;
+}
+
+//Read one audio frame from the input file, decodes, converts and stores it in the FIFO buffer.
+ERROR_CODE read_decode_convert_and_store(AVAudioFifo *audio_fifo, AVFormatContext *i_format_context,
+                                         AVCodecContext *i_codec_context, AVCodecContext *o_codec_context,
+                                         SwrContext *r_context, int *finished)
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    //Temporary storage of the input samples of the frame read from the file.
+    AVFrame *input_frame = NULL;
+    uint8_t **converted_input_samples = NULL; //Temporary storage for the converted input samples.
+    int data_present = 0; //ADDED 0
+
+    //Initialize temporary storage for one input frame.
+    CHK_NULL(input_frame = av_frame_alloc());
+    
+    //Decode one frame worth of audio samples.
+    CHK_ERROR(decode_audio_frame(input_frame, i_format_context, i_codec_context, &data_present, finished));
+    
+    //If end of the input is reached and there are no more samples in the decoder which are
+    // delayed, the decoder finally fully finished.
+    if(*finished && !data_present)
+        goto cleanup;
+    
+    //If there is decoded data, convert and store it
+    if(data_present)
+    {
+        //Initialize the temporary storage for the converted input samples.
+        CHK_ERROR(init_converted_samples(&converted_input_samples, o_codec_context, input_frame->nb_samples));
+
+        //Convert the input samples to the desired output sample format. This requires a
+        // temporary storage provided by converted_input_samples.
+        CHK_ERROR(convert_samples((const uint8_t**)input_frame->extended_data, converted_input_samples,
+                                  input_frame->nb_samples, r_context));
+
+        //Add the converted input samples to the FIFO buffer for latter processing.
+        CHK_ERROR(add_samples_to_fifo(audio_fifo, converted_input_samples, input_frame->nb_samples));
+    }
+
+cleanup:
+    if(input_frame)
+        av_frame_free(&input_frame);
+    
+    if(converted_input_samples)
+    {
+        av_freep(&converted_input_samples[0]);
+        free(converted_input_samples);
+    }
+    
+    return _error;
+}
+
+//Initialize one input frame for writing to the output file. The frame will be exactly `frame_size` samples large.
+//
+// The cleaning of `*frame` is to be handled by the calling function
+ERROR_CODE init_output_frame(AVFrame **frame, AVCodecContext *o_codec_context, int frame_size)
+{
+    ERROR_CODE _error = NO_ERROR;
+
+    //Create a new frame to store the audio samples.
+    CHK_NULL(*frame = av_frame_alloc());
+
+    //Set the frame's parameters, especially its size and format. The `av_frame_get_buffer` needs this
+    // to allocate memory for the audio samples of the frame. Default channel layouts based on
+    // the number of channels are assumed for simplicity.
+    (*frame)->nb_samples = frame_size;
+    (*frame)->channel_layout = output_codec_context->channel_layout;
+    (*frame)->format = output_codec_context->sample_fmt;
+    (*frame)->sample_rate = output_codec_context->sample_rate;
+
+    //Allocate the samples of the created frame. This call will make sure
+    // that the audio frame can hold as many samples as specified.
+    CHK_ERROR(av_frame_get_buffer(*frame, 0));
+
+cleanup:
+    return _error;
+}
+
+//Encode one frame worth of audio to the output file.
+ERROR_CODE encode_audio_frame(AVFrame *frame, AVFormatContext *o_format_context,
+                              AVCodecContext *o_codec_context, int *data_present)
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    //A persistent timestamp for the audio frames
+    static int64_t pts = 0;
+    
+    //Packet used for temporary storage.
+    AVPacket output_packet;
+    int error;
+    init_packet(&output_packet);
+
+    //Set a timestamp based on the sample rate for the container.
+    if(frame)
+    {
+        frame->pts = pts;
+        pts += frame->nb_samples;
+    }
+
+    //Encode the audio frame and store it in the temporary packet.
+    CHK_ERROR(avcodec_encode_audio2(o_codec_context, &output_packet, frame, data_present));
+
+    //Write one audio frame from the temporary packet to the output file.
+    if(*data_present)
+        CHK_ERROR(av_write_frame(o_format_context, &output_packet));
+
+cleanup:
+    av_packet_unref(&output_packet);
+    return 0;
+}
+
+//Load one audio frame from the FIFO buffer, encode and write it to the output file.
+ERROR_CODE load_encode_and_write(AVAudioFifo *audio_fifo, AVFormatContext *o_format_context,
+                                 AVCodecContext *o_codec_context)
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    //Temporary storage of the output samples of the frame written to the file.
+    AVFrame *output_frame = NULL;
+    
+    //Use the maximum number of possible samples per frame. If there is
+    // less than that in the FIFO, simply exhaust whatever is left.
+    const int frame_size = FFMIN(av_audio_fifo_size(fifo), output_codec_context->frame_size);
+    int data_written;
+
+    //Initialize temporary storage for one output frame.
+    CHK_ERROR(init_output_frame(&output_frame, output_codec_context, frame_size));
+
+    //Read as many samples from the FIFO buffer as required to fill the frame.
+    // The samples are stored in the frame temporarily.
+    CHK_GE(av_audio_fifo_read(fifo, (void**)output_frame->data, frame_size), frame_size);
+
+    //Encode one frame worth of audio samples.
+    CHK_ERROR(encode_audio_frame(output_frame, output_format_context, output_codec_context, &data_written));
+
+cleanup:
+    if(output_frame)
+        av_frame_free(&output_frame);
+    return _error;
+}
+
+//Peter: we are actually not using FDK AAC Codec; we are using the new ffmpeg native codec
 
 /**
     Load some more input samples
@@ -329,89 +817,191 @@ void init(const char *i_codec_name, int i_sample_rate, int i_channels, const cha
 
     The AAC Frame is written to the AAC Stream of the output
 */
-void load(uint8_t *i_data, int i_length) {
-    LOG1("load i_length", i_length);
+void load(uint8_t *i_data, int i_length)
+{
+    ERROR_CODE _error = NO_ERROR;
 
-/*
-    if(passthru_encoding) {
-        write_packet((void*)0x123, i_data, i_length);
+    //The `load_locked` must be false. If the load is locked (ie: another load call had been issued
+    // before a previous one returned) then error. This function is meant to be synchronous.
+    CHK_EQ(load_locked, false);
+    load_locked = true; //Now lock the load function
+    
+    LOG("i_length: %d", i_length);
+    
+    //Package the incoming payload into a convenient data structure
+    struct buffer_data input_bd = {.ptr = i_data, .size = (size_t)i_length, .offset = 0};
+    
+    //If this is the first time running `load`, fully initialize `input_format_context`, otherwise
+    // simply assign it the incoming payload
+    if(!input_format_context)
+        CHK_NULL(input_format_context = init_input_format_context(&input_bd));
+    else
+        input_format_context->pb->opaque = &input_bd;
+    
+    if(passthru_encoding)
+    {
+        //As a pass through, simply write to the output buffer data, cleanup, and exit
+        output_write(output_format_context->pb->opaque, i_data, i_length);
+        //TODO: cleanup here somehow
         return;
     }
-*/
+
+    const int output_frame_size = output_codec_context->frame_size;
+    int finished = 0;
+
+    //Loop as long as the transcoding process has not finished
+    while(!finished)
+    {
+        //Make sure that there is one frame worth of samples in the FIFO
+        // buffer so that the encoder can do its work.
+        //
+        // Since the decoder's and the encoder's frame size may differ, we
+        // need the FIFO buffer to store as many frames worth of input samples
+        // that they make up at least one frame worth of output samples.
+        //
+        // Also, if the end of the input is reached, proceed to the encoding procedure
+        while(av_audio_fifo_size(fifo) < output_frame_size && !finished)
+        {
+            //Decode one frame worth of audio samples, convert it to the
+            // output sample format and put it into the FIFO buffer.
+            CHK_ERROR(read_decode_convert_and_store(fifo, input_format_context, input_codec_context,
+                                                    output_codec_context, resample_context, &finished));
+
+        }
+
+        //If there are enough samples for the encoder, encode them. At the end of the file,
+        // pass the remaining samples to the encoder.
+        while(av_audio_fifo_size(fifo) >= output_frame_size || (finished && av_audio_fifo_size(fifo) > 0))
+        {
+            LOG("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
+            //Take one frame worth of audio samples from the FIFO buffer,
+            // encode it and write it to the output container.
+            CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));
+        }
+    }
+
+    //ADDED
+    goto cleanup;
+
+    
+    //
+    //OTHER
+    //
+
+    /* ADDED comment
     int frame_size = output_codec_context->frame_size;
     int input_samples_size = i_length / sizeof(float);
     int frame_samples_size = frame_size / sizeof(float);
 
-  /**
-    * Make the FIFO as large as it needs to be to hold both,
-    * the old and the new samples.
-    */
-    LOG1("  before fifo space",av_audio_fifo_space(fifo));
-    LOG1("    input_samples_size",input_samples_size);
-    CHK_ERROR(av_audio_fifo_realloc(fifo, av_audio_fifo_size(fifo) + input_samples_size));
-    LOG1("  after fifo space",av_audio_fifo_space(fifo));
-
-    /** Store the new samples in the FIFO buffer. */
-    LOG1("  before fifo size",av_audio_fifo_size(fifo));
-    CHK_GE(av_audio_fifo_write(fifo, (void **)&i_data, input_samples_size), input_samples_size);
-    LOG1("  after fifo size",av_audio_fifo_size(fifo));
-
+    //ADDED
+    //input_samples_size = i_length;
+    //frame_samples_size = frame_size;
+    
+    //Store the new samples in the FIFO buffer. The write function
+    // internally automatically reallocates as needed.
+    LOG("  before fifo space: %d", av_audio_fifo_space(fifo));
+    LOG("    input_samples_size: %d", input_samples_size);
+    LOG("  before fifo size: %d", av_audio_fifo_size(fifo));
+    CHK_GE(av_audio_fifo_write(fifo, (void**)&i_data, input_samples_size), input_samples_size);
+    LOG("  after fifo space: %d", av_audio_fifo_space(fifo));
+    LOG("  after fifo size: %d", av_audio_fifo_size(fifo));
+    
     AVPacket *output_packet;
-    CHK_NULL(output_packet=av_packet_alloc());
+    CHK_NULL(output_packet = av_packet_alloc());
     CHK_VOID(av_init_packet(output_packet));
-    /** Set the packet data and size so that it is recognized as being empty. */
+    //Set the packet data and size so that it is recognized as being empty.
     output_packet->data = NULL;
     output_packet->size = 0;
     output_packet->pts = 0;
 
-    int finished               = 0;
-    int amount_read            = 0;
+    int amount_read = 0; 
+   
+    //While there is at least one frame's worth of data in `fifo`,
+    // encode the frame and write it to the output container
+    while(av_audio_fifo_size(fifo) >= frame_samples_size)
+    {
+        LOG("BEFORE %p %p", input_frame_buffer, &input_frame_buffer);
+      
+        LOG("  before fifo size: %d", av_audio_fifo_size(fifo));
+        CHK_ERROR(amount_read = av_audio_fifo_read(fifo, (void**)input_frame->data, frame_samples_size));
+        LOG("  amount_read: %d", amount_read);
+        LOG("  after fifo size: %d", av_audio_fifo_size(fifo));
 
-    /**
-     * While there is at least one Frame's worth of data in the Fifo,
-     * encode the Frame and write it to the output Container
-     */
-    while (av_audio_fifo_size(fifo) >= frame_samples_size) {
-        LOG1("  before fifo size",av_audio_fifo_size(fifo));
-        CHK_ERROR( amount_read = av_audio_fifo_read(fifo,(void**)&input_frame_buffer,frame_samples_size));
-        LOG1("  amount_read",amount_read);
-        LOG1("  after fifo size",av_audio_fifo_size(fifo));
+        LOG("AFTER %p %p %p %p %lld", input_frame_buffer, &input_frame_buffer, input_frame->data, input_frame->extended_data, input_frame->pts);
 
+        LOG("  output packet before size: %d", output_packet->size);
+        
         int got_output = 0;
         CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, input_frame, &got_output));
-        LOG1("  got_output",got_output);
-        if(got_output) {
-            CHK_ERROR(av_write_frame(output_context, output_packet));
+        LOG("  got_output: %d", got_output);
+        LOG("  output packet size: %d", output_packet->size);
+        if(got_output)
+        {
+            CHK_ERROR(av_write_frame(output_format_context, output_packet));
             CHK_VOID(av_packet_unref(output_packet));
         }
     }
+    */
+    
+cleanup: 
+    //If there were an error, cleanup accordingly
+    if(_error != NO_ERROR)
+    {
+        //TODO Clean here
+        
+        //Exit on error
+        exit(1);
+    }
+    
+    load_locked = false; //Unlock the load once it has finished on success
+    return;
 }
 
-uint8_t *flush() {
-    LOG("flush");
+uint8_t *flush()
+{
+    ERROR_CODE _error = NO_ERROR;
+    
+    LOG("Started");
 
-    /** Get all the delayed frames */
+    int data_written;
+    //Flush the encoder as it may have delayed frames.
+    do {
+        CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
+    } while(data_written);
+
+    //Write the trailer of the output file container
+    CHK_ERROR(av_write_trailer(output_format_context));
+    
+    /* ADDED comments
+    //Get all the delayed frames
     AVPacket *output_packet;
-    CHK_NULL(output_packet=av_packet_alloc());
+    CHK_NULL(output_packet = av_packet_alloc());
     int got_output = 0;
     do {
         CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, NULL, &got_output));
-        LOG1("  got_output",got_output);
+        LOG("  got_output: %d",got_output);
         if(got_output) {
-            LOG1("    output_packet size",output_packet->size);
+            LOG("    output_packet size: %d",output_packet->size);
             CHK_VOID(av_packet_unref(output_packet));
         }
     } while(got_output);
-    CHK_ERROR(av_write_trailer(output_context));
-    return output_buffer;
+    CHK_ERROR(av_write_trailer(output_format_context));
+    */
+
+cleanup: //TODO
+
+    //TODO: make sure that stuff is handled correctly here
+    //The output buffer is located at the output format context's io payload's data pointer
+    return ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
 }
 
 /**
  * Finish the output Container, and return the contents buffer and length
  */
-void dispose(int status) {
+void dispose(int status)
+{
 
-    LOG("dispose\n");
+    LOG("Started");
 
     /* If there is a partial Frame left over in the Fifo, process it */
 
@@ -426,17 +1016,22 @@ void dispose(int status) {
     exit(status);
 }
 
-int get_output_sample_rate() {
-    LOG1("get_output_sample_rate", output_codec_context->sample_rate);
+int get_output_sample_rate()
+{
+    LOG("get_output_sample_rate: %d", output_codec_context->sample_rate);
     return output_codec_context->sample_rate;
 }
 
-char *get_output_format() {
-    fprintf(stdout,"get_output_format name:%s\n", output_context->oformat->name);
-    return (char *)output_context->oformat->name;
+char *get_output_format()
+{
+    LOG("get_output_format name: %s", output_format_context->oformat->name);
+    return (char*)output_format_context->oformat->name;
 }
 
-int get_output_length() {
-    LOG1("get_output_length", output_buffer_pos);
-    return output_buffer_pos;
+int get_output_length()
+{
+    //The output buffer's offset is located at the output format context's io payload's data offest
+    int offset = ((struct buffer_data*)output_format_context->pb->opaque)->offset;
+    LOG("output offset: %d", offset);
+    return offset;
 }

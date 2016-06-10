@@ -45,15 +45,20 @@ package com.marstonstudio.crossusermedia.encoder {
             }
         }
 
-        public function init(inputFormat:String, inputSampleRate:int, inputChannels:int, outputCodec:String, outputFormat:String, outputSampleRate:int, outputChannels:int, outputBitRate:int):void {
-            com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputSampleRate, inputChannels, outputCodec, outputFormat, outputSampleRate, outputChannels, outputBitRate);
+        public function init(inputFormat:String, inputCodec:String, inputSampleRate:int, inputChannels:int, outputCodec:String, outputFormat:String, outputSampleRate:int, outputChannels:int, outputBitRate:int):void {
+           
+            com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputCodec, outputFormat, outputSampleRate, outputChannels, outputBitRate);
+
         }
 
         public function load(input:ByteArray):void {
+            //Convert the input byte array into a C friendly type with its length
             var inputLength:int = input.length;
             var inputPointer:int = CModule.malloc(inputLength);
             CModule.writeBytes(inputPointer, inputLength, input);
+            
             com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
+
             CModule.free(inputPointer);
         }
         

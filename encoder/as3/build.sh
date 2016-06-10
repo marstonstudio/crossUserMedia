@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
-. setenv.sh
+function exit_on_fail {
+    "$@"
+    local status=$?
+    if [ $status -ne 0 ]; then
+        exit
+    fi
+    return $status
+}
+
+exit_on_fail source setenv.sh
 
 rm -Rf dist
 mkdir dist
@@ -12,12 +21,12 @@ cd ../ffmpeg
 if [ -f "config.mak" ]
 then
     echo "Cleaning past configuration"
-    make clean
+    exit_on_fail make clean
     echo "Cleaned past configuration"
 fi
 
 echo "Starting ffmpeg configuration"
-./configure \
+exit_on_fail ./configure \
     --prefix=../as3/dist \
 \
     --disable-runtime-cpudetect \
@@ -78,12 +87,12 @@ echo "Starting ffmpeg configuration"
 
 echo "Finished ffmpeg configuration"
 
-make
-make install
-make clean
+exit_on_fail make
+exit_on_fail make install
+exit_on_fail make clean
 
 cd ../as3
 
-make clean
-make
-make install
+exit_on_fail make clean
+exit_on_fail make
+exit_on_fail make install
