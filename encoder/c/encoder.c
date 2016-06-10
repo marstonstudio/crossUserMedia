@@ -995,9 +995,7 @@ cleanup: //TODO
     return ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
 }
 
-/**
- * Finish the output Container, and return the contents buffer and length
- */
+//Finish the output Container, and return the contents buffer and length
 void dispose(int status)
 {
 

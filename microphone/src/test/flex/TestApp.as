@@ -182,9 +182,12 @@ public class TestApp {
             assertTrue("outputSampleRate set to " + outputSampleRate, encoderOutputSampleRate == outputSampleRate);
             assertTrue("encoder.getOutputLength() > 0", encoderOutputLength > 0);
             assertTrue("outputBytesAvailable > 0", outputBytesAvailable > 0);
-            assertTrue("outputBytesAvailable = encoder.getOutputLength()", outputBytesAvailable == encoderOutputLength);
-            assertTrue("outputBytesAvailable * 10 < inputBytesAvailable", outputBytesAvailable * 10 < inputBytesAvailable);
-            assertTrue("outputBytesAvailable * 20 > inputBytesAvailable", outputBytesAvailable * 20 > inputBytesAvailable);
+            assertTrue("outputBytesAvailable = encoder.getOutputLength()",
+                outputBytesAvailable == encoderOutputLength);
+            assertTrue("outputBytesAvailable * 10 < inputBytesAvailable",
+                outputBytesAvailable * 10 < inputBytesAvailable);
+            assertTrue("outputBytesAvailable * 20 > inputBytesAvailable",
+                outputBytesAvailable * 20 > inputBytesAvailable);
 
             encoder.dispose(0);
         }
