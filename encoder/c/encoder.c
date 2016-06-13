@@ -492,14 +492,14 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 
 //Create MP4 AAC output Container to be returned by `flush`
 void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
-          int i_channels, const char *o_codec_name, const char *o_format_name,
+          int i_channels, const char *o_format_name, const char *o_codec_name,
           int o_sample_rate, int o_channels, int o_bit_rate)
 {
     ERROR_CODE _error = NO_ERROR;
     
     LOG("(%s, %s, %d, %d, %s, %s, %d, %d, %d)",
-        i_format_name, i_codec_name, i_sample_rate, i_channels, o_codec_name,
-        o_format_name, o_sample_rate, o_channels, o_bit_rate);
+        i_format_name, i_codec_name, i_sample_rate, i_channels,
+        o_format_name, o_codec_name, o_sample_rate, o_channels, o_bit_rate);
 
     //Enable the `passthru_encoding` if both the input and output codec names are the same
     passthru_encoding = !strcmp(i_codec_name, o_codec_name);
