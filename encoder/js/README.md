@@ -35,6 +35,31 @@ for usage and examples of the JSON objects used to transfer messages and data ba
 You can follow instructions on the [emscripten website](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)
 or use [homebrew](http://brew.sh) to install emscripten.
 
+### Windows Caveats
+Emscripten does not play well with cygwin as it gets mixed up with windows vs. cygwin paths internally. However, running it from MinGW works just fine.
+
+Install MinGW. A recommended way to proceed is via installing Git Bash which installs MinGW along with it.
+
+As a temporary patch until this issue is addressed by emscripten, the `shared.py` file of the project has to be edited. Navigate to the base dir of the emscripten installation (the directory named `Emscripten`). Then navigate to the `shared.py` file (`.../Emscripten/emscripten/1.35.0/tools/shared.py`). In that file, go inside the `make` function to this if statement found at around line 1189:
+
+```
+if 'mingw32-make' in args[0]:
+  env = Building.remove_sh_exe_from_path(env)
+```
+
+Then, disable that if statement by adding the condition `and False` to the end of it.
+
+Now, to test the emcc installation, run `emcc -v`.
+
+Emcc may complain that it is unable find python2. So make sure that python is installed, cd to the installation directory, and make a soft link from `python.exe` to `python2.exe`.
+
+In order to build this library, make and related programs are required. Download and run the mingw-get setup executable that will install `mingw-get`, a MinGW library installation tool. Run the tool and select `mingw-base` for installation.
+
+Add the directory containing the mingw binaries (usually '/c/MinGW/bin') to PATH.
+
+Then see if `mingw32-make` exists as an executable runnable directly from MinGW.
+
+### Mac Caveats
 If using homebrew on OS X, do the following to install emscripten and generate the ~/.emscripten config file:
 ```
 brew install emscripten node yuicompressor

@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 
+#Set to exit on any failure
+set -e
+
 cd ../ffmpeg
 
-emmake make clean
+#Only perform the make clean beforehand if the configure script has been called before
+# This can be easily identified by checking for the existance of "config.mak"
+if [ -f "config.mak" ]
+then
+    echo "Cleaning past configuration"
+    emmake make clean
+    echo "Cleaned past configuration"
+fi
 
 emconfigure ./configure \
     --prefix=../js/dist \
