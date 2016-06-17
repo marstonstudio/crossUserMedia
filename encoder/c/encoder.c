@@ -90,6 +90,9 @@ struct buffer_data {
     int offset;
 };
 
+//ADDED TEMPORARY!
+struct buffer_data *rm_me_output_buffer_data = NULL;
+
 #define ERROR_CODE int
 #define NO_ERROR 0
 #define INTERNAL_ERROR -1
@@ -503,13 +506,25 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     //Enable the `passthru_encoding` if both the input and output codec names are the same
     passthru_encoding = !strcmp(i_codec_name, o_codec_name);
 
-    //ADDED
-    //if(passthru_encoding)
-    //{
-    //    i_format_name = "f32be";
-    //    i_codec_name = "pcm_f32be";
-    //}
-    
+    //ADDED TEMPORARY!
+    if(passthru_encoding)
+    {
+        //Allocate space for the buffer to contain the output data
+        //TODO: is the output really at 44100 khz
+        const int max_output_length = 44100 * 4 * 30 * 10; //A really big number
+        uint8_t *output_data = NULL;
+        CHK_NULL(output_data = (uint8_t*)av_malloc(max_output_length));
+        
+        CHK_NULL(rm_me_output_buffer_data = (struct buffer_data*)av_malloc(sizeof(struct buffer_data)));
+        *rm_me_output_buffer_data = (struct buffer_data){.ptr = output_data,
+                                                         .size = (size_t)max_output_length,
+                                                         .offset = 0};
+        LOG("rm_me_output_buffer_data: ptr: %p, size: %d, offset %d", rm_me_output_buffer_data->ptr,
+            rm_me_output_buffer_data->size, rm_me_output_buffer_data->offset);
+        
+        return;
+    }
+       
     LOG("passthru_encoding: %s", passthru_encoding ? "true" : "false");
 
     //Register all codecs and formats so that they can be used.
@@ -828,6 +843,14 @@ void load(uint8_t *i_data, int i_length)
 {
     ERROR_CODE _error = NO_ERROR;
 
+    //ADDED TEMPORARY!
+    if(passthru_encoding)
+    {
+        //As a pass through, simply write to the output buffer data, cleanup, and exit
+        output_write(rm_me_output_buffer_data, i_data, i_length);
+        return;
+    }
+    
     //The `load_locked` must be false. If the load is locked (ie: another load call had been issued
     // before a previous one returned) then error. This function is meant to be synchronous.
     CHK_EQ(load_locked, false);
@@ -970,6 +993,10 @@ uint8_t *flush()
     
     LOG("Started");
 
+    //ADDED TEMPORARY!
+    if(passthru_encoding)
+        return rm_me_output_buffer_data->ptr;
+    
     int data_written;
     //Flush the encoder as it may have delayed frames.
     do {
@@ -1023,18 +1050,30 @@ void dispose(int status)
 
 int get_output_sample_rate()
 {
+    //ADDED TEMPORARY!
+    if(passthru_encoding)
+        return 0;
+    
     LOG("get_output_sample_rate: %d", output_codec_context->sample_rate);
     return output_codec_context->sample_rate;
 }
 
 char *get_output_format()
 {
+    //ADDED TEMPORARY!
+    if(passthru_encoding)
+        return "ADDED TEMPORARY!";
+    
     LOG("get_output_format name: %s", output_format_context->oformat->name);
     return (char*)output_format_context->oformat->name;
 }
 
 int get_output_length()
 {
+    //ADDED TEMPORARY!
+    if(passthru_encoding)
+        return rm_me_output_buffer_data->offset;
+    
     //The output buffer's offset is located at the output format context's io payload's data offest
     int offset = ((struct buffer_data*)output_format_context->pb->opaque)->offset;
     LOG("output offset: %d", offset);
