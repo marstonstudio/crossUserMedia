@@ -405,7 +405,6 @@ AVFormatContext *init_output_format_context(const char *o_format)
     *output_bd = (struct buffer_data){.ptr = output_data, .size = (size_t)max_output_length, .offset = 0};
     LOG("output_bd: ptr: %p, size: %d, offset %d", output_bd->ptr, output_bd->size, output_bd->offset);
     
-    
     //Initialize the output's custom io
     AVIOContext *output_io_context = NULL;
     CHK_NULL(output_io_context = init_io(output_bd, 1, NULL, output_write, output_seek));
@@ -421,7 +420,7 @@ AVFormatContext *init_output_format_context(const char *o_format)
 
     //Some container formats (like MP4) require global headers to be present
     // Mark the encoder so that it behaves accordingly.
-    if (o_context->oformat->flags & AVFMT_GLOBALHEADER)
+    if(o_context->oformat->flags & AVFMT_GLOBALHEADER)
         output_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     //Create a new audio stream in the output file container.
@@ -503,6 +502,14 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
 
     //Enable the `passthru_encoding` if both the input and output codec names are the same
     passthru_encoding = !strcmp(i_codec_name, o_codec_name);
+
+    //ADDED
+    //if(passthru_encoding)
+    //{
+    //    i_format_name = "f32be";
+    //    i_codec_name = "pcm_f32be";
+    //}
+    
     LOG("passthru_encoding: %s", passthru_encoding ? "true" : "false");
 
     //Register all codecs and formats so that they can be used.
@@ -843,7 +850,7 @@ void load(uint8_t *i_data, int i_length)
         //As a pass through, simply write to the output buffer data, cleanup, and exit
         output_write(output_format_context->pb->opaque, i_data, i_length);
         //TODO: cleanup here somehow
-        return;
+        goto cleanup;
     }
 
     const int output_frame_size = output_codec_context->frame_size;
@@ -999,7 +1006,7 @@ cleanup: //TODO
 void dispose(int status)
 {
 
-    LOG("Started");
+    LOG("Started Bulgaria: %s", __TIME__);
 
     /* If there is a partial Frame left over in the Fifo, process it */
 

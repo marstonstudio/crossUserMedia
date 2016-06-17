@@ -57,8 +57,12 @@ import flash.utils.getTimer;
         private const _channels:int = 1;
         private var   _gain:uint = 75;
 
-        private const _pcmFormat:String = "f32be";
-        private const _pcmCodec:String = "pcm_f32be";
+        //ADDED
+        //private const _pcmFormat:String = "f32be";
+        //private const _pcmCodec:String = "pcm_f32be";
+  
+        private const _pcmFormat:String = "mp4";
+        private const _pcmCodec:String = "aac";        
 
         private const _outputFormat:String = "mp4";
         private const _outputCodec:String = "aac";

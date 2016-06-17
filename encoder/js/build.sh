@@ -5,6 +5,8 @@ set -e
 
 cd ../ffmpeg
 
+:<<"EOF"
+
 #Only perform the make clean beforehand if the configure script has been called before
 # This can be easily identified by checking for the existance of "config.mak"
 if [ -f "config.mak" ]
@@ -14,7 +16,10 @@ then
     echo "Cleaned past configuration"
 fi
 
-emconfigure ./configure \
+EOF
+
+echo "Starting ffmpeg configuration"
+emconfigure /usr/bin/sh ./configure \
     --prefix=../js/dist \
 \
     --disable-runtime-cpudetect \
@@ -70,13 +75,21 @@ emconfigure ./configure \
     --disable-fast-unaligned \
 \
     --disable-debug \
-    --disable-stripping
+    --disable-stripping 
+    #--extra-cflags=-Wno-error=implicit-function-declaration
+
+#ADDED above flags
+
+echo "Finished ffmpeg configuration"
+
+#EOF
 
 emmake make
 emmake make install
 emmake make clean
 
 cd ../js
+
 emmake make clean
 emmake make
 emmake make install

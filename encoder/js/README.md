@@ -61,6 +61,7 @@ Then see if `mingw32-make` exists as an executable runnable directly from MinGW.
 
 ### Mac Caveats
 If using homebrew on OS X, do the following to install emscripten and generate the ~/.emscripten config file:
+
 ```
 brew install emscripten node yuicompressor
 emcc -v
@@ -68,12 +69,14 @@ emcc -v
 
 If you get errors which say `python2 not found`, try setting up a link to python2.
 Skip this step if you have no error.
+
 ```
 ln -sf /usr/bin/python2.7 /usr/local/bin/python2
 ```
 
 If you get errors which say `emcc.py not found`, then you may need to manually create symlinks for the emcc executables.
 Skip this step if you have no error.
+
 ```
 ln -s /usr/local/opt/emscripten/libexec/em++ /usr/local/opt/emscripten/libexec/em++.py
 ln -s /usr/local/opt/emscripten/libexec/emar /usr/local/opt/emscripten/libexec/emar.py
@@ -98,6 +101,7 @@ You should see no errors in the emscripten sanity check output.
 Now execute the full build which compiles the base FFMPEG libraries, compiles the encoder.js wrapper,
 and installs the output into the node_modules/pcmencoder folder in the frontend project.
 Run the [build.sh](/encoder/js/build.sh) script in the `encoder/js/` folder.
+
 ```
 ./build.sh
 ```
@@ -105,6 +109,7 @@ Run the [build.sh](/encoder/js/build.sh) script in the `encoder/js/` folder.
 This will take a long time.
 The full build only needs to be done once to install the base FFMPEG libraries into the dist folder.
 When doing development on the encoder, you can do faster compilation of just the custom encoder.c, pre.js, and post.js code by running:
+
 ```
 make clean
 make
