@@ -43,11 +43,13 @@ emconfigure /usr/bin/sh ./configure \
 \
     --disable-encoders \
     --enable-encoder=aac \
+    --enable-encoder=pcm_f32be `#Enable pcm_f32be for the passthru` \    
     --disable-decoders \
     --enable-decoder=pcm_f32le \
     --disable-hwaccels \
     --disable-muxers \
     --enable-muxer=mp4 \
+    --enable-muxer=pcm_f32be `#Enable pcm_f32be for the passthru` \    
     --disable-demuxers \
     --enable-demuxer=pcm_f32le \
     --disable-parsers \
