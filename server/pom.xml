@@ -156,7 +156,7 @@
         </dependency-->
 
         <dependency>
-            <groupId>xuggle</groupId>
+            <groupId>com.xuggle.xuggler</groupId>
             <artifactId>xuggle-xuggler</artifactId>
             <version>5.4</version>
             <exclusions>

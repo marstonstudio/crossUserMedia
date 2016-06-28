@@ -1,32 +1,28 @@
 #!/usr/bin/env bash
 
-function exit_on_fail {
-    "$@"
-    local status=$?
-    if [ $status -ne 0 ]; then
-        exit
-    fi
-    return $status
-}
+#Set to exit on any failure
+set -e
 
-exit_on_fail source setenv.sh
+source setenv.sh
 
 rm -Rf dist
 mkdir dist
 
 cd ../ffmpeg
 
+#:<<"EOF"
+
 #Only perform the make clean beforehand if the configure script has been called before
 # This can be easily identified by checking for the existance of "config.mak"
 if [ -f "config.mak" ]
 then
     echo "Cleaning past configuration"
-    exit_on_fail make clean
+    make clean
     echo "Cleaned past configuration"
 fi
 
 echo "Starting ffmpeg configuration"
-exit_on_fail ./configure \
+./configure \
     --prefix=../as3/dist \
 \
     --disable-runtime-cpudetect \
@@ -50,11 +46,13 @@ exit_on_fail ./configure \
 \
     --disable-encoders \
     --enable-encoder=aac \
+    --enable-encoder=pcm_f32be `#Enable pcm_f32be for the passthru` \
     --disable-decoders \
     --enable-decoder=pcm_f32be \
     --disable-hwaccels \
     --disable-muxers \
     --enable-muxer=mp4 \
+    --enable-muxer=pcm_f32be `#Enable pcm_f32be for the passthru` \
     --disable-demuxers \
     --enable-demuxer=pcm_f32be \
     --disable-parsers \
@@ -87,12 +85,14 @@ exit_on_fail ./configure \
 
 echo "Finished ffmpeg configuration"
 
-exit_on_fail make
-exit_on_fail make install
-exit_on_fail make clean
+#EOF
+
+make
+make install
+make clean
 
 cd ../as3
 
-exit_on_fail make clean
-exit_on_fail make
-exit_on_fail make install
+make clean
+make
+make install

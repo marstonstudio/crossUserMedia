@@ -23,7 +23,11 @@
 
 4. Run `build.sh` either from Cygwin or from a Mac terminal window.
 
-   Note: On Cygwin, the internal call to make may fail on building sha512.o due to an error: "Couldn't fork: Resource temporarily unavailable". In such case, make sure that there are no other Cygwin or Cygwin-related processes running except the current terminal window; close/terminate them if they exists and rerun `build.sh`.
+### Cygwin Caveats
+
+On first run, numerous errors like `$'\r': command not found` may appear. If so, install the `dos2unix` command and apply it to all of the complaining files to convert the dos line endings to their prettier unix equivalents.
+
+The internal call to make may fail on building sha512.o due to an error: "Couldn't fork: Resource temporarily unavailable". In such case, make sure that there are no other Cygwin or Cygwin-related processes running except the current terminal window; close/terminate them if they exists. Also close any memory hogging programs. Rerun `build.sh`, but comment out the ffmpeg's make clean and configure to save some time (uncomment the `#:<<"EOF"` and `#EOF` to do so).
 
 5. Once `build.sh` has built, which configures and compiles ffmpeg internally, you can compile just your project by running:
 

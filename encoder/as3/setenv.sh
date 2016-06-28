@@ -4,7 +4,7 @@
 case "$(uname -s)" in
     CYGWIN*) #On windows
         BASE_DIR=/cygdrive/c/EnglishCentral
-        printf "Environment set for Windows platform.\n"
+        printf "Environment set for Cygwin Windows platform.\n"
         ;;
     Darwin) #On mac
         BASE_DIR=/usr/local
