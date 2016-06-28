@@ -70,6 +70,8 @@ This API
 #include <emscripten.h>
 #endif
 
+void dispose(int status);
+
 //Initialize the global input and output contexts
 AVCodecContext *input_codec_context = NULL;
 AVFormatContext *input_format_context = NULL;
@@ -169,13 +171,6 @@ static const char *get_error_text(const ERROR_CODE error)
     static char error_buffer[255];
     av_strerror(error, error_buffer, sizeof(error_buffer));
     return error_buffer;
-}
-
-//To be registered with `on_exit`. Calls `av_free` on the input `arg`.
-static void av_free_on_exit(int status, void *arg)
-{
-    LOG("Called from status: %d", status);
-    CHK_VOID(av_free(arg));
 }
 
 int main(int argc, char **argv)
@@ -606,45 +601,9 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     CHK_NULL(fifo = av_audio_fifo_alloc(output_codec_context->sample_fmt, output_codec_context->channels, 1));
     
 cleanup:    
-    //If there were an error, clean up accordingly
+    //If there were an error, clean up accordingly and exit with an error status
     if(_error != NO_ERROR)
-    {
-        //Codecs have no contained elements, so only the top-level needs to be free'd
-        if(input_codec_context)
-            avcodec_free_context(&input_codec_context);
-        if(output_codec_context)
-            avcodec_free_context(&output_codec_context);
-
-        //Free the format contexts along with their contained elements
-        //
-        // If the format context initialized correctly (ie: bears a non-NULL value), then all of
-        // its contained elements must have been initialized properly as well
-        //
-        if(input_format_context)
-        {
-            av_free(input_format_context->pb->buffer);
-            av_free(input_format_context->pb);
-            avformat_free_context(input_format_context);
-        }
-        
-        if(output_format_context)
-        {
-            av_free(((struct buffer_data*)output_format_context->pb->opaque)->ptr);
-            av_free(output_format_context->pb->opaque);
-            av_free(output_format_context->pb->buffer);
-            av_free(output_format_context->pb);
-            avformat_free_context(output_format_context);
-        }
-        
-        if(resample_context)
-            swr_free(&resample_context);
-        
-        //There is no need to handle `fifo` because if it passed, as it is the last operation in
-        // this function, then this error cleanup routine would never be executed
-        
-        //Exit on error
-        exit(1);
-    }
+        dispose(1); //Calls `exit(1)` internally
 }
 
 //Add converted input audio samples to the FIFO buffer for later processing.
@@ -950,79 +909,11 @@ void load(uint8_t *i_data, int i_length)
         }
     }
 
-    //ADDED
-    goto cleanup;
-
-    
-    //
-    //OTHER
-    //
-
-    /* ADDED comment
-    int frame_size = output_codec_context->frame_size;
-    int input_samples_size = i_length / sizeof(float);
-    int frame_samples_size = frame_size / sizeof(float);
-
-    //ADDED
-    //input_samples_size = i_length;
-    //frame_samples_size = frame_size;
-    
-    //Store the new samples in the FIFO buffer. The write function
-    // internally automatically reallocates as needed.
-    LOG("  before fifo space: %d", av_audio_fifo_space(fifo));
-    LOG("    input_samples_size: %d", input_samples_size);
-    LOG("  before fifo size: %d", av_audio_fifo_size(fifo));
-    CHK_GE(av_audio_fifo_write(fifo, (void**)&i_data, input_samples_size), input_samples_size);
-    LOG("  after fifo space: %d", av_audio_fifo_space(fifo));
-    LOG("  after fifo size: %d", av_audio_fifo_size(fifo));
-    
-    AVPacket *output_packet;
-    CHK_NULL(output_packet = av_packet_alloc());
-    CHK_VOID(av_init_packet(output_packet));
-    //Set the packet data and size so that it is recognized as being empty.
-    output_packet->data = NULL;
-    output_packet->size = 0;
-    output_packet->pts = 0;
-
-    int amount_read = 0; 
-   
-    //While there is at least one frame's worth of data in `fifo`,
-    // encode the frame and write it to the output container
-    while(av_audio_fifo_size(fifo) >= frame_samples_size)
-    {
-        LOG("BEFORE %p %p", input_frame_buffer, &input_frame_buffer);
-      
-        LOG("  before fifo size: %d", av_audio_fifo_size(fifo));
-        CHK_ERROR(amount_read = av_audio_fifo_read(fifo, (void**)input_frame->data, frame_samples_size));
-        LOG("  amount_read: %d", amount_read);
-        LOG("  after fifo size: %d", av_audio_fifo_size(fifo));
-
-        LOG("AFTER %p %p %p %p %lld", input_frame_buffer, &input_frame_buffer, input_frame->data, input_frame->extended_data, input_frame->pts);
-
-        LOG("  output packet before size: %d", output_packet->size);
-        
-        int got_output = 0;
-        CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, input_frame, &got_output));
-        LOG("  got_output: %d", got_output);
-        LOG("  output packet size: %d", output_packet->size);
-        if(got_output)
-        {
-            CHK_ERROR(av_write_frame(output_format_context, output_packet));
-            CHK_VOID(av_packet_unref(output_packet));
-        }
-    }
-    */
-    
 cleanup: 
-    //If there were an error, clean up accordingly
+    //If there were an error, clean up accordingly and exit with an error status
     if(_error != NO_ERROR)
-    {
-        //TODO Clean here
+        dispose(1); //Calls `exit(1)` internally
         
-        //Exit on error
-        exit(1);
-    }
-    
     load_locked = false; //Unlock the load once it has finished on success
     return;
 }
@@ -1042,50 +933,55 @@ uint8_t *flush()
     //Write the trailer of the output file container
     CHK_ERROR(av_write_trailer(output_format_context));
 
-    //ADDED data hex-dump
-    int i = 0;
-    for(; i < ((struct buffer_data*)output_format_context->pb->opaque)->offset; i++)
-    {
-        fprintf(stdout, "%x", *(((struct buffer_data*)output_format_context->pb->opaque)->ptr + i));
-    }
-
-    LOG("");
-    
-    /* ADDED comments
-    //Get all the delayed frames
-    AVPacket *output_packet;
-    CHK_NULL(output_packet = av_packet_alloc());
-    int got_output = 0;
-    do {
-        CHK_ERROR(avcodec_encode_audio2(output_codec_context, output_packet, NULL, &got_output));
-        LOG("  got_output: %d",got_output);
-        if(got_output) {
-            LOG("    output_packet size: %d",output_packet->size);
-            CHK_VOID(av_packet_unref(output_packet));
-        }
-    } while(got_output);
-    CHK_ERROR(av_write_trailer(output_format_context));
-    */
-
 cleanup:
 
-    //TODO: make sure that stuff is handled correctly here
+    //If there were an error, clean up accordingly and exit with an error status
+    if(_error != NO_ERROR)
+        dispose(1); //Calls `exit(1)` internally
+    
     //The output buffer is located at the output format context's io payload's data pointer
     return ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
 }
 
-//Finish the output Container, and return the contents buffer and length
+//Clean up and exit
 void dispose(int status)
 {
-
+    
     LOG("Started Bulgaria: %s", __TIME__);
 
-    /* If there is a partial Frame left over in the Fifo, process it */
+    //Codecs have no contained elements, so only the top-level needs to be free'd
+    if(input_codec_context)
+        avcodec_free_context(&input_codec_context);
+    if(output_codec_context)
+        avcodec_free_context(&output_codec_context);
 
-    /* Write the tail to the Container and close it */
+    //Free the format contexts along with their contained elements
+    //
+    // If the format context initialized correctly (ie: bears a non-NULL value), then all of
+    // its contained elements must have been initialized properly as well
+    //
+    if(input_format_context)
+    {
+        av_free(input_format_context->pb->buffer);
+        av_free(input_format_context->pb);
+        avformat_free_context(input_format_context);
+    }
+        
+    if(output_format_context)
+    {
+        av_free(((struct buffer_data*)output_format_context->pb->opaque)->ptr);
+        av_free(output_format_context->pb->opaque);
+        av_free(output_format_context->pb->buffer);
+        av_free(output_format_context->pb);
+        avformat_free_context(output_format_context);
+    }
+        
+    if(resample_context)
+        swr_free(&resample_context);
 
-    /* Get the Container contents */
-
+    if(fifo)
+        av_audio_fifo_free(fifo);
+            
     #ifdef __EMSCRIPTEN__
     emscripten_force_exit(status);
     #endif
