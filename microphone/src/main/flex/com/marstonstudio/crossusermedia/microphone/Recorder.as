@@ -60,12 +60,13 @@ import flash.utils.getTimer;
         private const _pcmFormat:String = "f32be";
         private const _pcmCodec:String = "pcm_f32be";
 
-        //ADDED        
-        private const _outputFormat:String = "f32be";
-        private const _outputCodec:String = "pcm_f32be";
+        //Setting for passthru
+        //private const _outputFormat:String = "f32be";
+        //private const _outputCodec:String = "pcm_f32be";
         
-        //private const _outputFormat:String = "mp4";
-        //private const _outputCodec:String = "aac";
+        private const _outputFormat:String = "mp4";
+        private const _outputCodec:String = "aac";
+        
         private const _outputBitRate:int = 32000;
         
         private var _startTime:uint;

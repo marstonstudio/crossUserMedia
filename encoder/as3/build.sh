@@ -10,6 +10,8 @@ mkdir dist
 
 cd ../ffmpeg
 
+#:<<"EOF"
+
 #Only perform the make clean beforehand if the configure script has been called before
 # This can be easily identified by checking for the existance of "config.mak"
 if [ -f "config.mak" ]
@@ -82,6 +84,8 @@ echo "Starting ffmpeg configuration"
     --disable-stripping
 
 echo "Finished ffmpeg configuration"
+
+#EOF
 
 make
 make install

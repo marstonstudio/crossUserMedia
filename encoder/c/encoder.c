@@ -72,7 +72,6 @@ This API
 
 //Initialize the global input and output contexts
 AVCodecContext *input_codec_context = NULL;
-AVInputFormat *input_format = NULL;
 AVFormatContext *input_format_context = NULL;
 
 AVCodecContext *output_codec_context = NULL;
@@ -189,6 +188,14 @@ int main(int argc, char **argv)
 int input_read(void *ptr, uint8_t *buf, int buf_size)
 {
     struct buffer_data *bd = (struct buffer_data*)ptr;
+
+    //Sanity check
+    if(!bd)
+    {
+        WARNING("NULL ptr buffer encountered");
+        return 0;
+    }
+    
     const int data_left = bd->size - bd->offset;
     LOG("bd->ptr: %p bd->offset: %d data_left: %d buf_size: %d", bd->ptr, bd->offset, data_left, buf_size);
 
@@ -202,12 +209,21 @@ int input_read(void *ptr, uint8_t *buf, int buf_size)
     //Copy internal buffer data to `buf`
     memcpy(buf, bd->ptr + bd->offset, buf_size);
     bd->offset += buf_size;
+    
     return buf_size;
 }
 
 int output_write(void *ptr, uint8_t *buf, int buf_size)
 {
     struct buffer_data *bd = (struct buffer_data*)ptr;
+
+    //Sanity check
+    if(!bd)
+    {
+        WARNING("NULL ptr buffer encountered");
+        return 0;
+    }
+    
     const int space_left = bd->size - bd->offset;    
     LOG("bd->ptr: %p bd->size: %d bd->offset: %d space_left: %d buf_size: %d",
         bd->ptr, bd->size, bd->offset, space_left, buf_size);
@@ -222,12 +238,35 @@ int output_write(void *ptr, uint8_t *buf, int buf_size)
     memcpy(bd->ptr + bd->offset, buf, buf_size);
     bd->offset += buf_size;
     LOG("bd->offset: %d", bd->offset);
+    
     return buf_size;
 }
 
 int64_t output_seek(void *ptr, int64_t offset, int whence)
 {
-    LOG("ptr: %p offset: %lld whence: %d", ptr, offset, whence);
+    struct buffer_data *bd = (struct buffer_data*)ptr;
+    
+    //Sanity check
+    if(!bd)
+    {
+        WARNING("NULL ptr buffer encountered");
+        return 0;
+    }
+    
+    
+    LOG("bd->ptr: %p bd->size: %d bd->offset %d offset: %lld whence: %d",
+        bd->ptr, bd->size, bd->offset, offset, whence);
+
+    //Overflow protection
+    if(offset >= bd->size)
+    {
+        WARNING("Seek overflow encountered");
+        return 0;
+    }
+    
+    bd->offset = offset;
+    LOG("bd->offset: %d", bd->offset);
+    
     return offset;
 }
 
@@ -320,9 +359,9 @@ cleanup:
 }
 
 AVIOContext *init_io(void *internal_data, int write_flag,
-                        int(*read_packet)(void*, uint8_t*, int),
-                        int(*write_packet)(void*, uint8_t*, int),
-                        int64_t(*seek)(void*, int64_t, int))
+                     int(*read_packet)(void*, uint8_t*, int),
+                     int(*write_packet)(void*, uint8_t*, int),
+                     int64_t(*seek)(void*, int64_t, int))
 {
     ERROR_CODE _error = NO_ERROR;
     
@@ -353,22 +392,26 @@ cleanup:
     return avioContext;
 }
 
-AVFormatContext *init_input_format_context(struct buffer_data *input_bd)
+AVFormatContext *init_input_format_context(const char *i_format_name)
 {
     ERROR_CODE _error = NO_ERROR;
 
     AVFormatContext *i_context = NULL;
     
-    //Initialize the input's custom io
+    //Initialize the input's custom io without any data as it still has not come in yet
     AVIOContext *input_io_context = NULL;
-    CHK_NULL(input_io_context = init_io(input_bd, 0, &input_read, NULL, NULL));
+    CHK_NULL(input_io_context = init_io(NULL, 0, &input_read, NULL, NULL));
     
     //Allocate some space for the input format context and connect the custom io to it
     CHK_NULL(i_context = avformat_alloc_context());
     i_context->pb = input_io_context;
 
+    //Since the input audio data is header-less, manually set its input format to a global variable
+    AVInputFormat *i_format = NULL;
+    CHK_NULL(i_format = av_find_input_format(i_format_name));
+    
     //Initialize the input format context without an input file, but with a custom io and a manually set input format
-    CHK_ERROR(avformat_open_input(&i_context, NULL, input_format, NULL));
+    CHK_ERROR(avformat_open_input(&i_context, NULL, i_format, NULL));
     CHK_ERROR(avformat_find_stream_info(i_context, NULL));
 
 cleanup:
@@ -427,18 +470,12 @@ AVFormatContext *init_output_format_context(const char *o_format)
     AVStream *output_stream;
     CHK_NULL(output_stream = avformat_new_stream(o_context, output_codec_context->codec));
 
-    output_stream->codec->sample_fmt     = output_codec_context->sample_fmt;
-    output_stream->codec->sample_rate    = output_codec_context->sample_rate;
-    output_stream->codec->channels       = output_codec_context->channels;
-    output_stream->codec->channel_layout = output_codec_context->channel_layout;
-    output_stream->codec->bit_rate       = output_codec_context->bit_rate;
-    output_stream->codec->frame_size     = output_codec_context->frame_size;
-    output_stream->codec->flags          = output_codec_context->flags;
-
     //Set the sample rate for the container.
-    output_stream->time_base.den = output_stream->codec->sample_rate;
+    output_stream->time_base.den = input_codec_context->sample_rate;
     output_stream->time_base.num = 1;
 
+    CHK_ERROR(avcodec_parameters_from_context(output_stream->codecpar, output_codec_context));
+    
     //Write the Header to the output container
     CHK_ERROR(avformat_write_header(o_context, NULL));
 
@@ -465,7 +502,6 @@ cleanup:
     
     return o_context;
 }
-
 
 //Check that a given sample format is supported by the encoder
 int check_sample_rate(AVCodec *codec, int sample_rate)
@@ -495,20 +531,13 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
           int o_sample_rate, int o_channels, int o_bit_rate)
 {
     ERROR_CODE _error = NO_ERROR;
-    
+
     LOG("(%s, %s, %d, %d, %s, %s, %d, %d, %d)",
         i_format_name, i_codec_name, i_sample_rate, i_channels,
         o_format_name, o_codec_name, o_sample_rate, o_channels, o_bit_rate);
 
     //Enable the `passthru_encoding` if both the input and output codec names are the same
     passthru_encoding = !strcmp(i_codec_name, o_codec_name);
-
-    //ADDED
-    //if(passthru_encoding)
-    //{
-    //    i_format_name = "f32be";
-    //    i_codec_name = "pcm_f32be";
-    //}
     
     LOG("passthru_encoding: %s", passthru_encoding ? "true" : "false");
 
@@ -523,9 +552,8 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     AVCodec *i_codec = NULL;
     CHK_NULL(i_codec = avcodec_find_decoder_by_name(i_codec_name));
     CHK_NULL(input_codec_context = init_codec_context(i_codec, i_sample_rate, i_channels, -1));
-    
-    //Since the input audio data is header-less, manually set its input format to a global variable
-    CHK_NULL(input_format = av_find_input_format(i_format_name));
+
+    CHK_NULL(input_format_context = init_input_format_context(i_format_name));
     
     //
     //Initialize output contexts
@@ -535,6 +563,13 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     AVCodec *o_codec = NULL;
     CHK_NULL(o_codec = avcodec_find_encoder_by_name(o_codec_name));
     CHK_NULL(output_codec_context = init_codec_context(o_codec, o_sample_rate, o_channels, o_bit_rate));
+
+    //ADDED sketchy patch to get the passthru working using the resampler, fifo, decoding, and encoding
+    if(passthru_encoding)
+        output_codec_context->frame_size = 1024;
+
+    //Allow the use of the experimental AAC encoder
+    output_codec_context->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
     
     //Initialize the output format context
     CHK_NULL(output_format_context = init_output_format_context(o_format_name));
@@ -644,10 +679,10 @@ ERROR_CODE decode_audio_frame(AVFrame *frame, AVFormatContext *i_format_context,
         if(_error == AVERROR_EOF)
         {
             *finished = 1;
-            _error = NO_ERROR; //Clear the end of file error
+            _error = NO_ERROR; //Clear the EOF error
         }else{
             ERROR("Could not read frame ('%s')", get_error_text(_error));
-            goto cleanup; //ADDED changed from: return _error;
+            goto cleanup;
         }
     }
 
@@ -673,7 +708,7 @@ ERROR_CODE read_decode_convert_and_store(AVAudioFifo *audio_fifo, AVFormatContex
     //Temporary storage of the input samples of the frame read from the file.
     AVFrame *input_frame = NULL;
     uint8_t **converted_input_samples = NULL; //Temporary storage for the converted input samples.
-    int data_present = 0; //ADDED 0
+    int data_present = 0;
 
     //Initialize temporary storage for one input frame.
     CHK_NULL(input_frame = av_frame_alloc());
@@ -838,21 +873,9 @@ void load(uint8_t *i_data, int i_length)
     //Package the incoming payload into a convenient data structure
     struct buffer_data input_bd = {.ptr = i_data, .size = (size_t)i_length, .offset = 0};
     
-    //If this is the first time running `load`, fully initialize `input_format_context`, otherwise
-    // simply assign it the incoming payload
-    if(!input_format_context)
-        CHK_NULL(input_format_context = init_input_format_context(&input_bd));
-    else
-        input_format_context->pb->opaque = &input_bd;
+    //Assign it the incoming payload
+    input_format_context->pb->opaque = &input_bd;
     
-    if(passthru_encoding)
-    {
-        //As a pass through, simply write to the output buffer data, cleanup, and exit
-        output_write(output_format_context->pb->opaque, i_data, i_length);
-        //TODO: cleanup here somehow
-        goto cleanup;
-    }
-
     const int output_frame_size = output_codec_context->frame_size;
     int finished = 0;
 
@@ -978,6 +1001,15 @@ uint8_t *flush()
 
     //Write the trailer of the output file container
     CHK_ERROR(av_write_trailer(output_format_context));
+
+    //ADDED data hex-dump
+    int i = 0;
+    for(; i < ((struct buffer_data*)output_format_context->pb->opaque)->offset; i++)
+    {
+        fprintf(stdout, "%x", *(((struct buffer_data*)output_format_context->pb->opaque)->ptr + i));
+    }
+
+    LOG("");
     
     /* ADDED comments
     //Get all the delayed frames
@@ -995,7 +1027,7 @@ uint8_t *flush()
     CHK_ERROR(av_write_trailer(output_format_context));
     */
 
-cleanup: //TODO
+cleanup:
 
     //TODO: make sure that stuff is handled correctly here
     //The output buffer is located at the output format context's io payload's data pointer
