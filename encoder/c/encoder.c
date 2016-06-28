@@ -112,13 +112,16 @@ struct buffer_data {
 //  
 // cleanup: //A goto tag to be placed at the very end of the function where the various cleanup routines are contained
 //  //Cleanup routines here
+//
+// Note: All variables cleaned in the cleanup section must be defined at the top of the respective function
+//  before any CHK macros and set to some default, uninitialized value (such as NULL)
 //  
 #define CHK_NULL(x)                                             \
     do {                                                        \
         LOG(#x);                                                \
         if(!(x))                                                \
         {                                                       \
-            ERROR("%s FAILED", #x);                          \
+            ERROR("%s FAILED", #x);                             \
             _error = INTERNAL_ERROR; /*There was an error!*/    \
             goto cleanup;                                       \
         }                                                       \
@@ -160,16 +163,19 @@ struct buffer_data {
         }                                                               \
     } while(0)
           
-/**
- * Convert an error code into a text message.
- * @param error Error code to be converted
- * @return Corresponding error text (not thread-safe)
- */
+//Convert an error code into its corresponding error text message (not thread-safe).
 static const char *get_error_text(const ERROR_CODE error)
 {
     static char error_buffer[255];
     av_strerror(error, error_buffer, sizeof(error_buffer));
     return error_buffer;
+}
+
+//To be registered with `on_exit`. Calls `av_free` on the input `arg`.
+static void av_free_on_exit(int status, void *arg)
+{
+    LOG("Called from status: %d", status);
+    CHK_VOID(av_free(arg));
 }
 
 int main(int argc, char **argv)
@@ -273,7 +279,8 @@ int64_t output_seek(void *ptr, int64_t offset, int whence)
 AVCodecContext *init_codec_context(AVCodec *codec, int sample_rate, int channels, int bit_rate)
 {
     ERROR_CODE _error = NO_ERROR;
-    
+
+    //Instantiate the variables of this function before any CHK macros    
     AVCodecContext *codec_context = NULL;
 
     //Create a new codec context.
@@ -294,7 +301,7 @@ AVCodecContext *init_codec_context(AVCodec *codec, int sample_rate, int channels
     CHK_ERROR(avcodec_open2(codec_context, codec, NULL));
 
 cleanup:
-    //If there were an error, cleanup accordingly    
+    //If there were an error, clean up accordingly    
     if(_error != NO_ERROR)
     {
         if(codec_context)
@@ -323,6 +330,7 @@ SwrContext *init_resampler(AVCodecContext *i_codec_context, AVCodecContext *o_co
 {
     ERROR_CODE _error = NO_ERROR;
 
+    //Instantiate the variables of this function before any CHK macros    
     SwrContext *r_context = NULL;
     
     //Create a resampler context for the conversion.
@@ -345,7 +353,7 @@ SwrContext *init_resampler(AVCodecContext *i_codec_context, AVCodecContext *o_co
     CHK_ERROR(swr_init(r_context));
     
 cleanup:
-    //If there were an error, cleanup accordingly
+    //If there were an error, clean up accordingly
     if(_error != NO_ERROR)
     {
         if(r_context)
@@ -364,24 +372,26 @@ AVIOContext *init_io(void *internal_data, int write_flag,
                      int64_t(*seek)(void*, int64_t, int))
 {
     ERROR_CODE _error = NO_ERROR;
+
+    //Instantiate the variables of this function before any CHK macros
+    uint8_t *ioBuffer = NULL;
+    AVIOContext *avioContext = NULL;
     
     //Allocate space for the custom io's internal buffer
     const int ioBufferSize = 4096;
-    uint8_t *ioBuffer = NULL;
     CHK_NULL(ioBuffer = (uint8_t*)av_malloc(ioBufferSize));
-
+    
     //Initialize the custom io
-    AVIOContext *avioContext = NULL;
     CHK_NULL(avioContext = avio_alloc_context(ioBuffer, ioBufferSize, write_flag, internal_data,
                                               read_packet, write_packet, seek));
 
 cleanup:
-    //If there were an error, cleanup accordingly
+    //If there were an error, clean up accordingly
     if(_error != NO_ERROR)
     {
         if(ioBuffer)
             av_free(ioBuffer);
-
+        
         //There is no need to handle `avioContext` because if it passed, as it is the last
         // operation in this function, then this error cleanup routine would never be executed        
         
@@ -396,10 +406,12 @@ AVFormatContext *init_input_format_context(const char *i_format_name)
 {
     ERROR_CODE _error = NO_ERROR;
 
-    AVFormatContext *i_context = NULL;
+    //Instantiate the variables of this function before any CHK macros
+    AVIOContext *input_io_context = NULL;    
+    AVFormatContext *i_context = NULL;    
+    AVInputFormat *i_format = NULL;    
     
     //Initialize the input's custom io without any data as it still has not come in yet
-    AVIOContext *input_io_context = NULL;
     CHK_NULL(input_io_context = init_io(NULL, 0, &input_read, NULL, NULL));
     
     //Allocate some space for the input format context and connect the custom io to it
@@ -407,7 +419,6 @@ AVFormatContext *init_input_format_context(const char *i_format_name)
     i_context->pb = input_io_context;
 
     //Since the input audio data is header-less, manually set its input format to a global variable
-    AVInputFormat *i_format = NULL;
     CHK_NULL(i_format = av_find_input_format(i_format_name));
     
     //Initialize the input format context without an input file, but with a custom io and a manually set input format
@@ -415,11 +426,17 @@ AVFormatContext *init_input_format_context(const char *i_format_name)
     CHK_ERROR(avformat_find_stream_info(i_context, NULL));
 
 cleanup:
-    //If there were an error, cleanup accordingly
+    //If there were an error, clean up accordingly
     if(_error != NO_ERROR)
     {
+        //If the `input_io_context` was initialized correctly (ie: bears a non-NULL value), then
+        // its internal buffer must have initialized properly as well
         if(input_io_context)
+        {
+            av_free(input_io_context->buffer);
             av_free(input_io_context);
+        }
+        
         if(i_context)
             avformat_free_context(i_context);
         
@@ -433,24 +450,26 @@ cleanup:
 AVFormatContext *init_output_format_context(const char *o_format)
 {
     ERROR_CODE _error = NO_ERROR;
-    
-    AVFormatContext *o_context = NULL;
 
+    //Instantiate the variables of this function before any CHK macros    
+    uint8_t *output_data = NULL;
+    struct buffer_data *output_bd = NULL;
+    AVIOContext *output_io_context = NULL;
+    AVFormatContext *o_context = NULL;    
+    AVStream *output_stream = NULL;    
+    
     //Allocate space for the buffer to contain the output data
     //TODO: is the output really at 44100 khz
     const int max_output_length = 44100 * 4 * 30; //Max of 30 seconds at 44100khz
-    uint8_t *output_data = NULL;
     CHK_NULL(output_data = (uint8_t*)av_malloc(max_output_length));
     
     //Initialize the internal input buffer data for its custom io
-    struct buffer_data *output_bd = NULL;
     CHK_NULL(output_bd = (struct buffer_data*)av_malloc(sizeof(struct buffer_data)));
     *output_bd = (struct buffer_data){.ptr = output_data, .size = (size_t)max_output_length, .offset = 0};
     LOG("output_bd: ptr: %p, size: %d, offset %d", output_bd->ptr, output_bd->size, output_bd->offset);
     
     //Initialize the output's custom io
-    AVIOContext *output_io_context = NULL;
-    CHK_NULL(output_io_context = init_io(output_bd, 1, NULL, output_write, output_seek));
+    CHK_NULL(output_io_context = init_io(output_bd, 1, NULL, &output_write, &output_seek));
     
     //Create a new format context for the output container format.
     CHK_NULL(o_context = avformat_alloc_context());
@@ -467,7 +486,6 @@ AVFormatContext *init_output_format_context(const char *o_format)
         output_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     //Create a new audio stream in the output file container.
-    AVStream *output_stream;
     CHK_NULL(output_stream = avformat_new_stream(o_context, output_codec_context->codec));
 
     //Set the sample rate for the container.
@@ -480,15 +498,22 @@ AVFormatContext *init_output_format_context(const char *o_format)
     CHK_ERROR(avformat_write_header(o_context, NULL));
 
 cleanup:
-    //If there were an error, cleanup accordingly
+    //If there were an error, clean up accordingly
     if(_error != NO_ERROR)
     {
         if(output_data)
             av_free(output_data);
         if(output_bd)
             av_free(output_bd);
+
+        //If the `output_io_context` was initialized correctly (ie: bears a non-NULL value), then
+        // its internal buffer must have initialized properly as well
         if(output_io_context)
-            av_free(output_io_context);        
+        {
+            av_free(output_io_context->buffer);
+            av_free(output_io_context);
+        }
+        
         if(o_context)
             avformat_free_context(o_context);
 
@@ -518,13 +543,6 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
     return 0;
 }
 
-
-//TODO: There are containers allocated in init_io for example that have no error handling
-// once the function exits, yet they still persist. Consider creating a function and registering
-// it on exit if the entire execution passes such that if something later on fails,
-// they still will be counted for.
-
-
 //Create MP4 AAC output Container to be returned by `flush`
 void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
           int i_channels, const char *o_format_name, const char *o_codec_name,
@@ -532,6 +550,9 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
 {
     ERROR_CODE _error = NO_ERROR;
 
+    //Instantiate the variables of this function before any CHK macros
+    AVCodec *i_codec = NULL, *o_codec = NULL;
+    
     LOG("(%s, %s, %d, %d, %s, %s, %d, %d, %d)",
         i_format_name, i_codec_name, i_sample_rate, i_channels,
         o_format_name, o_codec_name, o_sample_rate, o_channels, o_bit_rate);
@@ -549,7 +570,6 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     //
     
     //Create an input codec context given the input header information
-    AVCodec *i_codec = NULL;
     CHK_NULL(i_codec = avcodec_find_decoder_by_name(i_codec_name));
     CHK_NULL(input_codec_context = init_codec_context(i_codec, i_sample_rate, i_channels, -1));
 
@@ -560,7 +580,6 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     //
     
     //Create an output codec context given the output header information
-    AVCodec *o_codec = NULL;
     CHK_NULL(o_codec = avcodec_find_encoder_by_name(o_codec_name));
     CHK_NULL(output_codec_context = init_codec_context(o_codec, o_sample_rate, o_channels, o_bit_rate));
 
@@ -587,15 +606,36 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     CHK_NULL(fifo = av_audio_fifo_alloc(output_codec_context->sample_fmt, output_codec_context->channels, 1));
     
 cleanup:    
-    //If there were an error, cleanup accordingly
+    //If there were an error, clean up accordingly
     if(_error != NO_ERROR)
     {
+        //Codecs have no contained elements, so only the top-level needs to be free'd
         if(input_codec_context)
             avcodec_free_context(&input_codec_context);
         if(output_codec_context)
             avcodec_free_context(&output_codec_context);
+
+        //Free the format contexts along with their contained elements
+        //
+        // If the format context initialized correctly (ie: bears a non-NULL value), then all of
+        // its contained elements must have been initialized properly as well
+        //
+        if(input_format_context)
+        {
+            av_free(input_format_context->pb->buffer);
+            av_free(input_format_context->pb);
+            avformat_free_context(input_format_context);
+        }
+        
         if(output_format_context)
+        {
+            av_free(((struct buffer_data*)output_format_context->pb->opaque)->ptr);
+            av_free(output_format_context->pb->opaque);
+            av_free(output_format_context->pb->buffer);
+            av_free(output_format_context->pb);
             avformat_free_context(output_format_context);
+        }
+        
         if(resample_context)
             swr_free(&resample_context);
         
@@ -974,7 +1014,7 @@ void load(uint8_t *i_data, int i_length)
     */
     
 cleanup: 
-    //If there were an error, cleanup accordingly
+    //If there were an error, clean up accordingly
     if(_error != NO_ERROR)
     {
         //TODO Clean here

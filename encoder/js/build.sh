@@ -5,7 +5,7 @@ set -e
 
 cd ../ffmpeg
 
-:<<"EOF"
+#:<<"EOF"
 
 #Only perform the make clean beforehand if the configure script has been called before
 # This can be easily identified by checking for the existance of "config.mak"
@@ -16,7 +16,7 @@ then
     echo "Cleaned past configuration"
 fi
 
-EOF
+#EOF
 
 echo "Starting ffmpeg configuration"
 emconfigure /usr/bin/sh ./configure \
