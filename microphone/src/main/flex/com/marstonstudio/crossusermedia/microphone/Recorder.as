@@ -67,7 +67,7 @@ import flash.utils.getTimer;
         private const _outputFormat:String = "mp4";
         private const _outputCodec:String = "aac";
         
-        private const _outputBitRate:int = 32000;
+        private const _outputBitRate:int = 48000;
         
         private var _startTime:uint;
         private var _microphone:Microphone;
