@@ -95,10 +95,17 @@ struct buffer_data {
 #define NO_ERROR 0
 #define INTERNAL_ERROR -1
 
-#define LOG(M, ...) fprintf(stdout, "LOG :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
-#define WARNING(M, ...) fprintf(stdout, "WARNING :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+//Verbosity levels
+// Errors, Warnings, and Logs: 3
+// Errors and Warnings: 2
+// Errors: 1
+// Nothing: 0
+#define VERBOSITY 2
+
+#define LOG(M, ...) if(VERBOSITY >= 3) fprintf(stdout, "LOG :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+#define WARNING(M, ...) if(VERBOSITY >= 2) fprintf(stdout, "WARNING :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 //The stream `stderr` already prints a prepended "ERROR :: " to its output text
-#define ERROR(M, ...) fprintf(stderr, "%s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+#define ERROR(M, ...) if(VERBOSITY >= 1) fprintf(stderr, "%s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 
 #define CHK_VOID(x)                             \
     {                                           \
@@ -538,7 +545,6 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
     return 0;
 }
 
-//Create MP4 AAC output Container to be returned by `flush`
 void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
           int i_channels, const char *o_format_name, const char *o_codec_name,
           int o_sample_rate, int o_channels, int o_bit_rate)
@@ -837,27 +843,21 @@ cleanup:
     return _error;
 }
 
-//Peter: we are actually not using FDK AAC Codec; we are using the new ffmpeg native codec
 
-/**
-    Load some more input samples
-
-    We are using the FDK AAC Codec
-    http://wiki.hydrogenaud.io/index.php?title=Fraunhofer_FDK_AAC#Sample_Format
-    The FDK library is based on fixed-point math and only supports 16-bit integer PCM input.
-
-    These input buffers are varying sizes (not Frame size)
-    The samples are converted to 16 bit Integer are put into a Fifo
-
-    When at least a Frame's worth of data is in the Fifo,
-    a Frame is read
-
-    Before the first Frame is read,
-
-    A Codec converts the input PCM Frame to a AAC Frame
-
-    The AAC Frame is written to the AAC Stream of the output
-*/
+//Load some more input samples
+//
+// We are using the native ffmpeg aac codec
+//
+// These input buffers are varying sizes (not Frame size)
+// The samples are converted to 16 bit Integer are put into a Fifo
+//
+// When at least a Frame's worth of data is in the Fifo, a Frame is read
+//
+// Before the first Frame is read,
+//
+// A Codec converts the input PCM Frame to a AAC Frame
+//
+// The AAC Frame is written to the AAC Stream of the output
 void load(uint8_t *i_data, int i_length)
 {
     ERROR_CODE _error = NO_ERROR;
@@ -898,13 +898,11 @@ void load(uint8_t *i_data, int i_length)
 
         }
 
-        //If there are enough samples for the encoder, encode them. At the end of the file,
-        // pass the remaining samples to the encoder.
-        while(av_audio_fifo_size(fifo) >= output_frame_size || (finished && av_audio_fifo_size(fifo) > 0))
+        //If there are enough samples for the encoder, encode them.
+        while(av_audio_fifo_size(fifo) >= output_frame_size)
         {
             LOG("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
-            //Take one frame worth of audio samples from the FIFO buffer,
-            // encode it and write it to the output container.
+            //Encode and write audio samples from the FIFO buffer to the output container            
             CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));
         }
     }
@@ -924,8 +922,16 @@ uint8_t *flush()
     
     LOG("Started");
 
-    int data_written;
+    //Encode any remaining samples in the fifo after all of the loads
+    while(av_audio_fifo_size(fifo) > 0)
+    {
+        LOG("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
+        //Encode and write audio samples from the FIFO buffer to the output container
+        CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));        
+    }
+
     //Flush the encoder as it may have delayed frames.
+    int data_written;
     do {
         CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
     } while(data_written);
