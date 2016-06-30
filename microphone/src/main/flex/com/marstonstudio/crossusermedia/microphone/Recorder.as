@@ -66,8 +66,8 @@ import flash.utils.getTimer;
         
         private const _outputFormat:String = "mp4";
         private const _outputCodec:String = "aac";
-        
-        private const _outputBitRate:int = 48000;
+
+        private const _outputBitRate:int = 32000;
         
         private var _startTime:uint;
         private var _microphone:Microphone;
@@ -95,8 +95,8 @@ import flash.utils.getTimer;
             _microphone.gain = _gain;
             
             _encoder = new Encoder(_rootSprite);
-            _encoder.init(_pcmFormat, _pcmCodec, sampleRate, _channels,
-                    _outputFormat, _outputCodec, sampleRate, _channels, _outputBitRate);
+            _encoder.init(_pcmFormat, _pcmCodec, sampleRate, _channels, _outputFormat,
+                _outputCodec, sampleRate, _channels, _outputBitRate, 30);
 
             _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
         }
