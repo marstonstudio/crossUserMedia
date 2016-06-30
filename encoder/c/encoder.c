@@ -160,6 +160,18 @@ struct buffer_data {
         }                                                               \
     } while(0)
 
+#define CHK_LE(x, y)                                                    \
+    do {                                                                \
+        LOG(#x);                                                        \
+        int _tmp = (x);                                                 \
+        if(_tmp > y)                                                    \
+        {                                                               \
+            ERROR("%s FAILED %d > %d", #x, _tmp, y);                    \
+            _error = INTERNAL_ERROR; /*There was an error!*/            \
+            goto cleanup;                                               \
+        }                                                               \
+    } while(0)
+
 #define CHK_EQ(x, y)                                                    \
     do {                                                                \
         LOG(#x);                                                        \
@@ -175,7 +187,8 @@ struct buffer_data {
 //Convert an error code into its corresponding error text message (not thread-safe).
 static const char *get_error_text(const ERROR_CODE error)
 {
-    static char error_buffer[255];
+    char error_buffer[255];
+    WARNING("error_buffer: %p", error_buffer);
     av_strerror(error, error_buffer, sizeof(error_buffer));
     return error_buffer;
 }
@@ -449,7 +462,7 @@ cleanup:
     return i_context;
 }
 
-AVFormatContext *init_output_format_context(const char *o_format)
+AVFormatContext *init_output_format_context(const char *o_format, int o_buffer_max_seconds)
 {
     ERROR_CODE _error = NO_ERROR;
 
@@ -459,10 +472,15 @@ AVFormatContext *init_output_format_context(const char *o_format)
     AVIOContext *output_io_context = NULL;
     AVFormatContext *o_context = NULL;    
     AVStream *output_stream = NULL;    
+
+    //Only allow a maximum of 60 seconds of output audio
+    CHK_LE(o_buffer_max_seconds, 60);
     
-    //Allocate space for the buffer to contain the output data
-    //TODO: is the output really at 44100 khz
-    const int max_output_length = 44100 * 4 * 30; //Max of 30 seconds at 44100khz
+    //Allocate space to contain `o_buffer_max_seconds` of output data
+    //
+    // This is done by taking the output's samples per second times the number of
+    // max seconds to store times 4 bytes per sample (32bit)
+    const int max_output_length = output_codec_context->sample_rate * o_buffer_max_seconds * 4;
     CHK_NULL(output_data = (uint8_t*)av_malloc(max_output_length));
     
     //Initialize the internal input buffer data for its custom io
@@ -547,7 +565,7 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 
 void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
           int i_channels, const char *o_format_name, const char *o_codec_name,
-          int o_sample_rate, int o_channels, int o_bit_rate)
+          int o_sample_rate, int o_channels, int o_bit_rate, int o_buffer_max_seconds)
 {
     ERROR_CODE _error = NO_ERROR;
 
@@ -558,6 +576,11 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
         i_format_name, i_codec_name, i_sample_rate, i_channels,
         o_format_name, o_codec_name, o_sample_rate, o_channels, o_bit_rate);
 
+    //Log as documentation that 32kbits output bit rate may yield
+    // unpredictable output in this encoder for whatever reason
+    if(o_bit_rate == 32000)
+        LOG("Output bit rate is %d which may yield unpredictable output in this encoder", o_bit_rate);
+    
     //Enable the `passthru_encoding` if both the input and output codec names are the same
     passthru_encoding = !strcmp(i_codec_name, o_codec_name);
     
@@ -592,7 +615,7 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     output_codec_context->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
     
     //Initialize the output format context
-    CHK_NULL(output_format_context = init_output_format_context(o_format_name));
+    CHK_NULL(output_format_context = init_output_format_context(o_format_name, o_buffer_max_seconds));
 
     //
     //Resampler
@@ -691,6 +714,10 @@ ERROR_CODE decode_audio_frame(AVFrame *frame, AVFormatContext *i_format_context,
         }
     }
 
+    //TODO: use the non-deprecated functions to encode/decode audio
+    // avcodec_send_packet(i_codec_context, &input_packet);
+    // avcodec_receive_frame(i_codec_context, frame);
+    
     //Decode the audio frame stored in the temporary packet. An empty `input_packet` will flush the decoder.
     CHK_ERROR(avcodec_decode_audio4(i_codec_context, frame, data_present, &input_packet));
 
@@ -801,6 +828,10 @@ ERROR_CODE encode_audio_frame(AVFrame *frame, AVFormatContext *o_format_context,
         pts += frame->nb_samples;
     }
 
+    //TODO: use the non-deprecated functions to encode/decode audio
+    // avcodec_send_frame(i_codec_context, frame);
+    // avcodec_receive_packet(i_codec_context, &input_packet);
+    
     //Encode the audio frame and store it in the temporary packet.
     CHK_ERROR(avcodec_encode_audio2(o_codec_context, &output_packet, frame, data_present));
 
@@ -952,9 +983,11 @@ cleanup:
 //Clean up and exit
 void dispose(int status)
 {
-    
     LOG("Started Bulgaria: %s", __TIME__);
 
+    //Reset the `load_locked` variable as a part of the clean up
+    load_locked = false;
+    
     //Codecs have no contained elements, so only the top-level needs to be free'd
     if(input_codec_context)
         avcodec_free_context(&input_codec_context);

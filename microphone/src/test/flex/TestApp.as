@@ -156,8 +156,8 @@ public class TestApp {
             const outputBitRate:int = 32000;
 
             var encoder:Encoder = new Encoder(rootSprite);
-            encoder.init(inputFormat, inputCodec, inputSampleRate, inputChannels,
-                    outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate);
+            encoder.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat,
+                outputCodec, outputSampleRate, outputChannels, outputBitRate, 30);
             encoder.load(audioPcmAsset);
             var output:ByteArray = encoder.flush();
             var outputBytesAvailable:int = output.bytesAvailable;
