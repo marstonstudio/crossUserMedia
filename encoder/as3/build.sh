@@ -72,8 +72,6 @@ echo "Starting ffmpeg configuration"
     --arch=x86_64 \
     --cpu=generic \
     --enable-cross-compile \
-    `#This is a little hack that forces ffmpeg to build using the compiler tools` \
-    `# found in $FLASCC_BIN_PATH/ by using it as their common prefix` \
     --cross-prefix=$FLASCC_BIN_PATH/ \
     --target-os=none \
 \

@@ -84,6 +84,7 @@ AVAudioFifo *fifo = NULL;
 
 bool passthru_encoding = false;
 bool load_locked = false;
+int64_t audio_frame_pts;
 
 struct buffer_data {
     uint8_t *ptr;
@@ -100,9 +101,10 @@ struct buffer_data {
 // Errors and Warnings: 2
 // Errors: 1
 // Nothing: 0
-#define VERBOSITY 2
+#define VERBOSITY 3
 
-#define LOG(M, ...) if(VERBOSITY >= 3) fprintf(stdout, "LOG :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+#define LOG(M, ...) if(VERBOSITY >= 4) fprintf(stdout, "LOG :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+#define INFO(M, ...) if(VERBOSITY >= 3) fprintf(stdout, "INFO :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 #define WARNING(M, ...) if(VERBOSITY >= 2) fprintf(stdout, "WARNING :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 //The stream `stderr` already prints a prepended "ERROR :: " to its output text
 #define ERROR(M, ...) if(VERBOSITY >= 1) fprintf(stderr, "%s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
@@ -195,7 +197,7 @@ static const char *get_error_text(const ERROR_CODE error)
 
 int main(int argc, char **argv)
 {
-    LOG("Started");
+    INFO("main");
 
     #ifdef __EMSCRIPTEN__
     emscripten_exit_with_live_runtime();
@@ -224,7 +226,7 @@ int input_read(void *ptr, uint8_t *buf, int buf_size)
     if(buf_size > data_left)
     {
         buf_size = data_left;
-        WARNING("Read overflow encountered");
+        LOG("Read overflow encountered");
     }
     
     //Copy internal buffer data to `buf`
@@ -569,10 +571,12 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
 {
     ERROR_CODE _error = NO_ERROR;
 
+    audio_frame_pts = 0;
+
     //Instantiate the variables of this function before any CHK macros
     AVCodec *i_codec = NULL, *o_codec = NULL;
     
-    LOG("(%s, %s, %d, %d, %s, %s, %d, %d, %d)",
+    INFO("(%s, %s, %d, %d, %s, %s, %d, %d, %d)",
         i_format_name, i_codec_name, i_sample_rate, i_channels,
         o_format_name, o_codec_name, o_sample_rate, o_channels, o_bit_rate);
 
@@ -813,9 +817,6 @@ ERROR_CODE encode_audio_frame(AVFrame *frame, AVFormatContext *o_format_context,
 {
     ERROR_CODE _error = NO_ERROR;
     
-    //A persistent timestamp for the audio frames
-    static int64_t pts = 0;
-    
     //Packet used for temporary storage.
     AVPacket output_packet;
     int error;
@@ -824,8 +825,8 @@ ERROR_CODE encode_audio_frame(AVFrame *frame, AVFormatContext *o_format_context,
     //Set a timestamp based on the sample rate for the container.
     if(frame)
     {
-        frame->pts = pts;
-        pts += frame->nb_samples;
+        frame->pts = audio_frame_pts;
+        audio_frame_pts += frame->nb_samples;
     }
 
     //TODO: use the non-deprecated functions to encode/decode audio
@@ -897,7 +898,8 @@ void load(uint8_t *i_data, int i_length)
     // before a previous one returned) then error. This function is meant to be synchronous.
     CHK_EQ(load_locked, false);
     load_locked = true; //Now lock the load function
-    
+
+    CHK_NULL(i_data);
     LOG("i_length: %d", i_length);
     
     //Package the incoming payload into a convenient data structure

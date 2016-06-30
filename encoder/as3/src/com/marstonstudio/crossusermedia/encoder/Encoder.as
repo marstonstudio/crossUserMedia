@@ -56,8 +56,12 @@ package com.marstonstudio.crossusermedia.encoder {
             var inputLength:int = input.length;
             var inputPointer:int = CModule.malloc(inputLength);
             CModule.writeBytes(inputPointer, inputLength, input);
-            
-            com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
+
+            try {
+                com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
+            } catch (e:*) {
+                logException("Encoder.as", e);
+            }
 
             CModule.free(inputPointer);
         }

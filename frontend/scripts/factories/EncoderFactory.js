@@ -7,7 +7,7 @@ module.exports = function ($log, $q, pcmencoder) {
     
     var workerOnMessage = function(e) {
         
-        //$log.log('EncoderFactory onmessage cmd:' + e.data.cmd);
+        $log.log('EncoderFactory onmessage cmd:' + e.data.cmd);
 
         switch(e.data.cmd) {
 
@@ -38,11 +38,15 @@ module.exports = function ($log, $q, pcmencoder) {
     };
 
     var workerOnError = function(e) {
-        $log.error('EncoderFactory.js :: listener error ' + e.filename + ' line:' + e.lineno + ' ' + e.message);
+        if(e.filename && e.lineno && e.message) {
+            $log.error('EncoderFactory.js :: listener error ' + e.filename + ' line:' + e.lineno + ' ' + e.message);
+        } else {
+            $log.error('EncoderFactory.js :: listener error ' + e);
+        }
     };
 
     Service.init = function (inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate) {
-        //$log.log('EncoderFactory.js :: init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
+        $log.log('EncoderFactory.js :: init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
 
         //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker
         // https://github.com/substack/webworkify

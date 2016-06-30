@@ -11,7 +11,7 @@ LDFLAGS = -L./dist/lib
 
 LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
 
-CFLAGS = -v -O0 \
+CFLAGS = -v -O3 \
 	-pthread \
 	-I./dist/include \
 	-emit-swc=$(PACKAGE).flascc
