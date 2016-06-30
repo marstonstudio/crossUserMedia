@@ -187,7 +187,8 @@ struct buffer_data {
 //Convert an error code into its corresponding error text message (not thread-safe).
 static const char *get_error_text(const ERROR_CODE error)
 {
-    static char error_buffer[255];
+    char error_buffer[255];
+    WARNING("error_buffer: %p", error_buffer);
     av_strerror(error, error_buffer, sizeof(error_buffer));
     return error_buffer;
 }
@@ -827,6 +828,10 @@ ERROR_CODE encode_audio_frame(AVFrame *frame, AVFormatContext *o_format_context,
         pts += frame->nb_samples;
     }
 
+    //TODO: use the non-deprecated functions to encode/decode audio
+    // avcodec_send_frame(i_codec_context, frame);
+    // avcodec_receive_packet(i_codec_context, &input_packet);
+    
     //Encode the audio frame and store it in the temporary packet.
     CHK_ERROR(avcodec_encode_audio2(o_codec_context, &output_packet, frame, data_present));
 
@@ -978,9 +983,11 @@ cleanup:
 //Clean up and exit
 void dispose(int status)
 {
-    
     LOG("Started Bulgaria: %s", __TIME__);
 
+    //Reset the `load_locked` variable as a part of the clean up
+    load_locked = false;
+    
     //Codecs have no contained elements, so only the top-level needs to be free'd
     if(input_codec_context)
         avcodec_free_context(&input_codec_context);
