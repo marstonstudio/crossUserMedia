@@ -154,7 +154,7 @@ package {
         }
 
         private function onRecording(event:RecordingEvent):void {
-            Console.log("Main.as", "onRecording");
+            //Console.log("Main.as", "onRecording");
 
             if(!_microphonePermissionConfirmed) {
                 _microphonePermissionConfirmed = true;

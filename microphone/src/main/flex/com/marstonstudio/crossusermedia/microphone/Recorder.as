@@ -8,6 +8,7 @@ import flash.display.Sprite;
 import flash.events.EventDispatcher;
 import flash.events.SampleDataEvent;
 import flash.media.Microphone;
+import flash.system.System;
 import flash.utils.ByteArray;
 import flash.utils.getTimer;
 
@@ -120,7 +121,10 @@ import flash.utils.getTimer;
             
             var encodedBuffer:ByteArray = _encoder.flush();
             _encoder.dispose(0);
+            _encoder = null;
             dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, encodedBuffer, outputFormat, sampleRate) );
+            
+            System.pauseForGCIfCollectionImminent();
         }
 
         public function get gain():uint {
