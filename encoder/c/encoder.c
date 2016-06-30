@@ -73,17 +73,17 @@ This API
 void dispose(int status);
 
 //Initialize the global input and output contexts
-AVCodecContext *input_codec_context = NULL;
-AVFormatContext *input_format_context = NULL;
+AVCodecContext *input_codec_context;
+AVFormatContext *input_format_context;
 
-AVCodecContext *output_codec_context = NULL;
-AVFormatContext *output_format_context = NULL;
+AVCodecContext *output_codec_context;
+AVFormatContext *output_format_context;
 
-SwrContext *resample_context = NULL;
-AVAudioFifo *fifo = NULL;
+SwrContext *resample_context;
+AVAudioFifo *fifo;
 
-bool passthru_encoding = false;
-bool load_locked = false;
+bool passthru_encoding;
+bool load_locked;
 int64_t audio_frame_pts;
 
 struct buffer_data {
@@ -97,7 +97,8 @@ struct buffer_data {
 #define INTERNAL_ERROR -1
 
 //Verbosity levels
-// Errors, Warnings, and Logs: 3
+// Errors, Warnings, Infos, and Logs: 4
+// Errors, Warnings, and Infos: 3
 // Errors and Warnings: 2
 // Errors: 1
 // Nothing: 0
@@ -556,7 +557,7 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
     LOG("sample_rate: %d", sample_rate);
     const int *p = codec->supported_samplerates;
     while (*p != 0) {
-        LOG(" available: %d", *p);
+        LOG("available: %d", *p);
 
         if (*p == sample_rate)
             return 1;
@@ -571,6 +572,18 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
 {
     ERROR_CODE _error = NO_ERROR;
 
+    //Initialize the global variables to their default values
+    input_codec_context = NULL;
+    input_format_context = NULL;
+
+    output_codec_context = NULL;
+    output_format_context = NULL;
+
+    resample_context = NULL;
+    fifo = NULL;
+
+    passthru_encoding = false;
+    load_locked = false;    
     audio_frame_pts = 0;
 
     //Instantiate the variables of this function before any CHK macros
@@ -987,9 +1000,6 @@ void dispose(int status)
 {
     LOG("Started Bulgaria: %s", __TIME__);
 
-    //Reset the `load_locked` variable as a part of the clean up
-    load_locked = false;
-    
     //Codecs have no contained elements, so only the top-level needs to be free'd
     if(input_codec_context)
         avcodec_free_context(&input_codec_context);
