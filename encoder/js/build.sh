@@ -31,7 +31,7 @@ emconfigure ./configure \
 \
     --disable-doc \
 \
-    --disable-pthreads \
+    --enable-pthreads \
     --disable-w32threads \
     --disable-os2threads \
 \
