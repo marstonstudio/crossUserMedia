@@ -190,8 +190,9 @@ struct buffer_data {
 //Convert an error code into its corresponding error text message (not thread-safe).
 static const char *get_error_text(const ERROR_CODE error)
 {
-    char error_buffer[255];
-    WARNING("error_buffer: %p", error_buffer);
+    //TODO: The `static char*` type can cause issues sometimes due to
+    // optimizations in the flash and js cross-compilers
+    static char error_buffer[255];
     av_strerror(error, error_buffer, sizeof(error_buffer));
     return error_buffer;
 }
@@ -566,6 +567,7 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
     return 0;
 }
 
+//Initialize all of the critical data structures needed for this encoder
 void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
           int i_channels, const char *o_format_name, const char *o_codec_name,
           int o_sample_rate, int o_channels, int o_bit_rate, int o_buffer_max_seconds)
@@ -645,7 +647,7 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
 
     //Create the input FIFO buffer based on the Codec input format
     CHK_NULL(fifo = av_audio_fifo_alloc(output_codec_context->sample_fmt, output_codec_context->channels, 1));
-    
+
 cleanup:    
     //If there were an error, clean up accordingly and exit with an error status
     if(_error != NO_ERROR)
@@ -731,7 +733,7 @@ ERROR_CODE decode_audio_frame(AVFrame *frame, AVFormatContext *i_format_context,
         }
     }
 
-    //TODO: use the non-deprecated functions to encode/decode audio
+    //TODO: Use the non-deprecated functions to encode/decode audio
     // avcodec_send_packet(i_codec_context, &input_packet);
     // avcodec_receive_frame(i_codec_context, frame);
     
@@ -842,7 +844,7 @@ ERROR_CODE encode_audio_frame(AVFrame *frame, AVFormatContext *o_format_context,
         audio_frame_pts += frame->nb_samples;
     }
 
-    //TODO: use the non-deprecated functions to encode/decode audio
+    //TODO: Use the non-deprecated functions to encode/decode audio
     // avcodec_send_frame(i_codec_context, frame);
     // avcodec_receive_packet(i_codec_context, &input_packet);
     
@@ -888,7 +890,6 @@ cleanup:
     return _error;
 }
 
-
 //Load some more input samples
 //
 // We are using the native ffmpeg aac codec
@@ -912,13 +913,13 @@ void load(uint8_t *i_data, int i_length)
     CHK_EQ(load_locked, false);
     load_locked = true; //Now lock the load function
 
-    CHK_NULL(i_data);
-    LOG("i_length: %d", i_length);
+    LOG("i_length: %d", i_length);    
+    CHK_NULL(i_data); //TODO: This CHK may be a little too harsh on i_data. Possibly just return from `load`
     
     //Package the incoming payload into a convenient data structure
     struct buffer_data input_bd = {.ptr = i_data, .size = (size_t)i_length, .offset = 0};
     
-    //Assign it the incoming payload
+    //Assign the incoming payload to the custom io of `input_format_context`
     input_format_context->pb->opaque = &input_bd;
     
     const int output_frame_size = output_codec_context->frame_size;
@@ -962,6 +963,7 @@ cleanup:
     return;
 }
 
+//Finish up all of the encoding and return a pointer to the location of the output data
 uint8_t *flush()
 {
     ERROR_CODE _error = NO_ERROR;
@@ -995,7 +997,7 @@ cleanup:
     return ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
 }
 
-//Clean up and exit
+//Clean up everything and exit
 void dispose(int status)
 {
     LOG("Started Bulgaria: %s", __TIME__);
