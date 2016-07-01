@@ -872,7 +872,7 @@ ERROR_CODE load_encode_and_write(AVAudioFifo *audio_fifo, AVFormatContext *o_for
     //Use the maximum number of possible samples per frame. If there is
     // less than that in the FIFO, simply exhaust whatever is left.
     const int frame_size = FFMIN(av_audio_fifo_size(fifo), output_codec_context->frame_size);
-    int data_written;
+    int data_written = 0;
 
     //Initialize temporary storage for one output frame.
     CHK_ERROR(init_output_frame(&output_frame, output_codec_context, frame_size));
@@ -979,7 +979,7 @@ uint8_t *flush()
     }
 
     //Flush the encoder as it may have delayed frames.
-    int data_written;
+    int data_written = 0;
     do {
         CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
     } while(data_written);

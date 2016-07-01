@@ -1,0 +1,44 @@
+* crossUserMedia
+  - The code is entirely documented, so it should be easy to follow without much prior ffmpeg experience. 
+  - The program does have a stable coding convention established in terms of its general flow, error handling, and cleanup to even its syntactical and comment structure. It enables proper and flexible scalability, so continuing and adhering to it would be opportune.
+  - Follow the README.md's found in each subdirectory for installation and compilation instructions
+
+** init
+ - Initializes all of the critical data structures needed for this encoder. Structures include:
+   - `input_codec_context`
+   - `input_format_context`
+   - `output_codec_context`
+   - `output_format_context`
+   - `resample_context`
+   - `fifo`
+ - Initializes other global variables used in the encoder:
+   - `passthru_encoding`
+   - `load_locked`
+   - `audio_frame_pts`
+
+** load
+ - Reads, transcodes, and writes chunks of raw pcm audio into mp4 contained aac audio
+ - Flow of audio data
+   - PCM gets read from memory through an initialized custom io structure in the `input_format_context`
+   - Raw audio is stored in a packet, decoded, and is output to a frame in an internal format
+   - Frames are not always guaranteed to be produced given the incoming data
+   - Frames are then passed through the resampler to convert their sample format, but not the sample rate per se
+   - Fully processed input data is then pushed to `fifo` for later encoding
+   - Eventually all input, regardless of frame size requirements, makes it to `fifo`
+   - Data is then retrieved from `fifo` in output_frame_size chunks and stored again in a frame
+   - That frame is then encoded, stored in an output packet, and written using the custom io in the `output_format context`
+
+** flush
+  - Finishes up all of the encoding
+    - Encodes and writes any left over bits of audio data still in the `fifo`
+      - This is done at the very end instead of at every load since the left over bits of data are padded to fit the size requirements for an output frame. Doing this on every load will make the audio extremely slow and choppy
+    - Flushes the encoder of any delayed frames
+  - Returns a pointer to the location of the output data
+
+** dispose
+  - Cleans up everything sequentially top-down and exits with a code based on the parameter `status`
+
+** TODOs
+  - In `get_error_text`, the `static char*` type of the `error_buffer` can cause issues sometimes due to optimizations in the flash and js cross-compilers. First, find out if this is actually the root of any issues (it is likely that it is not), and if so, see if this is memory mish-mashing can be avoided
+  - In `decode_audio_frame` and `encode_audio_frame` the `avcodec_decode_audio4` and `avcodec_encode_audio2` are deprecated as of ffmpeg 3.1, the current submodule version used in this project. Those functions should be updated appropriately with their counterparts of avcodec_send_packet, avcodec_receive_packet, avcodec_send_frame, and avcodec_receive_frame.
+  - In `load` there is a `CHK_NULL(i_data)` which kills the entire encoder program if an `i_data` comes in as NULL. That may be a little too harsh, so possibly look into simply returning from `load` with some WARNING message instead.
