@@ -2,9 +2,9 @@
 package com.marstonstudio.crossusermedia.server.api;
 
 import com.marstonstudio.crossusermedia.server.element.FileFormat;
-import com.marstonstudio.crossusermedia.server.util.FileUtil;
 import com.marstonstudio.crossusermedia.server.element.ResponseSet;
 import com.marstonstudio.crossusermedia.server.util.AudioUtil;
+import com.marstonstudio.crossusermedia.server.util.FileUtil;
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
@@ -56,7 +56,7 @@ public class AudioREST {
 
         byte[] inputBytes = FileUtil.decodeBlob(payloadBlob);
         File inputFile = FileUtil.getNewEmptyFile(inputFormat.getExtension());
-        FileUtil.saveBytesToFile(inputBytes, inputFile);
+        FileUtil.saveBytesToFile(inputFile, inputBytes);
 
         try {
             File outputFile = AudioUtil.convertAudioFile(inputFile, inputFormat, inputSampleRate, outputFormat);

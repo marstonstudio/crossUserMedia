@@ -7,8 +7,9 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
     var PCM_FORMAT = 'f32le';
     var OUTPUT_CODEC = 'aac';
     var OUTPUT_FORMAT = 'mp4';
-    var OUTPUT_BITRATE = 32000;
     var CHANNELS = 1;
+    var OUTPUT_BITRATE = 32000;
+    var MAX_SECONDS = 30;
 
     var BUFFER_SIZE = 2048;
 
@@ -83,14 +84,19 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
                 }).catch(logException);
         };
 
-        Encoder.init(PCM_FORMAT, PCM_CODEC, audioContext.sampleRate, CHANNELS, OUTPUT_FORMAT, OUTPUT_CODEC, audioContext.sampleRate, CHANNELS, OUTPUT_BITRATE)
+        Encoder.prepare()
             .then(function(){
-                audioVolume.connect(audioRecorder);
-                audioRecorder.connect(audioContext.destination);
-                deferred.resolve();
-                
-            }).catch(logException);
 
+                Encoder.init(PCM_FORMAT, PCM_CODEC, audioContext.sampleRate, CHANNELS, OUTPUT_FORMAT, OUTPUT_CODEC, audioContext.sampleRate, CHANNELS, OUTPUT_BITRATE, MAX_SECONDS)
+                    .then(function(){
+                        audioVolume.connect(audioRecorder);
+                        audioRecorder.connect(audioContext.destination);
+                        deferred.resolve();
+
+                    }).catch(logException);
+
+            }).catch(logException);
+        
         return deferred.promise;
     }
 

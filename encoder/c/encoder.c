@@ -591,9 +591,10 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     //Instantiate the variables of this function before any CHK macros
     AVCodec *i_codec = NULL, *o_codec = NULL;
     
-    INFO("(%s, %s, %d, %d, %s, %s, %d, %d, %d)",
+    INFO("(%s, %s, %d, %d, %s, %s, %d, %d, %d, %d)",
         i_format_name, i_codec_name, i_sample_rate, i_channels,
-        o_format_name, o_codec_name, o_sample_rate, o_channels, o_bit_rate);
+        o_format_name, o_codec_name, o_sample_rate, o_channels,
+        o_bit_rate, o_buffer_max_seconds);
 
     //Log as documentation that 32kbits output bit rate may yield
     // unpredictable output in this encoder for whatever reason

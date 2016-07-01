@@ -7,3 +7,7 @@ Module['print'] = function(text) {
 Module['printErr'] = function(text) { 
     console.error('encoder.c ' + text);
 };
+
+Module['onRuntimeInitialized'] = function() {
+    self.postMessage({'cmd':'prepareComplete'});
+}

@@ -126,4 +126,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
         }
     }
 
+    //$log.log('testing encoder');
+    //var testEncoder = new Worker('/js/encoder.js');
+
 };

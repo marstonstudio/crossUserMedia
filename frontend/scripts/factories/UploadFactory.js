@@ -3,7 +3,6 @@ module.exports = function($rootScope, $log, $http) {
     var Service = {};
 
     Service.send = function(audioBlob, inputFormat, inputSampleRate, outputFormat) {
-
         var formData = new FormData();
         formData.append('payload', audioBlob);
         formData.append('inputFormat', inputFormat);

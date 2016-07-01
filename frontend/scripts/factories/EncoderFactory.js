@@ -10,6 +10,11 @@ module.exports = function ($log, $q, pcmencoder) {
         $log.log('EncoderFactory onmessage cmd:' + e.data.cmd);
 
         switch(e.data.cmd) {
+            
+            case 'prepareComplete':
+                $log.log('prepareComplete');
+                deferred.resolve();
+                break;
 
             case 'initComplete':
                 deferred.resolve();
@@ -44,9 +49,8 @@ module.exports = function ($log, $q, pcmencoder) {
             $log.error('EncoderFactory.js :: listener error ' + e);
         }
     };
-
-    Service.init = function (inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate) {
-        $log.log('EncoderFactory.js :: init inputFormat:' + inputFormat + ', inputSampleRate:' + inputSampleRate + ', outputFormat:' + outputFormat);
+    
+    Service.prepare = function () {
 
         //TODO: figure out a better way to make this reference through browserify to get the javascript properly loaded as a webworker
         // https://github.com/substack/webworkify
@@ -55,7 +59,13 @@ module.exports = function ($log, $q, pcmencoder) {
         encoder = new Worker('/js/encoder.js');
         encoder.onmessage = workerOnMessage;
         encoder.onerror = workerOnError;
-     
+
+        deferred = $q.defer();
+        return deferred.promise;
+    };
+
+    Service.init = function (inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, maxSeconds) {
+        
         deferred = $q.defer();
         encoder.postMessage({
             'cmd':'init', 
@@ -67,7 +77,8 @@ module.exports = function ($log, $q, pcmencoder) {
             'outputCodec': outputCodec,
             'outputSampleRate': outputSampleRate,
             'outputChannels': outputChannels,
-            'outputBitRate': outputBitRate
+            'outputBitRate': outputBitRate,
+            'maxSeconds': maxSeconds
         });
         return deferred.promise;
     };
@@ -91,7 +102,7 @@ module.exports = function ($log, $q, pcmencoder) {
     Service.dispose = function() {
         $log.log('EncoderFactory.dispose');
 
-        encoder.postMessage({'cmd':'dispose'});
+        //encoder.postMessage({'cmd':'dispose'});
     };
 
     return Service;

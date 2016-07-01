@@ -41,10 +41,9 @@ public class FileUtil {
         return url.toString();
     }
 
-    public static File copyFile(File inputFile, File outputFile) {
+    public static void copyFile(File inputFile, File outputFile) {
         try {
             Files.copy(inputFile.toPath(), outputFile.toPath());
-            return outputFile;
         }catch(IOException e) {
             logger.error(e);
             throw new WebApplicationException(e);
@@ -65,13 +64,13 @@ public class FileUtil {
         return extension;
     }
 
-    public static File prepareOutputFile(File inputFile, String outputFileType, boolean passThru) {
+    public static File createOutputFile(File inputFile, String outputFileType, boolean passThru) {
         String inputName = inputFile.getAbsolutePath();
         String outputName = inputName.substring(0, inputName.lastIndexOf('.')) + (passThru ? "_pasthru." : ".") + outputFileType;
         return new File(outputName);
     }
 
-    public static File saveBytesToFile(byte[] header, byte[] payload, File inputFile) {
+    public static void saveBytesToFile(File inputFile, byte[] header, byte[] payload) {
         try {
             FileOutputStream fileStream = new FileOutputStream(inputFile);
             if(header != null) {
@@ -79,15 +78,14 @@ public class FileUtil {
             }
             fileStream.write(payload);
             fileStream.close();
-            return inputFile;
         } catch (Exception e) {
             logger.error(e);
             throw new WebApplicationException(e);
         }
     }
 
-    public static File saveBytesToFile(byte[] payload, File inputFile) {
-        return saveBytesToFile(null, payload, inputFile);
+    public static void saveBytesToFile(File inputFile, byte[] payload) {
+        saveBytesToFile(inputFile, null, payload);
     }
 
     public static byte[] getBytesFromFile(File inputFile) {
