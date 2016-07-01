@@ -3,6 +3,7 @@
 #Switch the base variables based on the platform
 case "$(uname -s)" in
     CYGWIN*) #On windows
+        #TODO: Standardize this path for windows
         BASE_DIR=/cygdrive/c/EnglishCentral
         printf "Environment set for Cygwin Windows platform.\n"
         ;;
