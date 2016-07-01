@@ -1,85 +1,50 @@
 package com.marstonstudio.crossusermedia.server.util;
 
-import com.marstonstudio.crossusermedia.server.element.AudioFormat;
-import com.xuggle.mediatool.IMediaReader;
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.MediaToolAdapter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.mediatool.event.IAddStreamEvent;
-import com.xuggle.xuggler.*;
+import com.marstonstudio.crossusermedia.server.element.FileFormat;
+import net.sourceforge.jaad.util.wav.WaveFileWriter;
+import net.sourceforge.jaad.aac.Decoder;
+import net.sourceforge.jaad.aac.SampleBuffer;
+import net.sourceforge.jaad.mp4.MP4Container;
+import net.sourceforge.jaad.mp4.api.AudioTrack;
+import net.sourceforge.jaad.mp4.api.Frame;
+import net.sourceforge.jaad.mp4.api.Movie;
+import net.sourceforge.jaad.mp4.api.Track;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.xml.ws.WebServiceException;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 public class AudioUtil {
 
     static private final Logger logger = Logger.getLogger(AudioUtil.class);
 
-    public static File convertAudioFile(File inputFile, AudioFormat inputFormat, Integer inputSampleRate, AudioFormat outputFormat) throws InterruptedException, IOException {
+    public static File convertAudioFile(File inputFile, FileFormat inputFormat, Integer inputSampleRate, FileFormat outputFormat) throws InterruptedException, IOException {
         logger.info("inputFile: " + inputFile + ", inputFormat:" + inputFormat + ", inputSampleRate:" + inputSampleRate + ", outputFormat:" + outputFormat);
 
-        boolean passThru = inputFormat == outputFormat;
-
-        File outputFile = FileUtil.prepareOutputFile(inputFile, outputFormat.getExtension(), passThru);
-        if (passThru) {
+        if(inputFormat == outputFormat) {
+            File outputFile = FileUtil.prepareOutputFile(inputFile, outputFormat.getExtension(), true);
             return FileUtil.copyFile(inputFile, outputFile);
         }
 
-        File encodingFile = inputFormat.isPCM() ? convertPcmToWav(inputFile, inputFormat, inputSampleRate) : inputFile;
-
-        ConverterTool converter = new ConverterTool(null);
-        IMediaReader reader = ToolFactory.makeReader(encodingFile.getAbsolutePath());
-        reader.addListener(converter);
-
-        IMediaWriter writer = ToolFactory.makeWriter(outputFile.getAbsolutePath(), reader);
-
-        converter.addListener(writer);
-
-        IError error = reader.readPacket();
-        while (error == null) {
-            error = reader.readPacket();
+        if(inputFormat.isPcm()) {
+            return convertPcmToWav(inputFile, inputFormat, inputSampleRate);
         }
 
-        //if an error was returned other than end of file, throw exception.  ERROR_IO seems to happen every time while still succesful?
-        if ((error == null) || (error.getType() == IError.Type.ERROR_EOF)) {
-            logger.info("encoded succesfully to outputFile: " + outputFile);
-        } else {
-            throw new WebServiceException(error.toString());
+        if(inputFormat.isAac() && outputFormat.equals(FileFormat.WAV)) {
+            return convertAacToWav(inputFile);
         }
 
-        return outputFile;
-    }
-
-    static class ConverterTool extends MediaToolAdapter {
-
-        Integer sampleRate;
-
-        public ConverterTool(Integer sampleRate) {
-            this.sampleRate = sampleRate;
-        }
-
-        public void onAddStream(IAddStreamEvent event) {
-
-            IStreamCoder streamCoder = event.getSource()
-                    .getContainer()
-                    .getStream(event.getStreamIndex())
-                    .getStreamCoder();
-
-            if (sampleRate != null) streamCoder.setSampleRate(sampleRate);
-
-            super.onAddStream(event);
-        }
+        throw new WebServiceException("Cannot convert " + inputFormat + " to " + outputFormat);
     }
 
     //http://stackoverflow.com/questions/4440015/java-pcm-to-wav
-    public static File convertPcmToWav(File pcmFile, AudioFormat inputFormat, Integer inputSampleRate) throws IOException {
+    public static File convertPcmToWav(File pcmFile, FileFormat inputFormat, Integer inputSampleRate) throws IOException {
 
         if(inputSampleRate == null) {
             throw new WebApplicationException("inputSampleRate is required for format type: " + inputFormat.getName(), Response.Status.METHOD_NOT_ALLOWED);
@@ -140,12 +105,12 @@ public class AudioUtil {
         header[42] = (byte) ((int16PcmData.length >> 16) & 0xff);
         header[43] = (byte) ((int16PcmData.length >> 24) & 0xff);
 
-        File wavFile = FileUtil.prepareOutputFile(pcmFile, AudioFormat.WAV.getExtension(), false);
+        File wavFile = FileUtil.prepareOutputFile(pcmFile, FileFormat.WAV.getExtension(), false);
         wavFile = FileUtil.saveBytesToFile(header, int16PcmData, wavFile);
         return wavFile;
     }
 
-    public static byte[] convertFloat32ToInt16Pcm(byte[] float32PcmData, AudioFormat inputFormat) {
+    public static byte[] convertFloat32ToInt16Pcm(byte[] float32PcmData, FileFormat inputFormat) {
         logger.info("convertFloat32ToInt16Pcm format:" + inputFormat.getName() +", byteOrder:" + inputFormat.getByteOrder());
 
         FloatBuffer float32Buffer = ByteBuffer.wrap(float32PcmData).order(inputFormat.getByteOrder()).asFloatBuffer();
@@ -164,5 +129,32 @@ public class AudioUtil {
         return byteBuffer.array();
     }
 
+    //http://www.programcreek.com/java-api-examples/index.php?api=net.sourceforge.jaad.aac.Decoder
+    public static File convertAacToWav(File mp4File) throws IOException {
 
+        File wavFile = FileUtil.prepareOutputFile(mp4File, FileFormat.WAV.getExtension(), false);
+
+        RandomAccessFile randomAccessFile = new RandomAccessFile(mp4File, "r");
+        final MP4Container cont = new MP4Container(randomAccessFile);
+        final Movie movie = cont.getMovie();
+        final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
+        if (tracks.isEmpty()) {
+            throw new WebApplicationException("Movie does not contain any AAC track", Response.Status.METHOD_NOT_ALLOWED);
+        }
+
+        final AudioTrack track = (AudioTrack) tracks.get(0);
+        WaveFileWriter wav = new WaveFileWriter(wavFile, track.getSampleRate(), track.getChannelCount(), track.getSampleSize());
+        final Decoder dec = new Decoder(track.getDecoderSpecificInfo());
+
+        Frame frame;
+        final SampleBuffer buf = new SampleBuffer();
+        while (track.hasMoreFrames()) {
+            frame = track.readNextFrame();
+            dec.decodeFrame(frame.getData(), buf);
+            wav.write(buf.getData());
+        }
+
+        wav.close();
+        return wavFile;
+    }
 }

@@ -67,7 +67,7 @@ public class FileUtil {
 
     public static File prepareOutputFile(File inputFile, String outputFileType, boolean passThru) {
         String inputName = inputFile.getAbsolutePath();
-        String outputName = inputName.substring(0, inputName.lastIndexOf('.')) + (passThru ? "_converted." : ".") + outputFileType;
+        String outputName = inputName.substring(0, inputName.lastIndexOf('.')) + (passThru ? "_pasthru." : ".") + outputFileType;
         return new File(outputName);
     }
 

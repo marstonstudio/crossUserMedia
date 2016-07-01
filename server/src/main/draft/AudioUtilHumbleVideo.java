@@ -254,4 +254,54 @@ public class AudioUtil {
 
         //File inputFile = saveFile(inputBytes);
         */
+
+            /*
+        File encodingFile = inputFormat.isPcm() ? convertPcmToWav(inputFile, inputFormat, inputSampleRate) : inputFile;
+
+        ConverterTool converter = new ConverterTool(null);
+        IMediaReader reader = ToolFactory.makeReader(encodingFile.getAbsolutePath());
+        reader.addListener(converter);
+
+        IMediaWriter writer = ToolFactory.makeWriter(outputFile.getAbsolutePath(), reader);
+
+        converter.addListener(writer);
+
+        IError error = reader.readPacket();
+        while (error == null) {
+            error = reader.readPacket();
+        }
+
+        //if an error was returned other than end of file, throw exception.  ERROR_IO seems to happen every time while still succesful?
+        if ((error == null) || (error.getType() == IError.Type.ERROR_EOF)) {
+            logger.info("encoded succesfully to outputFile: " + outputFile);
+        } else {
+            throw new WebServiceException(error.toString());
+        }
+
+        return outputFile;
+        */
+
+
+    /*
+    static class ConverterTool extends MediaToolAdapter {
+
+        Integer sampleRate;
+
+        public ConverterTool(Integer sampleRate) {
+            this.sampleRate = sampleRate;
+        }
+
+        public void onAddStream(IAddStreamEvent event) {
+
+            IStreamCoder streamCoder = event.getSource()
+                    .getContainer()
+                    .getStream(event.getStreamIndex())
+                    .getStreamCoder();
+
+            if (sampleRate != null) streamCoder.setSampleRate(sampleRate);
+
+            super.onAddStream(event);
+        }
+    }
+    */
 }

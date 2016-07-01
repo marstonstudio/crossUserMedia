@@ -86,7 +86,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
                 $scope.microphoneStartEnabled = true;
 
                 return UploadRecording
-                    .send(encodedSource.blob, encodedSource.format, encodedSource.sampleRate, 'mp3')
+                    .send(encodedSource.blob, encodedSource.format, encodedSource.sampleRate, 'wav')
                     .then(displayProcessedOutput, function(reason) {$log.error(reason);});
 
             }, function(reason) { $log.error(reason);});

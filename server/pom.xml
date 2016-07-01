@@ -65,6 +65,13 @@
 
     </build>
 
+    <repositories>
+        <repository>
+            <id>bintray</id>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
+    </repositories>
+
     <dependencies>
 
         <dependency>
@@ -155,7 +162,7 @@
             <version>0.2.1</version>
         </dependency-->
 
-        <dependency>
+        <!--dependency>
             <groupId>com.xuggle.xuggler</groupId>
             <artifactId>xuggle-xuggler</artifactId>
             <version>5.4</version>
@@ -165,6 +172,12 @@
                     <artifactId>logback-classic</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency-->
+
+        <dependency>
+            <groupId>net.sourceforge.jaadec</groupId>
+            <artifactId>jaad</artifactId>
+            <version>0.8.5</version>
         </dependency>
 
     </dependencies>

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class AudioSet {
+public class ResponseSet {
 
     private String inputUrl;
 
@@ -20,7 +20,7 @@ public class AudioSet {
         return outputUrl;
     }
 
-    public AudioSet(String inputUrl, String outputUrl) {
+    public ResponseSet(String inputUrl, String outputUrl) {
         this.inputUrl = inputUrl;
         this.outputUrl = outputUrl;
     }

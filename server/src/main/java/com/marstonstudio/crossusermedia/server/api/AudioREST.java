@@ -1,9 +1,9 @@
 // Copyright (c) 2014. EnglishCentral. All rights reserved.
 package com.marstonstudio.crossusermedia.server.api;
 
-import com.marstonstudio.crossusermedia.server.element.AudioFormat;
+import com.marstonstudio.crossusermedia.server.element.FileFormat;
 import com.marstonstudio.crossusermedia.server.util.FileUtil;
-import com.marstonstudio.crossusermedia.server.element.AudioSet;
+import com.marstonstudio.crossusermedia.server.element.ResponseSet;
 import com.marstonstudio.crossusermedia.server.util.AudioUtil;
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -39,7 +39,7 @@ public class AudioREST {
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public AudioSet postBlob(
+    public ResponseSet postBlob(
             @Context HttpServletRequest hsr,
             @FormDataParam("payload") final InputStream payloadBlob,
             @FormDataParam("inputFormat") final String inputFormatName,
@@ -48,8 +48,8 @@ public class AudioREST {
     ) throws IOException {
         logger.info("POST /audio");
 
-        AudioFormat inputFormat = AudioFormat.fromString(inputFormatName);
-        AudioFormat outputFormat = AudioFormat.fromString(outputFormatName);
+        FileFormat inputFormat = FileFormat.fromString(inputFormatName);
+        FileFormat outputFormat = FileFormat.fromString(outputFormatName);
 
         validateAudioType("inputFormat", inputFormat);
         validateAudioType("outputFormat", outputFormat);
@@ -60,7 +60,7 @@ public class AudioREST {
 
         try {
             File outputFile = AudioUtil.convertAudioFile(inputFile, inputFormat, inputSampleRate, outputFormat);
-            return new AudioSet(
+            return new ResponseSet(
                     FileUtil.getAudioUrlFromFile(hsr, inputFile),
                     FileUtil.getAudioUrlFromFile(hsr, outputFile)
             );
@@ -73,7 +73,7 @@ public class AudioREST {
 
     private void validateAudioType(String paramName, Enum audioFormat) {
         if(audioFormat == null) {
-            throw new WebApplicationException(paramName + " is required and must be one of " + AudioFormat.toEnumeratedList(), Response.Status.METHOD_NOT_ALLOWED);
+            throw new WebApplicationException(paramName + " is required and must be one of " + FileFormat.toEnumeratedList(), Response.Status.METHOD_NOT_ALLOWED);
         }
     }
 

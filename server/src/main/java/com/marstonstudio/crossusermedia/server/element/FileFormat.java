@@ -2,25 +2,26 @@ package com.marstonstudio.crossusermedia.server.element;
 
 import java.nio.ByteOrder;
 
-public enum AudioFormat {
+public enum FileFormat {
 
-    WAV("wav", "wav"),
-    MP3("mp3", "mp3"),
-    MP4("mp4", "mp4"),
-    PCM_F32_LE("f32le", "pcm"),
-    PCM_F32_BE("f32be", "pcm");
+    WAV("wav", "wav", "wav"),
+    MP4("mp4", "mp4", "aac"),
+    PCM_F32_LE("f32le", "pcm", "pcm"),
+    PCM_F32_BE("f32be", "pcm", "pcm");
 
     private final String name;
     private final String extension;
+    private final String codec;
 
-    AudioFormat(String name, String extension) {
+    FileFormat(String name, String extension, String codec) {
         this.name = name;
         this.extension = extension;
+        this.codec = codec;
     }
 
-    public static AudioFormat fromString(String n) {
+    public static FileFormat fromString(String n) {
         if(n != null) {
-            for(AudioFormat a : AudioFormat.values()) {
+            for(FileFormat a : FileFormat.values()) {
                 if(n.equals(a.name)) return a;
             }
         }
@@ -29,7 +30,7 @@ public enum AudioFormat {
 
     public static String toEnumeratedList() {
         String values = "";
-        for(AudioFormat a : AudioFormat.values()) {
+        for(FileFormat a : FileFormat.values()) {
             values += a.name + ", ";
         }
         return values;
@@ -43,8 +44,12 @@ public enum AudioFormat {
         return extension;
     }
 
-    public boolean isPCM() {
+    public boolean isPcm() {
         return "pcm".equals(extension);
+    }
+
+    public boolean isAac() {
+        return "aac".equals(codec);
     }
 
     public ByteOrder getByteOrder() {
