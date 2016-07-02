@@ -41,8 +41,7 @@ public class AudioUtil {
         }
 
         if(inputFormat.isAac() && outputFormat.equals(FileFormat.WAV)) {
-            return inputFile;
-            //return convertAacToWav(inputFile);
+            return convertAacToWav(inputFile);
         }
 
         throw new WebServiceException("Cannot convert " + inputFormat + " to " + outputFormat);
@@ -50,32 +49,24 @@ public class AudioUtil {
 
     //http://stackoverflow.com/questions/4440015/java-pcm-to-wav
     public static File convertPcmToWav(File pcmFile, FileFormat inputFormat, Integer inputSampleRate) throws IOException {
+        logger.info("convertPcmToWav");
 
         if(inputSampleRate == null) {
             throw new WebApplicationException("inputSampleRate is required for format type: " + inputFormat.getName(), Response.Status.METHOD_NOT_ALLOWED);
         }
 
         byte[] float32PcmData = FileUtil.getBytesFromFile(pcmFile);
-        byte[] int16PcmData = convertFloat32ToInt16Pcm(float32PcmData, inputFormat);
+        byte[] int16PcmData = convertFloat32ToInt16Pcm(float32PcmData, inputFormat.getByteOrder());
 
         File wavFile = FileUtil.createOutputFile(pcmFile, FileFormat.WAV.getExtension(), false);
         writeWavFile(wavFile, int16PcmData, inputSampleRate, 1, 16);
         return wavFile;
-
-        /*
-        File wavFile = FileUtil.createOutputFile(pcmFile, FileFormat.WAV.getExtension(), false);
-        WaveFileWriter wavWriter = new WaveFileWriter(wavFile, inputSampleRate, 1, 16);
-        wavWriter.write(int16PcmData);
-        wavWriter.close();
-
-        return wavFile;
-        */
     }
 
-    public static byte[] convertFloat32ToInt16Pcm(byte[] float32PcmData, FileFormat inputFormat) {
-        logger.info("convertFloat32ToInt16Pcm format:" + inputFormat.getName() +", byteOrder:" + inputFormat.getByteOrder());
+    public static byte[] convertFloat32ToInt16Pcm(byte[] float32PcmData, ByteOrder inputByteOrder) {
+        logger.info("convertFloat32ToInt16Pcm byteOrder:" + inputByteOrder);
 
-        FloatBuffer float32Buffer = ByteBuffer.wrap(float32PcmData).order(inputFormat.getByteOrder()).asFloatBuffer();
+        FloatBuffer float32Buffer = ByteBuffer.wrap(float32PcmData).order(inputByteOrder).asFloatBuffer();
         float32Buffer.rewind();
         int l = float32Buffer.remaining();
 
@@ -95,6 +86,7 @@ public class AudioUtil {
     // https://github.com/DV8FromTheWorld/JAADec
     // http://www.programcreek.com/java-api-examples/index.php?api=net.sourceforge.jaad.aac.Decoder
     public static File convertAacToWav(File mp4File) throws IOException {
+        logger.info("convertAacToWav");
 
         RandomAccessFile randomAccessFile = new RandomAccessFile(mp4File, "r");
         final MP4Container cont = new MP4Container(randomAccessFile);
@@ -113,10 +105,11 @@ public class AudioUtil {
         File wavFile = FileUtil.createOutputFile(mp4File, FileFormat.WAV.getExtension(), false);
         WaveFileWriter wavWriter = new WaveFileWriter(wavFile, sampleRate, channels, sampleSize);
 
-        final SampleBuffer buffer = new SampleBuffer();
         while (track.hasMoreFrames()) {
             Frame frame = track.readNextFrame();
+            SampleBuffer buffer = new SampleBuffer();
             try {
+                logger.info("reading frame time:" + frame.getTime());
                 decoder.decodeFrame(frame.getData(), buffer);
                 wavWriter.write(buffer.getData());
             } catch (AACException e) {
@@ -129,6 +122,7 @@ public class AudioUtil {
     }
 
     public static void writeWavFile(File wavFile, byte[] int16PcmData, int sampleRate, int channels, int sampleSize) {
+        logger.info("writeWavFile");
 
         long totalDataLen = int16PcmData.length + 36;
         long bitrate = sampleRate * channels * sampleSize;

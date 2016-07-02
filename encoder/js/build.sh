@@ -1,24 +1,16 @@
 #!/usr/bin/env bash
 
-#Set to exit on any failure
 set -e
 
 cd ../ffmpeg
 
-#:<<"EOF"
-
 #Only perform the make clean beforehand if the configure script has been called before
-# This can be easily identified by checking for the existance of "config.mak"
 if [ -f "config.mak" ]
 then
     echo "Cleaning past configuration"
     emmake make clean
-    echo "Cleaned past configuration"
 fi
 
-#EOF
-
-echo "Starting ffmpeg configuration"
 emconfigure ./configure \
     --prefix=../js/dist \
 \
@@ -31,7 +23,7 @@ emconfigure ./configure \
 \
     --disable-doc \
 \
-    --enable-pthreads \
+    --disable-pthreads \
     --disable-w32threads \
     --disable-os2threads \
 \
@@ -43,13 +35,13 @@ emconfigure ./configure \
 \
     --disable-encoders \
     --enable-encoder=aac \
-    --enable-encoder=pcm_f32be \
+    --enable-encoder=pcm_f32le \
     --disable-decoders \
     --enable-decoder=pcm_f32le \
     --disable-hwaccels \
     --disable-muxers \
     --enable-muxer=mp4 \
-    --enable-muxer=pcm_f32be \
+    --enable-muxer=pcm_f32le \
     --disable-demuxers \
     --enable-demuxer=pcm_f32le \
     --disable-parsers \
@@ -78,13 +70,8 @@ emconfigure ./configure \
 \
     --disable-debug \
     --disable-stripping 
-    #--extra-cflags=-Wno-error=implicit-function-declaration
-
-#ADDED above flags
 
 echo "Finished ffmpeg configuration"
-
-#EOF
 
 emmake make
 emmake make install
