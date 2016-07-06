@@ -1,15 +1,13 @@
 package com.marstonstudio.crossusermedia.server.util;
 
 import com.marstonstudio.crossusermedia.server.element.FileFormat;
-import net.sourceforge.jaad.aac.AACException;
-import net.sourceforge.jaad.aac.Decoder;
-import net.sourceforge.jaad.aac.SampleBuffer;
-import net.sourceforge.jaad.mp4.MP4Container;
-import net.sourceforge.jaad.mp4.api.AudioTrack;
-import net.sourceforge.jaad.mp4.api.Frame;
-import net.sourceforge.jaad.mp4.api.Movie;
-import net.sourceforge.jaad.mp4.api.Track;
-import net.sourceforge.jaad.util.wav.WaveFileWriter;
+import com.xuggle.mediatool.IMediaReader;
+import com.xuggle.mediatool.IMediaWriter;
+import com.xuggle.mediatool.MediaToolAdapter;
+import com.xuggle.mediatool.ToolFactory;
+import com.xuggle.mediatool.event.IAddStreamEvent;
+import com.xuggle.xuggler.IError;
+import com.xuggle.xuggler.IStreamCoder;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
@@ -17,11 +15,9 @@ import javax.ws.rs.core.Response;
 import javax.xml.ws.WebServiceException;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.List;
 
 public class AudioUtil {
 
@@ -82,45 +78,6 @@ public class AudioUtil {
         return byteBuffer.array();
     }
 
-    // http://jaadec.sourceforge.net/index.php
-    // https://github.com/DV8FromTheWorld/JAADec
-    // http://www.programcreek.com/java-api-examples/index.php?api=net.sourceforge.jaad.aac.Decoder
-    public static File convertAacToWav(File mp4File) throws IOException {
-        logger.info("convertAacToWav");
-
-        RandomAccessFile randomAccessFile = new RandomAccessFile(mp4File, "r");
-        final MP4Container cont = new MP4Container(randomAccessFile);
-        final Movie movie = cont.getMovie();
-        final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
-        if (tracks.isEmpty()) {
-            throw new WebApplicationException("Movie does not contain any AAC track", Response.Status.METHOD_NOT_ALLOWED);
-        }
-
-        final AudioTrack track = (AudioTrack) tracks.get(0);
-        final Decoder decoder = new Decoder(track.getDecoderSpecificInfo());
-        int sampleRate = decoder.getConfig().getSampleFrequency().getFrequency();
-        int channels = decoder.getConfig().getChannelConfiguration().getChannelCount();
-        int sampleSize = track.getSampleSize();
-
-        File wavFile = FileUtil.createOutputFile(mp4File, FileFormat.WAV.getExtension(), false);
-        WaveFileWriter wavWriter = new WaveFileWriter(wavFile, sampleRate, channels, sampleSize);
-
-        while (track.hasMoreFrames()) {
-            Frame frame = track.readNextFrame();
-            SampleBuffer buffer = new SampleBuffer();
-            try {
-                logger.info("reading frame time:" + frame.getTime());
-                decoder.decodeFrame(frame.getData(), buffer);
-                wavWriter.write(buffer.getData());
-            } catch (AACException e) {
-                logger.error(e);
-            }
-        }
-
-        wavWriter.close();
-        return wavFile;
-    }
-
     public static void writeWavFile(File wavFile, byte[] int16PcmData, int sampleRate, int channels, int sampleSize) {
         logger.info("writeWavFile");
 
@@ -174,5 +131,57 @@ public class AudioUtil {
         header[43] = (byte) ((int16PcmData.length >> 24) & 0xff);
 
         FileUtil.saveBytesToFile(wavFile, header, int16PcmData);
+    }
+
+
+    // http://jaadec.sourceforge.net/index.php
+    // https://github.com/DV8FromTheWorld/JAADec
+    // http://www.programcreek.com/java-api-examples/index.php?api=net.sourceforge.jaad.aac.Decoder
+    public static File convertAacToWav(File mp4File) throws IOException {
+        logger.info("convertAacToWav");
+
+        File wavFile = FileUtil.createOutputFile(mp4File, FileFormat.WAV.getExtension(), false);
+        ConverterTool converter = new ConverterTool(null);
+        IMediaReader reader = ToolFactory.makeReader(mp4File.getAbsolutePath());
+        reader.addListener(converter);
+
+        IMediaWriter writer = ToolFactory.makeWriter(wavFile.getAbsolutePath(), reader);
+
+        converter.addListener(writer);
+
+        IError error = reader.readPacket();
+        while (error == null) {
+            error = reader.readPacket();
+        }
+
+        //if an error was returned other than end of file, throw exception.  ERROR_IO seems to happen every time while still succesful?
+        if ((error == null) || (error.getType() == IError.Type.ERROR_EOF)) {
+            logger.info("encoded succesfully to wavFile: " + wavFile);
+        } else {
+            throw new WebServiceException(error.toString());
+        }
+
+        return wavFile;
+    }
+
+    static class ConverterTool extends MediaToolAdapter {
+
+        Integer sampleRate;
+
+        public ConverterTool(Integer sampleRate) {
+            this.sampleRate = sampleRate;
+        }
+
+        public void onAddStream(IAddStreamEvent event) {
+
+            IStreamCoder streamCoder = event.getSource()
+                    .getContainer()
+                    .getStream(event.getStreamIndex())
+                    .getStreamCoder();
+
+            if (sampleRate != null) streamCoder.setSampleRate(sampleRate);
+
+            super.onAddStream(event);
+        }
     }
 }

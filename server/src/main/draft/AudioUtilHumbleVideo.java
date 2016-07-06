@@ -304,4 +304,44 @@ public class AudioUtil {
         }
     }
     */
+
+
+    // http://jaadec.sourceforge.net/index.php
+    // https://github.com/DV8FromTheWorld/JAADec
+    // http://www.programcreek.com/java-api-examples/index.php?api=net.sourceforge.jaad.aac.Decoder
+    public static File convertAacToWav(File mp4File) throws IOException {
+        logger.info("convertAacToWav");
+
+        RandomAccessFile randomAccessFile = new RandomAccessFile(mp4File, "r");
+        final MP4Container cont = new MP4Container(randomAccessFile);
+        final Movie movie = cont.getMovie();
+        final List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
+        if (tracks.isEmpty()) {
+            throw new WebApplicationException("Movie does not contain any AAC track", Response.Status.METHOD_NOT_ALLOWED);
+        }
+
+        final AudioTrack track = (AudioTrack) tracks.get(0);
+        final Decoder decoder = new Decoder(track.getDecoderSpecificInfo());
+        int sampleRate = decoder.getConfig().getSampleFrequency().getFrequency();
+        int channels = decoder.getConfig().getChannelConfiguration().getChannelCount();
+        int sampleSize = track.getSampleSize();
+
+        File wavFile = FileUtil.createOutputFile(mp4File, FileFormat.WAV.getExtension(), false);
+        WaveFileWriter wavWriter = new WaveFileWriter(wavFile, sampleRate, channels, sampleSize);
+
+        while (track.hasMoreFrames()) {
+            Frame frame = track.readNextFrame();
+            SampleBuffer buffer = new SampleBuffer();
+            try {
+                logger.info("reading frame time:" + frame.getTime());
+                decoder.decodeFrame(frame.getData(), buffer);
+                wavWriter.write(buffer.getData());
+            } catch (AACException e) {
+                logger.error(e);
+            }
+        }
+
+        wavWriter.close();
+        return wavFile;
+    }
 }

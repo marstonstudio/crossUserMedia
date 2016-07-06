@@ -18,6 +18,7 @@ public class JerseyApplication extends ResourceConfig {
     public JerseyApplication(ServiceLocator serviceLocator) {
         packages("com.marstonstudio.crossusermedia.server.api");
 
+        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         Logger.getLogger("org.glassfish.jersey").setLevel(Level.INFO);
 
         register(JacksonFeature.class);
