@@ -23,7 +23,7 @@ emconfigure ./configure \
 \
     --disable-doc \
 \
-    --disable-pthreads \
+    --enable-pthreads \
     --disable-w32threads \
     --disable-os2threads \
 \
@@ -61,9 +61,9 @@ emconfigure ./configure \
     --arch=x86_64 \
     --cpu=generic \
     --enable-cross-compile \
-    --target-os=none \
     --cross-prefix=em \
     --cc=emcc \
+    --target-os=none \
 \
     --disable-asm \
     --disable-fast-unaligned \

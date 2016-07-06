@@ -16,7 +16,8 @@ package {
     import flash.external.ExternalInterface;
     import flash.system.Security;
     import flash.system.SecurityPanel;
-    import flash.utils.Timer;
+import flash.system.System;
+import flash.utils.Timer;
 
     [SWF(width="430", height="276", frameRate="24", backgroundColor="#FFFFFF")]
     public class Main extends Sprite {
@@ -132,8 +133,8 @@ package {
             }
         }
 
-        private function externalStartRecording():void {
-            Console.log("Main.as", "externalStartRecording");
+        private function externalStartRecording(passthru:Boolean = false):void {
+            Console.log("Main.as", "externalStartRecording passthru:" + passthru);
             ExternalInterface.call("onFlashStatusMessage", "recording started");
 
             if(!_microphonePermissionConfirmed) {
@@ -141,7 +142,7 @@ package {
                 _microphonePermissionTimer.start();
             }
 
-            _recorder = new Recorder(this);
+            _recorder = new Recorder(this, passthru);
             _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
             _recorder.addEventListener(RecordingEvent.COMPLETE, onRecordComplete);
             _recorder.record();
@@ -179,6 +180,9 @@ package {
             
             ExternalInterface.call("onFlashSoundRecorded", b64.toString(), event.format, event.sampleRate);
             ExternalInterface.call("onFlashStatusMessage", "audio saved");
+            
+            _recorder = null;
+            System.pauseForGCIfCollectionImminent();
         }
         
     }

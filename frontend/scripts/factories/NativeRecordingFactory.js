@@ -5,14 +5,16 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
 
     var PCM_CODEC = 'pcm_f32le';
     var PCM_FORMAT = 'f32le';
-    var OUTPUT_CODEC = 'aac';
-    var OUTPUT_FORMAT = 'mp4';
+    var ENCODED_CODEC = 'aac';
+    var ENCODED_FORMAT = 'mp4';
+
     var CHANNELS = 1;
     var OUTPUT_BITRATE = 32000;
     var MAX_SECONDS = 30;
 
     var BUFFER_SIZE = 2048;
 
+    var audioPassthru = null;
     var audioStream = null;
     var audioContext = null;
     var audioInput = null;
@@ -30,9 +32,11 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
         $log.error('showSettings unimplemented for NativeRecordingFactory');
     };
 
-    Service.startRecording = function() {
-        $log.log('NativeRecordingFactory.js startRecording');
+    Service.startRecording = function(passthru) {
+        $log.log('NativeRecordingFactory.js startRecording passthru:' + passthru);
         $rootScope.$emit('statusEvent', 'recording started');
+        
+        audioPassthru = passthru;
 
         //try to avoid creating a new audioStream in firefox so we do not need to get permission again
         if( audioStream &&
@@ -86,8 +90,12 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
 
         Encoder.prepare()
             .then(function(){
+                
+                var outputFormat = audioPassthru ? PCM_FORMAT : ENCODED_FORMAT;
+                var outputCodec = audioPassthru ? PCM_CODEC : ENCODED_CODEC;
+                $log.log('audioPassthru:' + audioPassthru + ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec);
 
-                Encoder.init(PCM_FORMAT, PCM_CODEC, audioContext.sampleRate, CHANNELS, OUTPUT_FORMAT, OUTPUT_CODEC, audioContext.sampleRate, CHANNELS, OUTPUT_BITRATE, MAX_SECONDS)
+                Encoder.init(PCM_FORMAT, PCM_CODEC, audioContext.sampleRate, CHANNELS, outputFormat, outputCodec, audioContext.sampleRate, CHANNELS, OUTPUT_BITRATE, MAX_SECONDS)
                     .then(function(){
                         audioVolume.connect(audioRecorder);
                         audioRecorder.connect(audioContext.destination);

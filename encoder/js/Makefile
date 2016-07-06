@@ -8,20 +8,29 @@ LDFLAGS = -L./dist/lib
 
 LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
 
+# https://github.com/kripken/emscripten/blob/master/src/settings.js
+# https://kripken.github.io/emscripten-site/docs/optimizing/Optimizing-Code.html
+# https://kripken.github.io/emscripten-site/docs/porting/Debugging.html
+
 CFLAGS = -v -O3 \
 	-I./dist/include \
 	-s OUTLINING_LIMIT=10000 \
 	-s TOTAL_MEMORY=16777216 \
 	-s NO_EXIT_RUNTIME=1 \
+	-s ASSERTIONS=2 \
 	-s EXPORTED_FUNCTIONS="['_main', '_init', '_load', '_flush', '_get_output_sample_rate', '_get_output_format', '_get_output_length', '_dispose']" \
 	--pre-js pre.js \
 	--post-js post.js
 
-# 	-s OUTLINING_LIMIT=100000 \
-#  	-s TOTAL_MEMORY=67108864 \
-# 	-s USE_PTHREADS=1 \
-#   -s BUILD_AS_WORKER=1 \
-# -s ASSERTIONS=1 \
+#	-s TOTAL_MEMORY=67108864 \
+#	-s TOTAL_MEMORY=16777216 \
+#	-s ASSERTIONS=1 \
+# 	-s SAFE_HEAP=1 \
+#	-s ASSERTIONS=2 \
+#	-s WARN_UNALIGNED=1 \
+# -g4
+
+
 
 
 ################################################################

@@ -588,6 +588,10 @@ void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate
     load_locked = false;    
     audio_frame_pts = 0;
 
+    //by default all info messages sent to stderr
+    //might be better to use av_log_set_callback to route info to stdout
+    av_log_set_level(AV_LOG_ERROR);
+
     //Instantiate the variables of this function before any CHK macros
     AVCodec *i_codec = NULL, *o_codec = NULL;
     
@@ -968,8 +972,6 @@ cleanup:
 uint8_t *flush()
 {
     ERROR_CODE _error = NO_ERROR;
-    
-    LOG("Started");
 
     //Encode any remaining samples in the fifo after all of the loads
     while(av_audio_fifo_size(fifo) > 0)
@@ -995,7 +997,9 @@ cleanup:
         dispose(1); //Calls `exit(1)` internally
     
     //The output buffer is located at the output format context's io payload's data pointer
-    return ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
+    uint8_t *output_ptr = ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
+    INFO("flush: %p", output_ptr);
+    return output_ptr;
 }
 
 //Clean up everything and exit
@@ -1045,13 +1049,13 @@ void dispose(int status)
 
 int get_output_sample_rate()
 {
-    LOG("get_output_sample_rate: %d", output_codec_context->sample_rate);
+    INFO("get_output_sample_rate: %d", output_codec_context->sample_rate);
     return output_codec_context->sample_rate;
 }
 
 char *get_output_format()
 {
-    LOG("get_output_format name: %s", output_format_context->oformat->name);
+    INFO("get_output_format name: %s", output_format_context->oformat->name);
     return (char*)output_format_context->oformat->name;
 }
 
@@ -1059,6 +1063,6 @@ int get_output_length()
 {
     //The output buffer's offset is located at the output format context's io payload's data offest
     int offset = ((struct buffer_data*)output_format_context->pb->opaque)->offset;
-    LOG("output offset: %d", offset);
+    INFO("get_output_length: %d", offset);
     return offset;
 }

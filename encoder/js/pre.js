@@ -9,5 +9,6 @@ Module['printErr'] = function(text) {
 };
 
 Module['onRuntimeInitialized'] = function() {
+    console.log('encoder.js prepared, build 04');
     self.postMessage({'cmd':'prepareComplete'});
 }

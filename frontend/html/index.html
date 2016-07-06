@@ -39,10 +39,16 @@
 
         <h2>Cross Browser Compatible Audio Recorder</h2>
 
-        <md-button flex="10" class="md-icon-button" aria-label="source code on github" ng-href="https://github.com/marstonstudio/crossUserMedia" target="_blank">
+        <md-switch ng-model="encodingFormat" aria-label="format" class="md-primary md-hue-3" md-no-ink
+                   ng-disabled="!microphoneStartEnabled"
+                   ng-false-value="'mp4'" ng-true-value="'pcm'" >
+            {{encodingFormat}}
+        </md-switch>
+
+        <!--md-button flex="10" class="md-icon-button" aria-label="source code on github" ng-href="https://github.com/marstonstudio/crossUserMedia" target="_blank">
             <md-tooltip>github source</md-tooltip>
             <md-icon md-svg-src="/img/github.svg"></md-icon>
-        </md-button>
+        </md-button-->
 
     </md-toolbar>
     <md-content layout="column" class="buttonBox">
@@ -86,7 +92,7 @@
                        ng-disabled="!microphoneSourceAudioReady"
                        ng-click="microphone.playSource();" >
                 <md-icon>play_circle_filled</md-icon>
-                Play Original Audio</md-button>
+                Play Encoded MP4</md-button>
 
             <md-button id="outputButton"
                        class="md-raised md-primary md-hue-3"

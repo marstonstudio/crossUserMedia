@@ -61,23 +61,26 @@ import flash.utils.getTimer;
         private const _pcmFormat:String = "f32be";
         private const _pcmCodec:String = "pcm_f32be";
 
-        //Setting for passthru
-        //private const _outputFormat:String = "f32be";
-        //private const _outputCodec:String = "pcm_f32be";
-        
-        private const _outputFormat:String = "mp4";
-        private const _outputCodec:String = "aac";
-        
         private const _outputBitRate:int = 32000;
         private const _maxSeconds:int = 30;
+
+        private var _outputFormat:String;
+        private var _outputCodec:String;
         
         private var _startTime:uint;
         private var _microphone:Microphone;
         private var _encoder:Encoder;
         private var _rootSprite:Sprite;
 
-        public function Recorder(rootSprite:Sprite) {
+        public function Recorder(rootSprite:Sprite, passthru:Boolean = false) {
             this._rootSprite = rootSprite;
+            if(passthru) {
+                _outputFormat = _pcmFormat;
+                _outputCodec = _pcmCodec;
+            } else {
+                _outputFormat = "mp4";
+                _outputCodec = "aac"; 
+            }
         }
 
         /**
@@ -97,8 +100,9 @@ import flash.utils.getTimer;
             _microphone.gain = _gain;
             
             _encoder = new Encoder(_rootSprite);
-            _encoder.init(_pcmFormat, _pcmCodec, sampleRate, _channels, _outputFormat,
-                _outputCodec, sampleRate, _channels, _outputBitRate, _maxSeconds);
+            _encoder.init(  _pcmFormat, _pcmCodec, sampleRate, _channels, 
+                            _outputFormat, _outputCodec, sampleRate, _channels, 
+                            _outputBitRate, _maxSeconds);
 
             _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
         }
@@ -111,7 +115,7 @@ import flash.utils.getTimer;
             var time:Number = getTimer() - _startTime;
             dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time) );
             
-            _encoder.load(event.data);
+            if(_encoder != null) _encoder.load(event.data);
         }
         
         /**
@@ -124,8 +128,6 @@ import flash.utils.getTimer;
             _encoder.dispose(0);
             _encoder = null;
             dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, encodedBuffer, outputFormat, sampleRate) );
-            
-            System.pauseForGCIfCollectionImminent();
         }
 
         public function get gain():uint {

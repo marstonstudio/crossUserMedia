@@ -60,6 +60,7 @@ public class AudioREST {
 
         try {
             File outputFile = AudioUtil.convertAudioFile(inputFile, inputFormat, inputSampleRate, outputFormat);
+            logger.info("encoded outputFile:" + outputFile);
             return new ResponseSet(
                     FileUtil.getAudioUrlFromFile(hsr, inputFile),
                     FileUtil.getAudioUrlFromFile(hsr, outputFile)

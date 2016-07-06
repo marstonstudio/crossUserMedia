@@ -6,6 +6,8 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
 
     var self = this;
     
+    $scope.encodingFormat;
+
     $scope.microphoneFlashEnabled = !Navigator.getUserMediaEnabled;
     $scope.microphoneSourceAudioEnabled = !bowser.msie;
     
@@ -70,7 +72,7 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
     this.startRecording = function () {
         $scope.microphoneStartEnabled = false;
         resetState();
-        getRecordingObject().startRecording();
+        getRecordingObject().startRecording($scope.encodingFormat === 'pcm');
     };
 
     this.stopRecording = function () {
@@ -102,8 +104,10 @@ module.exports = function ($rootScope, $scope, $log, bowser, Navigator, FlashRec
     };
 
     function embedLocalBlob(audioBlob) {
-        self.sourceAudioElement.attr('src', URL.createObjectURL(audioBlob));
-        $scope.microphoneSourceAudioReady = true;
+        if($scope.encodingFormat !== 'pcm') {
+            self.sourceAudioElement.attr('src', URL.createObjectURL(audioBlob));
+            $scope.microphoneSourceAudioReady = true;
+        }
     }
 
     function displayProcessedOutput(response) {

@@ -64,6 +64,14 @@ var flush = function() {
     var outputLength = Module.ccall('get_output_length', 'number');
     var outputAudioPointer = Module.ccall('flush', 'number');
 
+    // https://kripken.github.io/emscripten-site/docs/api_reference/preamble.js.html
+    // https://github.com/kripken/emscripten/blob/master/src/preamble.js
+    // http://stackoverflow.com/questions/16586273/how-do-i-access-the-emscripten-typed-array-from-javascript
+    // http://stackoverflow.com/questions/18190859/trying-to-get-asm-js-to-return-a-typed-array
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
+
+    //var outputAudioArray = new Uint8Array(Module.HEAPU8.buffer, outputAudioPointer, outputLength);
+    //var outputAudioArray = Module.HEAPU8.subarray(outputAudioPointer, outputAudioPointer + outputLength);
     var outputAudioArray = new Uint8Array(outputLength);
     for(i=0; i<outputLength; i++) {
         var outputByte = Module.getValue(outputAudioPointer + i);
