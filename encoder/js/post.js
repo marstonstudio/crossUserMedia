@@ -28,13 +28,13 @@ this.onerror = function(e) {
 }
 
 var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, maxSeconds) {
-    console.log('encoder.js init inputFormat:' + inputFormat + ', inputCodec:' + inputCodec + ', inputSampleRate:' + inputSampleRate + ', inputChannels:' + inputChannels
+    console.log('encoder.js :: init inputFormat:' + inputFormat + ', inputCodec:' + inputCodec + ', inputSampleRate:' + inputSampleRate + ', inputChannels:' + inputChannels
                             + ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec +', outputSampleRate:' + outputSampleRate + ', outputChannels:' + outputChannels
                             + ', outputBitRate:' + outputBitRate + ", maxSeconds:" + maxSeconds);
-
-    Module.ccall(
+    
+    var status = Module.ccall(
         'init',
-        null,
+        'number',
         ['string', 'string', 'number', 'number', 'string', 'string', 'number', 'number', 'number', 'number'],
         [inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, maxSeconds]
     );
@@ -46,9 +46,9 @@ var load = function(inputAudio) {
     //console.log('encoder.js load inputAudio.byteLength:' + inputAudio.byteLength);
 
     var inputAudioArray = new Uint8Array(inputAudio);
-    Module.ccall(
+    var status = Module.ccall(
         'load',
-        null,
+        'number',
         ['array', 'number'],
         [inputAudioArray, inputAudioArray.length]
     );
@@ -57,7 +57,7 @@ var load = function(inputAudio) {
 };
 
 var flush = function() {
-    console.log('encoder.js flush');
+    console.log('encoder.js :: flush');
 
     var outputAudioPointer = Module.ccall('flush', 'number');
     var outputFormat = Module.ccall('get_output_format', 'string');
@@ -75,7 +75,7 @@ var flush = function() {
 };
 
 var dispose = function() {
-    console.log('encoder.js dispose');
+    console.log('encoder.js :: dispose');
 
     try {
         Module.ccall('dispose', null, ['number'], [0]);

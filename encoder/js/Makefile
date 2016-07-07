@@ -17,21 +17,9 @@ CFLAGS = -v -O3 \
 	-s OUTLINING_LIMIT=10000 \
 	-s TOTAL_MEMORY=16777216 \
 	-s NO_EXIT_RUNTIME=1 \
-	-s ASSERTIONS=2 \
 	-s EXPORTED_FUNCTIONS="['_main', '_init', '_load', '_flush', '_get_output_sample_rate', '_get_output_format', '_get_output_length', '_dispose']" \
 	--pre-js pre.js \
 	--post-js post.js
-
-#	-s TOTAL_MEMORY=67108864 \
-#	-s TOTAL_MEMORY=16777216 \
-#	-s ASSERTIONS=1 \
-# 	-s SAFE_HEAP=1 \
-#	-s ASSERTIONS=2 \
-#	-s WARN_UNALIGNED=1 \
-# -g4
-
-
-
 
 ################################################################
 

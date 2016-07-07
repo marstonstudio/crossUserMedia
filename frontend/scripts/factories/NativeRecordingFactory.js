@@ -29,11 +29,11 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
     Service.initialize = function() {};
 
     Service.showSettings = function () {
-        $log.error('showSettings unimplemented for NativeRecordingFactory');
+        $log.error('NativeRecordingFactory.js :: showSettings unimplemented');
     };
 
     Service.startRecording = function(passthru) {
-        $log.log('NativeRecordingFactory.js startRecording passthru:' + passthru);
+        $log.log('NativeRecordingFactory.js :: startRecording passthru:' + passthru);
         $rootScope.$emit('statusEvent', 'recording started');
         
         audioPassthru = passthru;
@@ -46,7 +46,7 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
         ) {
             startUserMediaRecording(audioStream);
         } else {
-            $log.log('NativeRecordingFactory.js creating new audioStream');
+            $log.log('NativeRecordingFactory.js :: creating new audioStream');
             Navigator.getNavigator().mediaDevices.getUserMedia(constraints)
                 .then(startUserMediaRecording)
                 .catch(logException);
@@ -93,8 +93,7 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
                 
                 var outputFormat = audioPassthru ? PCM_FORMAT : ENCODED_FORMAT;
                 var outputCodec = audioPassthru ? PCM_CODEC : ENCODED_CODEC;
-                $log.log('audioPassthru:' + audioPassthru + ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec);
-
+                
                 Encoder.init(PCM_FORMAT, PCM_CODEC, audioContext.sampleRate, CHANNELS, outputFormat, outputCodec, audioContext.sampleRate, CHANNELS, OUTPUT_BITRATE, MAX_SECONDS)
                     .then(function(){
                         audioVolume.connect(audioRecorder);

@@ -9,7 +9,7 @@
 
 void as3_init() __attribute__((
         used,
-        annotate("as3sig:public function init(inputFormat:String, inputCodec:String, inputSampleRate:int, inputChannels:int, outputFormat:String, outputCodec:String, outputSampleRate:int, outputChannels:int, outputBitRate:int, outputBufferMaxSeconds:int):void"),
+        annotate("as3sig:public function init(inputFormat:String, inputCodec:String, inputSampleRate:int, inputChannels:int, outputFormat:String, outputCodec:String, outputSampleRate:int, outputChannels:int, outputBitRate:int, outputBufferMaxSeconds:int):int"),
         annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
@@ -28,18 +28,20 @@ void as3_init(const char *i_format_name, const char *i_codec_name, int i_sample_
     AS3_GetScalarFromVar(o_bit_rate, outputBitRate);
     AS3_GetScalarFromVar(o_buffer_max_seconds, outputBufferMaxSeconds);
 
-    init(i_format_name, i_codec_name, i_sample_rate, i_channels, o_format_name,
+    int status = init(i_format_name, i_codec_name, i_sample_rate, i_channels, o_format_name,
          o_codec_name, o_sample_rate, o_channels, o_bit_rate, o_buffer_max_seconds);
 
     free((char*)i_format_name);
     free((char*)i_codec_name);
     free((char*)o_format_name);
     free((char*)o_codec_name);
+
+    AS3_Return(status);
 }
 
 void as3_load_pointer() __attribute__((
         used,
-        annotate("as3sig:public function loadPointer(inputPointer:int, inputLength:int):void"),
+        annotate("as3sig:public function loadPointer(inputPointer:int, inputLength:int):int"),
         annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
@@ -48,7 +50,9 @@ void as3_load_pointer(uint8_t *i_data, int i_length)
     AS3_GetScalarFromVar((uint8_t*)i_data, inputPointer);
     AS3_GetScalarFromVar(i_length, inputLength);
     
-    load(i_data, i_length);
+    int status = load(i_data, i_length);
+
+    AS3_Return(status);
 }
 
 void as3_flush_pointer() __attribute__((

@@ -51,7 +51,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Base64) {
     };
 
     Service.startRecording = function (passthru) {
-        $log.log('FlashRecordingFactory.js startRecording passthru:' + passthru);
+        $log.log('FlashRecordingFactory.js :: startRecording passthru:' + passthru);
         if(hasFlashInstalled) {
             getFlashObject().startRecording(passthru);
         }

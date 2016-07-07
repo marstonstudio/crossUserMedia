@@ -47,7 +47,7 @@ package com.marstonstudio.crossusermedia.encoder {
 
         public function init(inputFormat:String, inputCodec:String, inputSampleRate:int, inputChannels:int, outputFormat:String, outputCodec:String, outputSampleRate:int, outputChannels:int, outputBitRate:int, outputBufferMaxSeconds:int):void {
            
-            com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, outputBufferMaxSeconds);
+            var status:int = com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, outputBufferMaxSeconds);
 
         }
 
@@ -58,7 +58,7 @@ package com.marstonstudio.crossusermedia.encoder {
             CModule.writeBytes(inputPointer, inputLength, input);
 
             try {
-                com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
+                var status:int = com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
             } catch (e:*) {
                 logException("Encoder.as", e);
             }

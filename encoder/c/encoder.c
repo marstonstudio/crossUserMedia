@@ -568,7 +568,7 @@ int check_sample_rate(AVCodec *codec, int sample_rate)
 }
 
 //Initialize all of the critical data structures needed for this encoder
-void init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
+int init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
           int i_channels, const char *o_format_name, const char *o_codec_name,
           int o_sample_rate, int o_channels, int o_bit_rate, int o_buffer_max_seconds)
 {
@@ -657,6 +657,8 @@ cleanup:
     //If there were an error, clean up accordingly and exit with an error status
     if(_error != NO_ERROR)
         dispose(1); //Calls `exit(1)` internally
+
+    return 0;
 }
 
 //Add converted input audio samples to the FIFO buffer for later processing.
@@ -909,7 +911,7 @@ cleanup:
 // A Codec converts the input PCM Frame to a AAC Frame
 //
 // The AAC Frame is written to the AAC Stream of the output
-void load(uint8_t *i_data, int i_length)
+int load(uint8_t *i_data, int i_length)
 {
     ERROR_CODE _error = NO_ERROR;
 
@@ -965,7 +967,7 @@ cleanup:
         dispose(1); //Calls `exit(1)` internally
         
     load_locked = false; //Unlock the load once it has finished on success
-    return;
+    return 0;
 }
 
 //Finish up all of the encoding and return a pointer to the location of the output data

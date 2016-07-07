@@ -6,12 +6,11 @@ module.exports = function ($log, $q, pcmencoder) {
     var deferred;
     
     var workerOnMessage = function(e) {
-        $log.log('EncoderFactory onmessage cmd:' + e.data.cmd);
+        $log.log('EncoderFactory.js :: workerOnMessage cmd:' + e.data.cmd);
 
         switch(e.data.cmd) {
             
             case 'prepareComplete':
-                $log.log('prepareComplete');
                 deferred.resolve();
                 break;
 
@@ -32,7 +31,7 @@ module.exports = function ($log, $q, pcmencoder) {
                         'blob':blob
                     });
                 } else {
-                    deferred.reject('EncoderFactory no data received');
+                    deferred.reject('EncoderFactory.js :: no data received');
                 }
                 break;
             
@@ -54,7 +53,7 @@ module.exports = function ($log, $q, pcmencoder) {
     // https://github.com/shama/workerify
     // https://github.com/fabiosantoscode/require-emscripten
     Service.prepare = function () {
-        $log.log('EncoderFactory.prepare');
+        //$log.log('EncoderFactory.js :: prepare');
 
         encoder = new Worker('/js/encoder.js');
         encoder.onmessage = workerOnMessage;
@@ -65,7 +64,7 @@ module.exports = function ($log, $q, pcmencoder) {
     };
 
     Service.init = function (inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, maxSeconds) {
-        $log.log('EncoderFactory.init');
+        //$log.log('EncoderFactory.js :: init');
 
         deferred = $q.defer();
         encoder.postMessage({
@@ -93,7 +92,7 @@ module.exports = function ($log, $q, pcmencoder) {
     };
 
     Service.flush = function() {
-        $log.log('EncoderFactory.flush');
+        //$log.log('EncoderFactory.js :: flush');
 
         deferred = $q.defer();
         encoder.postMessage({'cmd':'flush'});
@@ -101,7 +100,7 @@ module.exports = function ($log, $q, pcmencoder) {
     };
 
     Service.dispose = function() {
-        $log.log('EncoderFactory.dispose');
+        //$log.log('EncoderFactory.js :: dispose');
 
         encoder.postMessage({'cmd':'dispose'});
     };
