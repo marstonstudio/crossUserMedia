@@ -31,7 +31,7 @@ var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, out
     console.log('encoder.js :: init inputFormat:' + inputFormat + ', inputCodec:' + inputCodec + ', inputSampleRate:' + inputSampleRate + ', inputChannels:' + inputChannels
                             + ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec +', outputSampleRate:' + outputSampleRate + ', outputChannels:' + outputChannels
                             + ', outputBitRate:' + outputBitRate + ", maxSeconds:" + maxSeconds);
-    
+
     var status = Module.ccall(
         'init',
         'number',
@@ -43,7 +43,7 @@ var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, out
 };
 
 var load = function(inputAudio) {
-    //console.log('encoder.js load inputAudio.byteLength:' + inputAudio.byteLength);
+    console.log('encoder.js load inputAudio.byteLength:' + inputAudio.byteLength);
 
     var inputAudioArray = new Uint8Array(inputAudio);
     var status = Module.ccall(
@@ -85,9 +85,4 @@ var dispose = function() {
             throw ex;
         }
     }
-};
-
-//hack, necessary so memory optimizer can be found in browser
-if(ENVIRONMENT_IS_WEB) {
-    Module['memoryInitializerPrefixURL'] = '/js/';
 };

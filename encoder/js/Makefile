@@ -39,5 +39,5 @@ install:
 	cp -f ./README.md $(INSTALL_DIR)
 
 clean:
-	rm -f dist/encoder.*
+	rm -f ./dist/encoder.*
 	rm -Rf $(INSTALL_DIR)

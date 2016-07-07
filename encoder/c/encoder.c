@@ -103,13 +103,13 @@ struct buffer_data {
 // Errors and Warnings: 2
 // Errors: 1
 // Nothing: 0
-#define VERBOSITY 3
+#define VERBOSITY 4
 
+#define TRACE(M, ...) if(VERBOSITY >= 5) fprintf(stdout, "TRACE :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 #define LOG(M, ...) if(VERBOSITY >= 4) fprintf(stdout, "LOG :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 #define INFO(M, ...) if(VERBOSITY >= 3) fprintf(stdout, "INFO :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 #define WARNING(M, ...) if(VERBOSITY >= 2) fprintf(stdout, "WARNING :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
-//The stream `stderr` already prints a prepended "ERROR :: " to its output text
-#define ERROR(M, ...) if(VERBOSITY >= 1) fprintf(stderr, "%s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
+#define ERROR(M, ...) if(VERBOSITY >= 1) fprintf(stderr, "ERROR :: %s :: " M "\n", __FUNCTION__, ##__VA_ARGS__)
 
 #define CHK_VOID(x)                             \
     {                                           \
@@ -131,7 +131,7 @@ struct buffer_data {
 //  
 #define CHK_NULL(x)                                             \
     do {                                                        \
-        LOG(#x);                                                \
+        TRACE(#x);                                                \
         if(!(x))                                                \
         {                                                       \
             ERROR("%s FAILED", #x);                             \
@@ -142,7 +142,7 @@ struct buffer_data {
 
 #define CHK_ERROR(x)                                                    \
     do {                                                                \
-        LOG(#x);                                                        \
+        TRACE(#x);                                                        \
         int _tmp = (x);                                                 \
         if(_tmp < 0)                                                    \
         {                                                               \
@@ -154,7 +154,7 @@ struct buffer_data {
 
 #define CHK_GE(x, y)                                                    \
     do {                                                                \
-        LOG(#x);                                                        \
+        TRACE(#x);                                                        \
         int _tmp = (x);                                                 \
         if(_tmp < y)                                                    \
         {                                                               \
@@ -166,7 +166,7 @@ struct buffer_data {
 
 #define CHK_LE(x, y)                                                    \
     do {                                                                \
-        LOG(#x);                                                        \
+        TRACE(#x);                                                        \
         int _tmp = (x);                                                 \
         if(_tmp > y)                                                    \
         {                                                               \
@@ -178,7 +178,7 @@ struct buffer_data {
 
 #define CHK_EQ(x, y)                                                    \
     do {                                                                \
-        LOG(#x);                                                        \
+        TRACE(#x);                                                        \
         int _tmp = (x);                                                 \
         if(_tmp != y)                                                   \
         {                                                               \
@@ -190,20 +190,32 @@ struct buffer_data {
 
 static void av_log_encoder(void *avcl, int level, const char *fmt, va_list vl)
 {
-        char message[255];
-        int ret = vsprintf(message, fmt, vl);
+    //pwpwpw: risks here? does this need to be freed or protected against overflow?
+    char message[255];
+    int ret = vsprintf(message, fmt, vl);
 
-        const char *item_name = av_default_item_name(avcl);
+    const char *item_name = av_default_item_name(avcl);
 
-        if(level <= AV_LOG_PANIC && VERBOSITY >= 1) {
-            fprintf(stderr, "FFMPEG ERROR :: %s :: %s\n", item_name, message);
-        } else if(level <= AV_LOG_WARNING && VERBOSITY >= 2) {
-            fprintf(stdout, "FFMPEG WARN :: %s :: %s\n", item_name, message);
-        } else if(level <= AV_LOG_INFO && VERBOSITY >= 3) {
-            fprintf(stdout, "FFMPEG INFO :: %s :: %s\n", item_name, message);
-        } else if(level <= AV_LOG_TRACE && VERBOSITY >= 4) {
-            fprintf(stdout, "FFMPEG LOG  :: %s :: %s\n", item_name, message);
-        }
+    if(level <= AV_LOG_PANIC && VERBOSITY >= 1)
+    {
+        fprintf(stderr, "FFMPEG ERROR :: %s :: %s", item_name, message);
+    }
+    else if(level <= AV_LOG_WARNING && VERBOSITY >= 2)
+    {
+        fprintf(stdout, "FFMPEG WARN :: %s :: %s", item_name, message);
+    }
+    else if(level <= AV_LOG_INFO && VERBOSITY >= 3)
+    {
+        fprintf(stdout, "FFMPEG INFO :: %s :: %s", item_name, message);
+    }
+    else if(level <= AV_LOG_DEBUG && VERBOSITY >= 4)
+    {
+        fprintf(stdout, "FFMPEG LOG  :: %s :: %s", item_name, message);
+    }
+    else if(level <= AV_LOG_TRACE && VERBOSITY >= 5)
+    {
+        fprintf(stdout, "FFMPEG TRACE  :: %s :: %s", item_name, message);
+    }
 }
 
 //Convert an error code into its corresponding error text message (not thread-safe).
@@ -243,13 +255,14 @@ int input_read(void *ptr, uint8_t *buf, int buf_size)
     }
     
     const int data_left = bd->size - bd->offset;
-    LOG("bd->ptr: %p bd->offset: %d data_left: %d buf_size: %d", bd->ptr, bd->offset, data_left, buf_size);
+    TRACE("bd->ptr: %p bd->offset: %d data_left: %d buf_size: %d", bd->ptr, bd->offset, data_left, buf_size);
 
     //Overflow protection
+    // pwpwpw:is this an actual problem if this occurs?
     if(buf_size > data_left)
     {
         buf_size = data_left;
-        LOG("Read overflow encountered");
+        TRACE("Read overflow encountered");
     }
     
     //Copy internal buffer data to `buf`
@@ -271,7 +284,7 @@ int output_write(void *ptr, uint8_t *buf, int buf_size)
     }
     
     const int space_left = bd->size - bd->offset;    
-    LOG("bd->ptr: %p bd->size: %d bd->offset: %d space_left: %d buf_size: %d",
+    TRACE("bd->ptr: %p bd->size: %d bd->offset: %d space_left: %d buf_size: %d",
         bd->ptr, bd->size, bd->offset, space_left, buf_size);
 
     //Overflow protection
@@ -283,7 +296,7 @@ int output_write(void *ptr, uint8_t *buf, int buf_size)
     
     memcpy(bd->ptr + bd->offset, buf, buf_size);
     bd->offset += buf_size;
-    LOG("bd->offset: %d", bd->offset);
+    TRACE("bd->offset: %d", bd->offset);
     
     return buf_size;
 }
@@ -300,7 +313,7 @@ int64_t output_seek(void *ptr, int64_t offset, int whence)
     }
     
     
-    LOG("bd->ptr: %p bd->size: %d bd->offset %d offset: %lld whence: %d",
+    TRACE("bd->ptr: %p bd->size: %d bd->offset %d offset: %lld whence: %d",
         bd->ptr, bd->size, bd->offset, offset, whence);
 
     //Overflow protection
@@ -311,7 +324,7 @@ int64_t output_seek(void *ptr, int64_t offset, int whence)
     }
     
     bd->offset = offset;
-    LOG("bd->offset: %d", bd->offset);
+    TRACE("bd->offset: %d", bd->offset);
     
     return offset;
 }
@@ -937,7 +950,7 @@ int load(uint8_t *i_data, int i_length)
     CHK_EQ(load_locked, false);
     load_locked = true; //Now lock the load function
 
-    LOG("i_length: %d", i_length);    
+    TRACE("i_length: %d", i_length);
     CHK_NULL(i_data); //TODO: This CHK may be a little too harsh on i_data. Possibly just return from `load`
     
     //Package the incoming payload into a convenient data structure
@@ -972,7 +985,7 @@ int load(uint8_t *i_data, int i_length)
         //If there are enough samples for the encoder, encode them.
         while(av_audio_fifo_size(fifo) >= output_frame_size)
         {
-            LOG("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
+            TRACE("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
             //Encode and write audio samples from the FIFO buffer to the output container            
             CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));
         }
