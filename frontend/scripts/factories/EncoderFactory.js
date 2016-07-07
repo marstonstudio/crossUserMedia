@@ -92,7 +92,7 @@ module.exports = function ($log, $q, pcmencoder) {
     };
 
     Service.flush = function() {
-        //$log.log('EncoderFactory.js :: flush');
+        $log.log('EncoderFactory.js :: flush');
 
         deferred = $q.defer();
         encoder.postMessage({'cmd':'flush'});
@@ -100,7 +100,7 @@ module.exports = function ($log, $q, pcmencoder) {
     };
 
     Service.dispose = function() {
-        //$log.log('EncoderFactory.js :: dispose');
+        $log.log('EncoderFactory.js :: dispose');
 
         encoder.postMessage({'cmd':'dispose'});
     };

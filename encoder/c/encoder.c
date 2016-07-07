@@ -59,6 +59,7 @@ This API
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/frame.h"
+#include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libswresample/swresample.h"
 
@@ -186,7 +187,25 @@ struct buffer_data {
             goto cleanup;                                               \
         }                                                               \
     } while(0)
-          
+
+static void av_log_encoder(void *avcl, int level, const char *fmt, va_list vl)
+{
+        char message[255];
+        int ret = vsprintf(message, fmt, vl);
+
+        const char *item_name = av_default_item_name(avcl);
+
+        if(level <= AV_LOG_PANIC && VERBOSITY >= 1) {
+            fprintf(stderr, "FFMPEG ERROR :: %s :: %s\n", item_name, message);
+        } else if(level <= AV_LOG_WARNING && VERBOSITY >= 2) {
+            fprintf(stdout, "FFMPEG WARN :: %s :: %s\n", item_name, message);
+        } else if(level <= AV_LOG_INFO && VERBOSITY >= 3) {
+            fprintf(stdout, "FFMPEG INFO :: %s :: %s\n", item_name, message);
+        } else if(level <= AV_LOG_TRACE && VERBOSITY >= 4) {
+            fprintf(stdout, "FFMPEG LOG  :: %s :: %s\n", item_name, message);
+        }
+}
+
 //Convert an error code into its corresponding error text message (not thread-safe).
 static const char *get_error_text(const ERROR_CODE error)
 {
@@ -199,7 +218,9 @@ static const char *get_error_text(const ERROR_CODE error)
 
 int main(int argc, char **argv)
 {
-    INFO("main");
+    INFO("build: %s, %s", __DATE__, __TIME__);
+
+    av_log_set_callback(av_log_encoder);
 
     #ifdef __EMSCRIPTEN__
     emscripten_exit_with_live_runtime();
@@ -587,10 +608,6 @@ int init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
     passthru_encoding = false;
     load_locked = false;    
     audio_frame_pts = 0;
-
-    //by default all info messages sent to stderr
-    //might be better to use av_log_set_callback to route info to stdout
-    av_log_set_level(AV_LOG_ERROR);
 
     //Instantiate the variables of this function before any CHK macros
     AVCodec *i_codec = NULL, *o_codec = NULL;
@@ -1051,13 +1068,13 @@ void dispose(int status)
 
 int get_output_sample_rate()
 {
-    INFO("get_output_sample_rate: %d", output_codec_context->sample_rate);
+    INFO("rate: %d", output_codec_context->sample_rate);
     return output_codec_context->sample_rate;
 }
 
 char *get_output_format()
 {
-    INFO("get_output_format name: %s", output_format_context->oformat->name);
+    INFO("name: %s", output_format_context->oformat->name);
     return (char*)output_format_context->oformat->name;
 }
 
@@ -1065,6 +1082,6 @@ int get_output_length()
 {
     //The output buffer's offset is located at the output format context's io payload's data offest
     int offset = ((struct buffer_data*)output_format_context->pb->opaque)->offset;
-    INFO("get_output_length: %d", offset);
+    INFO("offset: %d", offset);
     return offset;
 }
