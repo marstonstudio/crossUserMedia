@@ -55,28 +55,16 @@ void as3_load_pointer(uint8_t *i_data, int i_length)
     AS3_Return(status);
 }
 
-void as3_flush_pointer() __attribute__((
+void as3_flush() __attribute__((
         used,
-        annotate("as3sig:public function flushPointer():int"),
+        annotate("as3sig:public function flush():int"),
         annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
-void as3_flush_pointer()
+void as3_flush()
 {
     int o_data = (int)flush();
     AS3_Return(o_data);
-}
-
-void as3_get_output_sample_rate() __attribute__((
-        used,
-        annotate("as3sig:public function getOutputSampleRate():int"),
-        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
-    ));
-
-void as3_get_output_sample_rate()
-{
-    int o_sample_rate = get_output_sample_rate();
-    AS3_Return(o_sample_rate);
 }
 
 void as3_get_output_format() __attribute__((
@@ -92,6 +80,30 @@ void as3_get_output_format()
     AS3_DeclareVar(outputFormat, String);
     AS3_CopyCStringToVar(outputFormat, o_format, strlen(o_format));
     AS3_ReturnAS3Var(outputFormat);
+}
+
+void as3_get_output_sample_rate() __attribute__((
+        used,
+        annotate("as3sig:public function getOutputSampleRate():int"),
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
+    ));
+
+void as3_get_output_sample_rate()
+{
+    int o_sample_rate = get_output_sample_rate();
+    AS3_Return(o_sample_rate);
+}
+
+void as3_get_output_pointer() __attribute__((
+        used,
+        annotate("as3sig:public function getOutputPointer():int"),
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
+    ));
+
+void as3_get_output_pointer()
+{
+    int o_pointer = (int)get_output_pointer();
+    AS3_Return(o_pointer);
 }
 
 void as3_get_output_length() __attribute__((

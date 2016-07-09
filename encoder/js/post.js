@@ -58,21 +58,27 @@ var load = function(inputAudio) {
 
 var flush = function() {
     console.log('encoder.js :: flush');
+    var status = Module.ccall('flush', 'number');
+};
 
-    var outputAudioPointer = Module.ccall('flush', 'number');
+var onFlushCallback = function() {
+    console.log('encoder.js :: onFlushCallback');
+
+    var outputPointer = Module.ccall('get_output_pointer', 'number');
+    var outputLength = Module.ccall('get_output_length', 'number');
     var outputFormat = Module.ccall('get_output_format', 'string');
     var outputSampleRate = Module.ccall('get_output_sample_rate', 'number');
-    var outputLength = Module.ccall('get_output_length', 'number');
-    var outputAudioArray = Module.HEAPU8.slice(outputAudioPointer, outputAudioPointer + outputLength);
+
+    var outputAudio = Module.HEAPU8.slice(outputPointer, outputPointer + outputLength);
 
     self.postMessage({
         'cmd':'flushComplete',
         'outputFormat':outputFormat,
         'outputSampleRate':outputSampleRate,
-        'outputAudio':outputAudioArray.buffer},
-        [outputAudioArray.buffer]
+        'outputAudio':outputAudio.buffer},
+        [outputAudio.buffer]
     );
-};
+}
 
 var dispose = function() {
     console.log('encoder.js :: dispose');

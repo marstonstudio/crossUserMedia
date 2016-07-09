@@ -159,13 +159,14 @@ public class TestApp {
             encoder.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat,
                 outputCodec, outputSampleRate, outputChannels, outputBitRate, 30);
             encoder.load(audioPcmAsset);
-            var output:ByteArray = encoder.flush();
-            var outputBytesAvailable:int = output.bytesAvailable;
-            //ADDED var outputBytesAvailable:int = encoder.getOutputLength();
+            encoder.flush();
 
+            var outputAudio:ByteArray = encoder.getOutput();
+            var outputBytesAvailable:int = outputAudio.bytesAvailable;
+            
             var encoderOutputFormat:String = encoder.getOutputFormat();
             var encoderOutputSampleRate:int = encoder.getOutputSampleRate();
-            var encoderOutputLength:int = encoder.getOutputLength();
+
             var compressionRatio:Number = Math.round(1000 * outputBytesAvailable / inputBytesAvailable) / 10;
 
             trace("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -174,16 +175,12 @@ public class TestApp {
             trace("expected output filesize 6.8% of input, actual filesize:" + compressionRatio + "%");
             trace("encoder.getOutputFormat() = " + encoderOutputFormat);
             trace("encoder.getOutputSampleRate() = " + encoderOutputSampleRate);
-            trace("encoder.getOutputLength() = " + encoderOutputLength);
             trace("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
             sleep(1000);
 
             assertTrue("outputFormat set to " + outputFormat, encoderOutputFormat == outputFormat);
             assertTrue("outputSampleRate set to " + outputSampleRate, encoderOutputSampleRate == outputSampleRate);
-            assertTrue("encoder.getOutputLength() > 0", encoderOutputLength > 0);
             assertTrue("outputBytesAvailable > 0", outputBytesAvailable > 0);
-            assertTrue("outputBytesAvailable = encoder.getOutputLength()",
-                outputBytesAvailable == encoderOutputLength);
             assertTrue("outputBytesAvailable * 10 < inputBytesAvailable",
                 outputBytesAvailable * 10 < inputBytesAvailable);
             assertTrue("outputBytesAvailable * 20 > inputBytesAvailable",

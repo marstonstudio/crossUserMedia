@@ -19,7 +19,7 @@ CFLAGS = -v -O2 \
 COMPFLAGS = \
 	-include-libraries=$(OBJECTS) \
 	-source-path=src \
-	-include-classes $(PACKAGE).Encoder
+	-include-classes $(PACKAGE).Encoder $(PACKAGE).events.EncoderEvent
 
 ################################################################
 

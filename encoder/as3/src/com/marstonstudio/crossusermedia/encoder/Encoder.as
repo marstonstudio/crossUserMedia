@@ -1,11 +1,13 @@
 package com.marstonstudio.crossusermedia.encoder {
 
     import com.marstonstudio.crossusermedia.encoder.flascc.vfs.*;
+    import com.marstonstudio.crossusermedia.encoder.events.EncoderEvent;
 
     /**
      * Wrapper for the flascc compiled FFMPEG encoder which handles CModule interactions
      *
      * @see http://www.adobe.com/devnet-docs/flascc/docs/Reference.html
+     * @see https://www.adobe.com/devnet-docs/flascc/docs/apidocs/package-summary.html
      * @see https://www.adobe.com/devnet-docs/flascc/docs/capidocs/as3.html
      * @see https://github.com/crossbridge-community/crossbridge/blob/master/samples/06_SWIG/PassingData/PassData.as
      */
@@ -21,8 +23,6 @@ package com.marstonstudio.crossusermedia.encoder {
         // @see http://www.adobe.com/devnet/games/articles/pthreads-flascc.html
         // @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/system/Worker.html
         private var enableWorker:Boolean = false;
-
-        private var output:ByteArray;
 
         public function Encoder(container:Sprite = null) {
             log("Encoder.as", "constructor", false);
@@ -46,9 +46,7 @@ package com.marstonstudio.crossusermedia.encoder {
         }
 
         public function init(inputFormat:String, inputCodec:String, inputSampleRate:int, inputChannels:int, outputFormat:String, outputCodec:String, outputSampleRate:int, outputChannels:int, outputBitRate:int, outputBufferMaxSeconds:int):void {
-           
             var status:int = com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, outputBufferMaxSeconds);
-
         }
 
         public function load(input:ByteArray):void {
@@ -66,25 +64,40 @@ package com.marstonstudio.crossusermedia.encoder {
             CModule.free(inputPointer);
         }
         
-        public function flush():ByteArray {
-            var outputPointer:int = com.marstonstudio.crossusermedia.encoder.flascc.flushPointer();
-            var outputLength:int = com.marstonstudio.crossusermedia.encoder.flascc.getOutputLength();
-            output = new ByteArray();
-            CModule.readBytes(outputPointer, outputLength, output);
-            output.position = 0; //Reset the output's position back to the begging of the buffer
-            return output;
+        public function flush():void {
+            try {
+                var status:int = com.marstonstudio.crossusermedia.encoder.flascc.flush();
+            } catch (e:*) {
+                logException("Encoder.as", e);
+            }
         }
+        
+        public function onFlushCallback():void {
+            log("Encoder.as", "onFlushCallback");
 
-        public function getOutputSampleRate():int {
-            return com.marstonstudio.crossusermedia.encoder.flascc.getOutputSampleRate();
+            var outputAudio:ByteArray = getOutput();
+            var outputFormat:String = getOutputFormat();
+            var outputSampleRate:int = getOutputSampleRate();
+
+            CModule.rootSprite.dispatchEvent(new EncoderEvent(EncoderEvent.COMPLETE, outputAudio, outputFormat, outputSampleRate));
+        }
+        
+        public function getOutput():ByteArray {
+            var outputPointer:int = com.marstonstudio.crossusermedia.encoder.flascc.getOutputPointer();
+            var outputLength:int = com.marstonstudio.crossusermedia.encoder.flascc.getOutputLength();
+
+            var outputAudio:ByteArray = new ByteArray();
+            CModule.readBytes(outputPointer, outputLength, outputAudio);
+            outputAudio.position = 0;
+            return outputAudio;
         }
 
         public function getOutputFormat():String {
             return com.marstonstudio.crossusermedia.encoder.flascc.getOutputFormat();
         }
 
-        public function getOutputLength():int {
-            return com.marstonstudio.crossusermedia.encoder.flascc.getOutputLength();
+        public function getOutputSampleRate():int {
+            return com.marstonstudio.crossusermedia.encoder.flascc.getOutputSampleRate();
         }
         
         public function dispose(status:int):void {

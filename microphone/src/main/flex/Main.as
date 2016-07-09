@@ -1,6 +1,7 @@
 package {
 
-    import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
+import com.marstonstudio.crossusermedia.encoder.events.EncoderEvent;
+import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
     import com.marstonstudio.crossusermedia.microphone.Recorder;
     import com.marstonstudio.crossusermedia.microphone.sprites.CFFTextField;
     import com.marstonstudio.crossusermedia.microphone.util.Base64Encoder;
@@ -56,6 +57,8 @@ import flash.utils.Timer;
 
         public function Main() {
             Console.log("Main.as", "buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
+
+            this.addEventListener(EncoderEvent.COMPLETE, onEncoderComplete);
             this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
 
@@ -143,8 +146,7 @@ import flash.utils.Timer;
             }
 
             _recorder = new Recorder(this, passthru);
-            _recorder.addEventListener(RecordingEvent.RECORDING, onRecording);
-            _recorder.addEventListener(RecordingEvent.COMPLETE, onRecordComplete);
+            _recorder.addEventListener(RecordingEvent.SAMPLE_DATA, onRecording);
             _recorder.record();
         }
 
@@ -170,7 +172,7 @@ import flash.utils.Timer;
             setFlashVisible(true);
         }
 
-        private function onRecordComplete(event:RecordingEvent):void {
+        private function onEncoderComplete(event:EncoderEvent):void {
             ExternalInterface.call("onFlashStatusMessage", "audio saving");
 
             var b64:Base64Encoder = new Base64Encoder();
@@ -180,7 +182,8 @@ import flash.utils.Timer;
             
             ExternalInterface.call("onFlashSoundRecorded", b64.toString(), event.format, event.sampleRate);
             ExternalInterface.call("onFlashStatusMessage", "audio saved");
-            
+
+            _recorder.dispose();
             _recorder = null;
             System.pauseForGCIfCollectionImminent();
         }

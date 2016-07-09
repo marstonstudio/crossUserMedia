@@ -770,7 +770,8 @@ ERROR_CODE decode_audio_frame(AVFrame *frame, AVFormatContext *i_format_context,
         }
     }
 
-    //TODO: Use the non-deprecated functions to encode/decode audio
+    // TODO: Use the non-deprecated functions to encode/decode audio
+    // http://ffmpeg.org/doxygen/3.1/group__lavc__decoding.html#ga58bc4bf1e0ac59e27362597e467efff3
     // avcodec_send_packet(i_codec_context, &input_packet);
     // avcodec_receive_frame(i_codec_context, frame);
     
@@ -1001,7 +1002,7 @@ cleanup:
 }
 
 //Finish up all of the encoding and return a pointer to the location of the output data
-uint8_t *flush()
+int flush()
 {
     ERROR_CODE _error = NO_ERROR;
 
@@ -1027,11 +1028,17 @@ cleanup:
     //If there were an error, clean up accordingly and exit with an error status
     if(_error != NO_ERROR)
         dispose(1); //Calls `exit(1)` internally
-    
-    //The output buffer is located at the output format context's io payload's data pointer
-    uint8_t *output_ptr = ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
-    INFO("flush: %p", output_ptr);
-    return output_ptr;
+
+    #ifdef __EMSCRIPTEN__
+    emscripten_run_script("{onFlushCallback();}");
+    #endif
+
+    #ifdef __FLASHPLAYER__
+    inline_as3("import com.marstonstudio.crossusermedia.encoder.CModule;\n");
+    inline_as3("CModule.activeConsole.onFlushCallback();\n");
+    #endif
+
+    return 0;
 }
 
 //Clean up everything and exit
@@ -1079,16 +1086,24 @@ void dispose(int status)
     exit(status);
 }
 
+char *get_output_format()
+{
+    INFO("name: %s", output_format_context->oformat->name);
+    return (char*)output_format_context->oformat->name;
+}
+
 int get_output_sample_rate()
 {
     INFO("rate: %d", output_codec_context->sample_rate);
     return output_codec_context->sample_rate;
 }
 
-char *get_output_format()
+uint8_t *get_output_pointer()
 {
-    INFO("name: %s", output_format_context->oformat->name);
-    return (char*)output_format_context->oformat->name;
+    //The output buffer's offset is located at the output format context's io payload's data offest
+    uint8_t *output_ptr = ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
+    INFO("ptr: %p", output_ptr);
+    return output_ptr;
 }
 
 int get_output_length()

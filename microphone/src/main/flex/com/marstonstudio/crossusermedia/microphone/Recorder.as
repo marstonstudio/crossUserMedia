@@ -73,7 +73,9 @@ import flash.utils.getTimer;
         private var _rootSprite:Sprite;
 
         public function Recorder(rootSprite:Sprite, passthru:Boolean = false) {
+            
             this._rootSprite = rootSprite;
+            
             if(passthru) {
                 _outputFormat = _pcmFormat;
                 _outputCodec = _pcmCodec;
@@ -113,7 +115,7 @@ import flash.utils.getTimer;
          */        
         private function onSampleData(event:SampleDataEvent):void {
             var time:Number = getTimer() - _startTime;
-            dispatchEvent( new RecordingEvent(RecordingEvent.RECORDING, time) );
+            dispatchEvent( new RecordingEvent(RecordingEvent.SAMPLE_DATA, time) );
             
             if(_encoder != null) _encoder.load(event.data);
         }
@@ -123,11 +125,13 @@ import flash.utils.getTimer;
          */        
         public function stop():void {
             _microphone.removeEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
-            
-            var encodedBuffer:ByteArray = _encoder.flush();
+            _encoder.flush();
+            //_rootSprite must have a listener for EncoderEvent.COMPLETE
+        }
+        
+        public function dispose():void {
             _encoder.dispose(0);
             _encoder = null;
-            dispatchEvent( new RecordingEvent(RecordingEvent.COMPLETE, NaN, encodedBuffer, outputFormat, sampleRate) );
         }
 
         public function get gain():uint {
@@ -168,10 +172,6 @@ import flash.utils.getTimer;
                 }
             }
             return NaN;
-        }
-        
-        public function get outputFormat():String {
-            return _outputFormat;
         }
     }
 }
