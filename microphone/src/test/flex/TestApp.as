@@ -1,6 +1,7 @@
 package {
 
 import com.marstonstudio.crossusermedia.encoder.Encoder;
+import com.marstonstudio.crossusermedia.encoder.events.EncoderEvent;
 
 import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
@@ -115,12 +116,26 @@ import org.fluint.uiImpersonation.UIImpersonator;
  [AVIOContext @ 0x7f97b9d17400] Statistics: 276480 bytes read, 0 seeks
  */
 
-public class TestApp {
+    public class TestApp {
 
         public function TestApp() {}
 
         [Embed(source="../resources/audio.raw",mimeType="application/octet-stream")]
         public var AudioPcm:Class;
+    
+        private var inputBytesAvailable:int;
+        
+        private var encoder:Encoder;
+    
+        private const inputFormat:String = 'f32be';
+        private const inputCodec:String = 'pcm_f32be';
+        private const inputSampleRate:int = 16000;
+        private const inputChannels:int = 1;
+        private const outputFormat:String = 'mp4';
+        private const outputCodec:String = 'aac';
+        private const outputSampleRate:int = 16000;
+        private const outputChannels:int = 1;
+        private const outputBitRate:int = 32000;
     
         public var container:DisplayObjectContainer;
 
@@ -134,38 +149,32 @@ public class TestApp {
             UIImpersonator.addChild(container);
         }
 
-        [Test(description="Load audio asset")]
+        [Test(async,description="Load audio asset")]
         public function testAudioLoad():void {
 
             var audioPcmAsset:ByteArrayAsset = new AudioPcm();
-            var inputBytesAvailable:int = audioPcmAsset.bytesAvailable;
+            inputBytesAvailable = audioPcmAsset.bytesAvailable;
             assertTrue("embedded bytesAvailable", inputBytesAvailable > 0);
 
             assertNotNull(container.stage);
             var rootSprite:Sprite = new Sprite();
             container.addChild(rootSprite);
-            
-            const inputFormat:String = 'f32be';
-            const inputCodec:String = 'pcm_f32be';
-            const inputSampleRate:int = 16000;
-            const inputChannels:int = 1;
-            const outputFormat:String = 'mp4';
-            const outputCodec:String = 'aac';
-            const outputSampleRate:int = 16000;
-            const outputChannels:int = 1;
-            const outputBitRate:int = 32000;
+            Async.handleEvent(this, rootSprite, EncoderEvent.COMPLETE, encoderComplete);
 
-            var encoder:Encoder = new Encoder(rootSprite);
+            encoder = new Encoder(rootSprite);
             encoder.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat,
                 outputCodec, outputSampleRate, outputChannels, outputBitRate, 30);
             encoder.load(audioPcmAsset);
             encoder.flush();
+        }
+    
+        public function encoderComplete(event:EncoderEvent, ... rest):void {
 
-            var outputAudio:ByteArray = encoder.getOutput();
+            var outputAudio:ByteArray = event.data;
             var outputBytesAvailable:int = outputAudio.bytesAvailable;
-            
-            var encoderOutputFormat:String = encoder.getOutputFormat();
-            var encoderOutputSampleRate:int = encoder.getOutputSampleRate();
+
+            var encoderOutputFormat:String = event.format;
+            var encoderOutputSampleRate:int = event.sampleRate;
 
             var compressionRatio:Number = Math.round(1000 * outputBytesAvailable / inputBytesAvailable) / 10;
 
@@ -182,10 +191,10 @@ public class TestApp {
             assertTrue("outputSampleRate set to " + outputSampleRate, encoderOutputSampleRate == outputSampleRate);
             assertTrue("outputBytesAvailable > 0", outputBytesAvailable > 0);
             assertTrue("outputBytesAvailable * 10 < inputBytesAvailable",
-                outputBytesAvailable * 10 < inputBytesAvailable);
+                    outputBytesAvailable * 10 < inputBytesAvailable);
             assertTrue("outputBytesAvailable * 20 > inputBytesAvailable",
-                outputBytesAvailable * 20 > inputBytesAvailable);
-
+                    outputBytesAvailable * 20 > inputBytesAvailable);
+            
             encoder.dispose(0);
         }
     
