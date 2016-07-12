@@ -23,11 +23,17 @@ this.onerror = function(e) {
     console.error('encoder.js worker error: ' + e);
 }
 
+var loadQueue = [];
+var loadCalls = 0;
+
 var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, maxSeconds) {
     console.log('encoder.js :: init inputFormat:' + inputFormat + ', inputCodec:' + inputCodec + ', inputSampleRate:' + inputSampleRate + ', inputChannels:' + inputChannels
                             + ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec +', outputSampleRate:' + outputSampleRate + ', outputChannels:' + outputChannels
                             + ', outputBitRate:' + outputBitRate + ", maxSeconds:" + maxSeconds);
 
+    loadQueue.length = 0;
+    loadCalls = 0;
+    
     var status = Module.ccall(
         'init',
         'number',
@@ -39,26 +45,43 @@ var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, out
 };
 
 var load = function(inputAudio) {
-    if(inputAudio !== undefined) {
-        console.log('encoder.js load byteLength:' + inputAudio.byteLength);
-    } else {
-        console.log('encoder.js load flushing');
-    }
+    var inputAudioBytes = inputAudio !== undefined ? new Uint8Array(inputAudio) : new Uint8Array();
+    console.log('encoder.js load byteLength:' + inputAudioBytes.byteLength + ', loadQueue.length:' + loadQueue.length + ', calls:' + ++loadCalls);
 
-    var inputAudioArray = inputAudio !== undefined ? new Uint8Array(inputAudio) : new Uint8Array();
-    var status = Module.ccall(
-        'load',
-        'number',
-        ['array', 'number'],
-        [inputAudioArray, inputAudioArray.length]
-    );
-
-    self.postMessage({'cmd':'loadComplete'});
+    loadQueue.push(inputAudioBytes);
+    executeOnLoad();
 };
 
-var onFlushCallback = function() {
-    console.log('encoder.js :: onFlushCallback');
+var executeOnLoad = function() {
+    
+    var loadLocked = Module.ccall('get_load_locked_status', 'number');
+    if (!loadLocked && loadQueue.length > 0) {
+        
+        var inputAudioBytes = loadQueue.shift();
+        var status = Module.ccall(
+            'load',
+            'number',
+            ['array', 'number'],
+            [inputAudioBytes, inputAudioBytes.length]
+        );
+        
+        //was in fact loadLocked, put the inputAudio back
+        if(status === -1) {
+            loadQueue.unshift(inputAudioBytes);     //TODO: does this need to sleep? possible to get stuck?
+            
+        } else if(status === 0) {
+            executeOnFlushComplete();
+            
+        } else {
+            self.postMessage({'cmd':'loadComplete'});
+            if(loadQueue.length > 0) {
+                executeOnLoad();
+            }
+        }
+    }
+}
 
+var executeOnFlushComplete = function() {
     var outputPointer = Module.ccall('get_output_pointer', 'number');
     var outputLength = Module.ccall('get_output_length', 'number');
     var outputFormat = Module.ccall('get_output_format', 'string');
@@ -69,12 +92,12 @@ var onFlushCallback = function() {
     var outputAudio = Module.HEAPU8.slice(outputPointer, outputPointer + outputLength);
 
     self.postMessage({
-        'cmd':'flushComplete',
-        'outputFormat':outputFormat,
-        'outputCodec':outputCodec,
-        'outputSampleRate':outputSampleRate,
-        'outputChannels':outputChannels,
-        'outputAudio':outputAudio.buffer},
+            'cmd':'flushComplete',
+            'outputFormat':outputFormat,
+            'outputCodec':outputCodec,
+            'outputSampleRate':outputSampleRate,
+            'outputChannels':outputChannels,
+            'outputAudio':outputAudio.buffer},
         [outputAudio.buffer]
     );
 }

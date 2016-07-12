@@ -54,7 +54,7 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
     };
 
     function startUserMediaRecording(stream) {
-        var deferred = $q.defer();
+        var deferredStart = $q.defer();
 
         audioStream = stream;
 
@@ -97,13 +97,13 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
                     .then(function(){
                         audioVolume.connect(audioRecorder);
                         audioRecorder.connect(audioContext.destination);
-                        deferred.resolve();
+                        deferredStart.resolve();
 
                     }).catch(logException);
 
             }).catch(logException);
         
-        return deferred.promise;
+        return deferredStart.promise;
     }
 
     Service.stopRecording = function() {
@@ -111,7 +111,7 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
 
         $rootScope.$emit('statusEvent', 'recording stopped');
         
-        var deferred = $q.defer();
+        var deferredStop = $q.defer();
 
         if (audioStream && audioStream.active) {
             var audioTracks = audioStream.getAudioTracks();
@@ -150,12 +150,11 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
         
         Encoder.load()
             .then(function(encodedSource){
-                Encoder.dispose();
-                deferred.resolve(encodedSource);
+                deferredStop.resolve(encodedSource);
             }).catch(logException);
         
         $rootScope.$emit('statusEvent', 'audio captured');
-        return deferred.promise;
+        return deferredStop.promise;
     };
 
     function getAverageVolume(array) {

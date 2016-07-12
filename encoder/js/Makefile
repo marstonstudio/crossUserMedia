@@ -17,7 +17,7 @@ CFLAGS = -v -O3 \
 	-s OUTLINING_LIMIT=10000 \
 	-s TOTAL_MEMORY=16777216 \
 	-s NO_EXIT_RUNTIME=1 \
-	-s EXPORTED_FUNCTIONS="['_main', '_init', '_load', '_get_output_format', '_get_output_codec', '_get_output_sample_rate', '_get_output_channels', '_get_output_pointer', '_get_output_length', '_dispose']" \
+	-s EXPORTED_FUNCTIONS="['_main', '_init', '_load', '_get_output_format', '_get_output_codec', '_get_output_sample_rate', '_get_output_channels', '_get_output_pointer', '_get_output_length', '_get_load_locked_status', '_dispose']" \
 	--pre-js pre.js \
 	--post-js post.js
 

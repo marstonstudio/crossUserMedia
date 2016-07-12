@@ -1,6 +1,6 @@
 module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Base64) {
 
-    var deferred;
+    var deferredRecording;
 
     var initialized = false;
     var hasFlashInstalled = false;
@@ -17,7 +17,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Base64) {
             var outputAudio = b64toByteArray(outputAudioB64);
             var blob = new Blob([outputAudio.buffer], { type: 'audio/' + outputFormat });
 
-            deferred.resolve({
+            deferredRecording.resolve({
                 'format':outputFormat,
                 'codec':outputCodec,
                 'sampleRate':outputSampleRate,
@@ -27,7 +27,7 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Base64) {
         };
 
         $window.onFlashSoundRecordingError = function (error) {
-            deferred.reject(error);
+            deferredRecording.reject(error);
         };
 
         $window.onFlashStatusMessage = function(message) {
@@ -60,11 +60,11 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Base64) {
     };
 
     Service.stopRecording = function () {
-        deferred = $q.defer();
+        deferredRecording = $q.defer();
         if(hasFlashInstalled) {
             getFlashObject().stopRecording();
         }
-        return deferred.promise;
+        return deferredRecording.promise;
     };
 
     function getFlashObject() {

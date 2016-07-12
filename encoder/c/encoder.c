@@ -250,7 +250,7 @@ int input_read(void *ptr, uint8_t *buf, int buf_size)
     //Sanity check
     if(!bd)
     {
-        WARNING("NULL ptr buffer encountered");
+        LOG("NULL ptr buffer encountered");
         return 0;
     }
     
@@ -632,8 +632,9 @@ int init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
 
     //Log as documentation that 32kbits output bit rate may yield
     // unpredictable output in this encoder for whatever reason
+    // when compiled for GCC in Cygwin
     if(o_bit_rate == 32000)
-        LOG("Output bit rate is %d which may yield unpredictable output in this encoder", o_bit_rate);
+        TRACE("Output bit rate is %d which may yield unpredictable output in this encoder", o_bit_rate);
     
     //Enable the `passthru_encoding` if both the input and output codec names are the same
     passthru_encoding = !strcmp(i_codec_name, o_codec_name);
@@ -928,78 +929,60 @@ cleanup:
     return _error;
 }
 
-//Finish up all of the encoding and return a pointer to the location of the output data
-int flush()
-{
-    ERROR_CODE _error = NO_ERROR;
 
-    //Encode any remaining samples in the fifo after all of the loads
-    while(av_audio_fifo_size(fifo) > 0)
-    {
-        LOG("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
-        //Encode and write audio samples from the FIFO buffer to the output container
-        CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));
-    }
-
-    //Flush the encoder as it may have delayed frames.
-    int data_written = 0;
-    do {
-        CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
-    } while(data_written);
-
-    //Write the trailer of the output file container
-    CHK_ERROR(av_write_trailer(output_format_context));
-
-cleanup:
-
-    //If there were an error, clean up accordingly and exit with an error status
-    if(_error != NO_ERROR)
-        dispose(1); //Calls `exit(1)` internally
-
-    #ifdef __EMSCRIPTEN__
-    emscripten_run_script("{onFlushCallback();}");
-    #endif
-
-    #ifdef __FLASHPLAYER__
-    inline_as3("import com.marstonstudio.crossusermedia.encoder.CModule;\n");
-    inline_as3("CModule.activeConsole.onFlushCallback();\n");
-    #endif
-
-    return 0;
-}
-
-//Load some more input samples
+// load data into the encoder
 //
-// We are using the native ffmpeg aac codec
+// call with i_length=0 to flush the encoder of any remaining samples
 //
-// These input buffers are varying sizes (not Frame size)
-// The samples are converted to 16 bit Integer are put into a Fifo
+// returns back value of i_length as confirmation of what has been encoded
 //
-// When at least a Frame's worth of data is in the Fifo, a Frame is read
-//
-// Before the first Frame is read,
-//
-// A Codec converts the input PCM Frame to a AAC Frame
-//
-// The AAC Frame is written to the AAC Stream of the output
+// This function is meant to be synchronous.
+// If called again before the previous call has finished, then will will block
+// and return value of -1 to indicate that the call did nothing
 int load(uint8_t *i_data, int i_length)
 {
     ERROR_CODE _error = NO_ERROR;
-
     TRACE("(%p, %d)", i_data, i_length);
-    CHK_NULL(i_data); //TODO: This CHK may be a little too harsh on i_data. Possibly just return from `load`
 
+    if(load_locked)
+    {
+        WARNING("load_locked, no data processed, returning value of -1");
+        return -1;
+    }
+    load_locked = true;
+
+    // we are done, so execute a flush of all data waiting to be encoded
     if(i_length == 0)
     {
-        flush();
+        //Encode any remaining samples in the fifo after all of the loads
+        while(av_audio_fifo_size(fifo) > 0)
+        {
+            TRACE("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
+            //Encode and write audio samples from the FIFO buffer to the output container
+            CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));
+        }
+
+        //Flush the encoder as it may have delayed frames.
+        int data_written = 0;
+        do {
+            CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
+        } while(data_written);
+
+        //Write the trailer of the output file container
+        CHK_ERROR(av_write_trailer(output_format_context));
+
         goto cleanup;
     }
 
-    //The `load_locked` must be false. If the load is locked (ie: another load call had been issued
-    // before a previous one returned) then error. This function is meant to be synchronous.
-    CHK_EQ(load_locked, false);
-    load_locked = true; //Now lock the load function
-    
+    // Load some more input samples
+    // These input buffers are varying sizes (not Frame size)
+    // The samples are converted to 16 bit Integer are put into a Fifo
+    // When at least a Frame's worth of data is in the Fifo, a Frame is read
+    // Before the first Frame is read,
+    // A Codec converts the input PCM Frame to a AAC Frame
+    // The AAC Frame is written to the AAC Stream of the output
+    CHK_NULL(i_data);
+
     //Package the incoming payload into a convenient data structure
     struct buffer_data input_bd = {.ptr = i_data, .size = (size_t)i_length, .offset = 0};
     
@@ -1044,7 +1027,8 @@ cleanup:
         dispose(1); //Calls `exit(1)` internally
         
     load_locked = false; //Unlock the load once it has finished on success
-    return 0;
+
+    return i_length;
 }
 
 
@@ -1095,32 +1079,32 @@ void dispose(int status)
 
 char *get_output_format()
 {
-    INFO("(%s)", output_format_context->oformat->name);
+    LOG("(%s)", output_format_context->oformat->name);
     return (char*)output_format_context->oformat->name;
 }
 
 char *get_output_codec()
 {
-    INFO("(%s)", output_codec_context->codec->name);
+    LOG("(%s)", output_codec_context->codec->name);
     return (char*)output_codec_context->codec->name;
 }
 
 int get_output_sample_rate()
 {
-    INFO("(%d)", output_codec_context->sample_rate);
+    LOG("(%d)", output_codec_context->sample_rate);
     return output_codec_context->sample_rate;
 }
 
 int get_output_channels()
 {
-    INFO("(%d)", output_codec_context->channels);
+    LOG("(%d)", output_codec_context->channels);
     return output_codec_context->channels;
 }
 
 uint8_t *get_output_pointer()
 {
     uint8_t *output_ptr = ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
-    INFO("(%p)", output_ptr);
+    LOG("(%p)", output_ptr);
     return output_ptr;
 }
 
@@ -1128,6 +1112,13 @@ int get_output_length()
 {
     //The output buffer's offset is located at the output format context's io payload's data offest
     int offset = ((struct buffer_data*)output_format_context->pb->opaque)->offset;
-    INFO("(%d)", offset);
+    LOG("(%d)", offset);
     return offset;
+}
+
+int get_load_locked_status()
+{
+    int load_locked_status = (int) load_locked;
+    TRACE("(%d)", load_locked_status);
+    return load_locked_status;
 }

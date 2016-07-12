@@ -3,38 +3,44 @@ module.exports = function ($log, $q, pcmencoder) {
     var Service = {};
 
     var encoder;
-    var deferred;
+
+    var deferredPrepare;
+    var deferredInit;
+    var deferredLoad;
+    var deferredFlush;
     
     var workerOnMessage = function(e) {
-        $log.log('EncoderFactory.js :: workerOnMessage cmd:' + e.data.cmd);
+        //$log.log('EncoderFactory.js :: workerOnMessage cmd:' + e.data.cmd);
 
         switch(e.data.cmd) {
             
             case 'prepareComplete':
-                deferred.resolve();
+                deferredPrepare.resolve();
                 break;
 
             case 'initComplete':
-                deferred.resolve();
+                deferredInit.resolve();
                 break;
 
             case 'loadComplete':
-                deferred.resolve();
+                deferredLoad.resolve();
                 break;
 
             case 'flushComplete':
                 if(e.data.outputAudio) {
                     var blob = new Blob([e.data.outputAudio], { type: 'audio/' + e.data.outputFormat });
-                    deferred.resolve({
+                    deferredFlush.resolve({
                         'format':e.data.outputFormat,
                         'codec':e.data.outputCodec,
                         'sampleRate':e.data.outputSampleRate,
                         'channels':e.data.outputChannels,
                         'blob':blob
                     });
+                    
                 } else {
-                    deferred.reject('EncoderFactory.js :: no data received');
+                    deferredFlush.reject('EncoderFactory.js :: no data received');
                 }
+                encoder.postMessage({'cmd':'dispose'});
                 break;
             
             default:
@@ -57,18 +63,17 @@ module.exports = function ($log, $q, pcmencoder) {
     Service.prepare = function () {
         //$log.log('EncoderFactory.js :: prepare');
 
+        deferredPrepare = $q.defer();
         encoder = new Worker('/js/encoder.js');
         encoder.onmessage = workerOnMessage;
         encoder.onerror = workerOnError;
-
-        deferred = $q.defer();
-        return deferred.promise;
+        return deferredPrepare.promise;
     };
 
     Service.init = function (inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, maxSeconds) {
         //$log.log('EncoderFactory.js :: init');
 
-        deferred = $q.defer();
+        deferredInit = $q.defer();
         encoder.postMessage({
             'cmd':'init', 
             'inputFormat': inputFormat,
@@ -82,26 +87,22 @@ module.exports = function ($log, $q, pcmencoder) {
             'outputBitRate': outputBitRate,
             'maxSeconds': maxSeconds
         });
-        return deferred.promise;
+        return deferredInit.promise;
     };
 
     Service.load = function(inputAudio) {
         //$log.log('EncoderFactory.load');
 
-        deferred = $q.defer();
         if(inputAudio !== undefined) {
+            deferredLoad = $q.defer();
             encoder.postMessage({'cmd':'load', 'inputAudio':inputAudio}, [inputAudio]);
+            return deferredLoad.promise;
+
         } else {
+            deferredFlush = $q.defer();
             encoder.postMessage({'cmd':'load'});
+            return deferredFlush.promise;
         }
-        
-        return deferred.promise;
-    };
-
-    Service.dispose = function() {
-        $log.log('EncoderFactory.js :: dispose');
-
-        encoder.postMessage({'cmd':'dispose'});
     };
 
     return Service;
