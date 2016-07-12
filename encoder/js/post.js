@@ -49,10 +49,10 @@ var load = function(inputAudio) {
     console.log('encoder.js load byteLength:' + inputAudioBytes.byteLength + ', loadQueue.length:' + loadQueue.length + ', calls:' + ++loadCalls);
 
     loadQueue.push(inputAudioBytes);
-    executeOnLoad();
+    executeLoad();
 };
 
-var executeOnLoad = function() {
+var executeLoad = function() {
     
     var loadLocked = Module.ccall('get_load_locked_status', 'number');
     if (!loadLocked && loadQueue.length > 0) {
@@ -66,22 +66,23 @@ var executeOnLoad = function() {
         );
         
         //was in fact loadLocked, put the inputAudio back
-        if(status === -1) {
-            loadQueue.unshift(inputAudioBytes);     //TODO: does this need to sleep? possible to get stuck?
+        if(status === 1) {
+            loadQueue.unshift(inputAudioBytes);
             
-        } else if(status === 0) {
-            executeOnFlushComplete();
+        //called with inputAudioBytes.length === 0 to trigger flush   
+        } else if(inputAudioBytes.length === 0) {
+            executeFlushComplete();
             
         } else {
             self.postMessage({'cmd':'loadComplete'});
             if(loadQueue.length > 0) {
-                executeOnLoad();
+                executeLoad();
             }
         }
     }
 }
 
-var executeOnFlushComplete = function() {
+var executeFlushComplete = function() {
     var outputPointer = Module.ccall('get_output_pointer', 'number');
     var outputLength = Module.ccall('get_output_length', 'number');
     var outputFormat = Module.ccall('get_output_format', 'string');

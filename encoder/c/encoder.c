@@ -85,6 +85,7 @@ AVAudioFifo *fifo;
 
 bool passthru_encoding;
 bool load_locked;
+bool flushed;
 int64_t audio_frame_pts;
 
 struct buffer_data {
@@ -619,7 +620,8 @@ int init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
     fifo = NULL;
 
     passthru_encoding = false;
-    load_locked = false;    
+    load_locked = false;
+    flushed = false;
     audio_frame_pts = 0;
 
     //Instantiate the variables of this function before any CHK macros
@@ -944,10 +946,16 @@ int load(uint8_t *i_data, int i_length)
     ERROR_CODE _error = NO_ERROR;
     TRACE("(%p, %d)", i_data, i_length);
 
+    if(flushed)
+    {
+        WARNING("called after flushing, no new data accepted. call init() to restart");
+        return 0;
+    }
+
     if(load_locked)
     {
-        WARNING("load_locked, no data processed, returning value of -1");
-        return -1;
+        WARNING("load_locked, no data processed, returning value of 1");
+        return 1;
     }
     load_locked = true;
 
@@ -970,6 +978,8 @@ int load(uint8_t *i_data, int i_length)
 
         //Write the trailer of the output file container
         CHK_ERROR(av_write_trailer(output_format_context));
+
+        flushed = true;
 
         goto cleanup;
     }
@@ -1028,7 +1038,7 @@ cleanup:
         
     load_locked = false; //Unlock the load once it has finished on success
 
-    return i_length;
+    return 0;
 }
 
 

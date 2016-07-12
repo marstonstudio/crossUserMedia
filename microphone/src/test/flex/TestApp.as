@@ -166,7 +166,6 @@ import org.fluint.uiImpersonation.UIImpersonator;
                 outputCodec, outputSampleRate, outputChannels, outputBitRate, 30);
             encoder.load(audioPcmAsset);
             encoder.load();
-            //encoder.flush();
         }
     
         public function encoderComplete(event:EncoderEvent, ... rest):void {

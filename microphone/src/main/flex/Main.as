@@ -94,6 +94,9 @@ import flash.utils.Timer;
             _microphonePermissionTimer = new Timer(_microphonePermissionDelay, 1);
             _microphonePermissionTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onMicrophonePermissionTimerComplete);
 
+            _recorder = new Recorder(this);
+            _recorder.addEventListener(RecordingEvent.SAMPLE_DATA, onRecording);
+
             Security.showSettings(SecurityPanel.PRIVACY);
         }
 
@@ -144,10 +147,8 @@ import flash.utils.Timer;
                 _microphonePermissionTimer.reset();
                 _microphonePermissionTimer.start();
             }
-
-            _recorder = new Recorder(this, passthru);
-            _recorder.addEventListener(RecordingEvent.SAMPLE_DATA, onRecording);
-            _recorder.record();
+            
+            _recorder.record(passthru);
         }
 
         private function externalStopRecording():void {
@@ -184,8 +185,6 @@ import flash.utils.Timer;
             ExternalInterface.call("onFlashStatusMessage", "audio saved");
 
             _recorder.dispose();
-            _recorder = null;
-            System.pauseForGCIfCollectionImminent();
         }
         
     }

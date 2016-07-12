@@ -24,6 +24,10 @@ package com.marstonstudio.crossusermedia.encoder {
         // @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/system/Worker.html
         private var enableWorker:Boolean = false;
 
+        private var loadQueue:Vector.<ByteArray>;
+
+        private var loadCalls:int = 0;
+
         public function Encoder(container:Sprite = null) {
             log("Encoder.as", "constructor", false);
 
@@ -46,35 +50,59 @@ package com.marstonstudio.crossusermedia.encoder {
         }
 
         public function init(inputFormat:String, inputCodec:String, inputSampleRate:int, inputChannels:int, outputFormat:String, outputCodec:String, outputSampleRate:int, outputChannels:int, outputBitRate:int, outputBufferMaxSeconds:int):void {
+            loadQueue = new <ByteArray>[];
+            loadCalls = 0;
+
             var status:int = com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, outputBufferMaxSeconds);
         }
 
-        public function load(input:ByteArray = null):void {
+        public function load(inputAudioBytes:ByteArray = null):void {
+            if(inputAudioBytes == null) inputAudioBytes = new ByteArray();
             
-            //Convert the input byte array into a C friendly type with its length
-            var inputLength:int = input != null ? input.length : 0;
-            var inputPointer:int = CModule.malloc(inputLength);
-            if(input != null) CModule.writeBytes(inputPointer, inputLength, input);
-
-            try {
-                var status:int = com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
-            } catch (e:*) {
-                logException("Encoder.as", e);
-            }
-
-            CModule.free(inputPointer);
+            log('Encoder.as', 'load length:' + inputAudioBytes.length + ', loadQueue.length:' + loadQueue.length + ', calls:' + ++loadCalls);
+            loadQueue.push(inputAudioBytes);
+            executeLoad();
         }
-        
-        public function flush():void {
-            try {
-                var status:int = com.marstonstudio.crossusermedia.encoder.flascc.flush();
-            } catch (e:*) {
-                logException("Encoder.as", e);
+
+        private function executeLoad():void {
+            
+            var loadLocked:Boolean = (com.marstonstudio.crossusermedia.encoder.flascc.getLoadLockedStatus() == 1);
+            if(!loadLocked && loadQueue.length > 0) {
+                var inputAudioBytes:ByteArray = loadQueue.shift();
+                var inputLength:int = inputAudioBytes.length;
+                var inputPointer:int = CModule.malloc(inputLength);
+                CModule.writeBytes(inputPointer, inputLength, inputAudioBytes);
+
+                var status:int = -1;
+                try {
+                    status = com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
+                } catch (e:*) {
+                    logException("Encoder.as", e);
+                }
+
+                //was in fact loadLocked, put the inputAudio back
+                if(status == 1) {
+                    loadQueue.unshift(inputAudioBytes);
+
+                //called with inputAudioBytes.length==0 to trigger flush   
+                } else if(inputLength == 0) {
+                    executeFlushComplete();
+                    
+                //more that we need to load    
+                } else {
+                    if(loadQueue.length > 0) {
+                        executeLoad();
+                    }
+                }
+
+                CModule.free(inputPointer);
             }
+            
         }
+
         
-        public function onFlushCallback():void {
-            log("Encoder.as", "onFlushCallback");
+        private function executeFlushComplete():void {
+            log("Encoder.as", "executeFlushComplete");
 
             CModule.rootSprite.dispatchEvent(new EncoderEvent(EncoderEvent.COMPLETE, getOutput(), getOutputFormat(), getOutputCodec(), getOutputSampleRate(), getOutputChannels()));
         }

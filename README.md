@@ -15,3 +15,11 @@ A similar [HTML5 Microphone & Web Audio Demo](https://dev.modern.ie/testdrive/de
 * [Font tools](frontend/README.md)
 * [Emscripten](encoder/js/README.md)
 * [Crossbridge](encoder/as3/README.md)
+
+### Coding TODO ###
+
+- [ ] handle max recording length timeout
+- [ ] updated deprecated ffmpeg avcodec_decode_audio4() and avcodec_encode_audio2()
+- [ ] support sample rate conversion in encoder
+- [ ] JNI wrapper for ffmpeg decoder
+- [ ] microphone selector using enumerateDevices()

@@ -64,32 +64,26 @@ import flash.utils.getTimer;
         private const _outputBitRate:int = 32000;
         private const _maxSeconds:int = 30;
 
-        private var _outputFormat:String;
-        private var _outputCodec:String;
+        private const _defaultOutputFormat:String = "mp4";
+        private const _defaultOutputCodec:String = "aac";
         
         private var _startTime:uint;
         private var _microphone:Microphone;
         private var _encoder:Encoder;
         private var _rootSprite:Sprite;
 
-        public function Recorder(rootSprite:Sprite, passthru:Boolean = false) {
-            
+        public function Recorder(rootSprite:Sprite) {
             this._rootSprite = rootSprite;
-            
-            if(passthru) {
-                _outputFormat = _pcmFormat;
-                _outputCodec = _pcmCodec;
-            } else {
-                _outputFormat = "mp4";
-                _outputCodec = "aac"; 
-            }
         }
 
         /**
          * Starts recording from the default or specified microphone.
          * The first time the record() method is called the settings manager may pop-up to request access to the Microphone.
          */        
-        public function record():void {
+        public function record(passthru:Boolean = false):void {
+            
+            var outputFormat:String = passthru ? _pcmFormat : _defaultOutputFormat;
+            var outputCodec:String = passthru ? _pcmCodec : _defaultOutputCodec;
 
             if ( _microphone == null ) {
                 _microphone = Microphone.getMicrophone();
@@ -103,7 +97,7 @@ import flash.utils.getTimer;
             
             _encoder = new Encoder(_rootSprite);
             _encoder.init(  _pcmFormat, _pcmCodec, sampleRate, _channels, 
-                            _outputFormat, _outputCodec, sampleRate, _channels, 
+                            outputFormat, outputCodec, sampleRate, _channels, 
                             _outputBitRate, _maxSeconds);
 
             _microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
@@ -125,13 +119,14 @@ import flash.utils.getTimer;
          */        
         public function stop():void {
             _microphone.removeEventListener(SampleDataEvent.SAMPLE_DATA, onSampleData);
-            _encoder.flush();
+            _encoder.load();
             //_rootSprite must have a listener for EncoderEvent.COMPLETE
         }
         
         public function dispose():void {
             _encoder.dispose(0);
             _encoder = null;
+            //System.pauseForGCIfCollectionImminent();
         }
 
         public function get gain():uint {

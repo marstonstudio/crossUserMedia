@@ -55,18 +55,6 @@ void as3_load_pointer(uint8_t *i_data, int i_length)
     AS3_Return(status);
 }
 
-void as3_flush() __attribute__((
-        used,
-        annotate("as3sig:public function flush():int"),
-        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
-    ));
-
-void as3_flush()
-{
-    int o_data = (int)flush();
-    AS3_Return(o_data);
-}
-
 void as3_get_output_format() __attribute__((
         used,
         annotate("as3sig:public function getOutputFormat():String"),
@@ -144,6 +132,18 @@ void as3_get_output_length()
 {
     int o_length = get_output_length();
     AS3_Return(o_length);
+}
+
+void as3_get_load_locked_status() __attribute__((
+        used,
+        annotate("as3sig:public function getLoadLockedStatus():int"),
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
+    ));
+
+void as3_get_load_locked_status()
+{
+    int status = get_load_locked_status();
+    AS3_Return(status);
 }
 
 void as3_dispose() __attribute__((
