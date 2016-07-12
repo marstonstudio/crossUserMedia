@@ -19,7 +19,7 @@
         <player.debug>true</player.debug>
         <!-- download 'projector content debugger' from https://www.adobe.com/support/flashplayer/debug_downloads.html  -->
         <flex.flashPlayer.command>/Applications/Flash Player.app/Contents/MacOS/Flash Player Debugger</flex.flashPlayer.command>
-        <skipTests>false</skipTests>
+        <skipTests>true</skipTests>
     </properties>
 
     <build>

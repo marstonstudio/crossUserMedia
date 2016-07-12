@@ -84,7 +84,6 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
             Encoder.load(pcmArray.buffer)
                 .then(function(){
                     //$log.log('onaudioprocess time:' + e.playbackTime + ', level:' + level);
-
                 }).catch(logException);
         };
 
@@ -108,6 +107,8 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
     }
 
     Service.stopRecording = function() {
+        $log.log('NativeRecordingFactory.js :: stopping recording');
+
         $rootScope.$emit('statusEvent', 'recording stopped');
         
         var deferred = $q.defer();
@@ -147,11 +148,10 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
             audioContext = null;
         }
         
-        Encoder.flush()
+        Encoder.load()
             .then(function(encodedSource){
                 Encoder.dispose();
                 deferred.resolve(encodedSource);
-
             }).catch(logException);
         
         $rootScope.$emit('statusEvent', 'audio captured');

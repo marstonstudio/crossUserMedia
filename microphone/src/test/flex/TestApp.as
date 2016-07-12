@@ -165,7 +165,8 @@ import org.fluint.uiImpersonation.UIImpersonator;
             encoder.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat,
                 outputCodec, outputSampleRate, outputChannels, outputBitRate, 30);
             encoder.load(audioPcmAsset);
-            encoder.flush();
+            encoder.load();
+            //encoder.flush();
         }
     
         public function encoderComplete(event:EncoderEvent, ... rest):void {
@@ -174,7 +175,9 @@ import org.fluint.uiImpersonation.UIImpersonator;
             var outputBytesAvailable:int = outputAudio.bytesAvailable;
 
             var encoderOutputFormat:String = event.format;
+            var encoderOutputCodec:String = event.codec;
             var encoderOutputSampleRate:int = event.sampleRate;
+            var encoderOutputChannels:int = event.channels;
 
             var compressionRatio:Number = Math.round(1000 * outputBytesAvailable / inputBytesAvailable) / 10;
 

@@ -180,7 +180,7 @@ import flash.utils.Timer;
             b64.useUrlFilenameSafeAlphabet = true;
             b64.encodeBytes(event.data);
             
-            ExternalInterface.call("onFlashSoundRecorded", b64.toString(), event.format, event.sampleRate);
+            ExternalInterface.call("onFlashSoundRecorded", b64.toString(), event.format, event.codec, event.sampleRate, event.channels);
             ExternalInterface.call("onFlashStatusMessage", "audio saved");
 
             _recorder.dispose();

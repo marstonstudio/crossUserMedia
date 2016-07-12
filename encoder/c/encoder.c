@@ -928,6 +928,46 @@ cleanup:
     return _error;
 }
 
+//Finish up all of the encoding and return a pointer to the location of the output data
+int flush()
+{
+    ERROR_CODE _error = NO_ERROR;
+
+    //Encode any remaining samples in the fifo after all of the loads
+    while(av_audio_fifo_size(fifo) > 0)
+    {
+        LOG("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
+        //Encode and write audio samples from the FIFO buffer to the output container
+        CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));
+    }
+
+    //Flush the encoder as it may have delayed frames.
+    int data_written = 0;
+    do {
+        CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
+    } while(data_written);
+
+    //Write the trailer of the output file container
+    CHK_ERROR(av_write_trailer(output_format_context));
+
+cleanup:
+
+    //If there were an error, clean up accordingly and exit with an error status
+    if(_error != NO_ERROR)
+        dispose(1); //Calls `exit(1)` internally
+
+    #ifdef __EMSCRIPTEN__
+    emscripten_run_script("{onFlushCallback();}");
+    #endif
+
+    #ifdef __FLASHPLAYER__
+    inline_as3("import com.marstonstudio.crossusermedia.encoder.CModule;\n");
+    inline_as3("CModule.activeConsole.onFlushCallback();\n");
+    #endif
+
+    return 0;
+}
+
 //Load some more input samples
 //
 // We are using the native ffmpeg aac codec
@@ -946,13 +986,19 @@ int load(uint8_t *i_data, int i_length)
 {
     ERROR_CODE _error = NO_ERROR;
 
+    TRACE("(%p, %d)", i_data, i_length);
+    CHK_NULL(i_data); //TODO: This CHK may be a little too harsh on i_data. Possibly just return from `load`
+
+    if(i_length == 0)
+    {
+        flush();
+        goto cleanup;
+    }
+
     //The `load_locked` must be false. If the load is locked (ie: another load call had been issued
     // before a previous one returned) then error. This function is meant to be synchronous.
     CHK_EQ(load_locked, false);
     load_locked = true; //Now lock the load function
-
-    TRACE("i_length: %d", i_length);
-    CHK_NULL(i_data); //TODO: This CHK may be a little too harsh on i_data. Possibly just return from `load`
     
     //Package the incoming payload into a convenient data structure
     struct buffer_data input_bd = {.ptr = i_data, .size = (size_t)i_length, .offset = 0};
@@ -1001,45 +1047,6 @@ cleanup:
     return 0;
 }
 
-//Finish up all of the encoding and return a pointer to the location of the output data
-int flush()
-{
-    ERROR_CODE _error = NO_ERROR;
-
-    //Encode any remaining samples in the fifo after all of the loads
-    while(av_audio_fifo_size(fifo) > 0)
-    {
-        LOG("av_audio_fifo_size: %d", av_audio_fifo_size(fifo));
-        //Encode and write audio samples from the FIFO buffer to the output container
-        CHK_ERROR(load_encode_and_write(fifo, output_format_context, output_codec_context));        
-    }
-
-    //Flush the encoder as it may have delayed frames.
-    int data_written = 0;
-    do {
-        CHK_ERROR(encode_audio_frame(NULL, output_format_context, output_codec_context, &data_written));
-    } while(data_written);
-
-    //Write the trailer of the output file container
-    CHK_ERROR(av_write_trailer(output_format_context));
-
-cleanup:
-
-    //If there were an error, clean up accordingly and exit with an error status
-    if(_error != NO_ERROR)
-        dispose(1); //Calls `exit(1)` internally
-
-    #ifdef __EMSCRIPTEN__
-    emscripten_run_script("{onFlushCallback();}");
-    #endif
-
-    #ifdef __FLASHPLAYER__
-    inline_as3("import com.marstonstudio.crossusermedia.encoder.CModule;\n");
-    inline_as3("CModule.activeConsole.onFlushCallback();\n");
-    #endif
-
-    return 0;
-}
 
 //Clean up everything and exit
 void dispose(int status)
@@ -1088,21 +1095,32 @@ void dispose(int status)
 
 char *get_output_format()
 {
-    INFO("name: %s", output_format_context->oformat->name);
+    INFO("(%s)", output_format_context->oformat->name);
     return (char*)output_format_context->oformat->name;
+}
+
+char *get_output_codec()
+{
+    INFO("(%s)", output_codec_context->codec->name);
+    return (char*)output_codec_context->codec->name;
 }
 
 int get_output_sample_rate()
 {
-    INFO("rate: %d", output_codec_context->sample_rate);
+    INFO("(%d)", output_codec_context->sample_rate);
     return output_codec_context->sample_rate;
+}
+
+int get_output_channels()
+{
+    INFO("(%d)", output_codec_context->channels);
+    return output_codec_context->channels;
 }
 
 uint8_t *get_output_pointer()
 {
-    //The output buffer's offset is located at the output format context's io payload's data offest
     uint8_t *output_ptr = ((struct buffer_data*)output_format_context->pb->opaque)->ptr;
-    INFO("ptr: %p", output_ptr);
+    INFO("(%p)", output_ptr);
     return output_ptr;
 }
 
@@ -1110,6 +1128,6 @@ int get_output_length()
 {
     //The output buffer's offset is located at the output format context's io payload's data offest
     int offset = ((struct buffer_data*)output_format_context->pb->opaque)->offset;
-    INFO("offset: %d", offset);
+    INFO("(%d)", offset);
     return offset;
 }

@@ -4,19 +4,15 @@ import java.nio.ByteOrder;
 
 public enum FileFormat {
 
-    WAV("wav", "wav", "wav"),
-    MP4("mp4", "mp4", "aac"),
-    PCM_F32_LE("f32le", "pcm", "pcm"),
-    PCM_F32_BE("f32be", "pcm", "pcm");
+    WAV("wav"),
+    MP4("mp4"),
+    PCM_F32_LE("f32le"),
+    PCM_F32_BE("f32be");
 
     private final String name;
-    private final String extension;
-    private final String codec;
 
-    FileFormat(String name, String extension, String codec) {
+    FileFormat(String name) {
         this.name = name;
-        this.extension = extension;
-        this.codec = codec;
     }
 
     public static FileFormat fromString(String n) {
@@ -41,15 +37,18 @@ public enum FileFormat {
     }
 
     public String getExtension() {
-        return extension;
+        if(isPcm()) {
+            return "pcm";
+        }
+        return this.getName();
     }
 
     public boolean isPcm() {
-        return "pcm".equals(extension);
+        return (this == PCM_F32_BE || this == PCM_F32_LE);
     }
 
     public boolean isAac() {
-        return "aac".equals(codec);
+        return (this == MP4);
     }
 
     public ByteOrder getByteOrder() {

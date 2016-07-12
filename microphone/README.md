@@ -58,5 +58,7 @@ In order to build in IntelliJ, you must add a compiler override option which wil
 ```-define+=CONFIG::cffFont,false```
 
 * Setting the output of IntelliJ Flex builds to be inside the Java project makes it easier to trigger updates in the development envrionment.
-Replace ```~``` with the absolute local filesystem path.
-```-output=~/crossUserMedia/server/src/main/webapp/swf/microphone.swf```
+Replace ```~``` with the absolute local filesystem path. The downside of this is that the IntelliJ FlexUnit test runner will no longer work.
+```-output=~/crossUserMedia/server/target/server/swf/microphone.swf```
+
+-output=/Users/jon/Workspace/github/crossUserMedia/server/target/server/swf/microphone.swf

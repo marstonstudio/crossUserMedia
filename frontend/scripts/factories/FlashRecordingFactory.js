@@ -13,13 +13,15 @@ module.exports = function ($rootScope, $log, $window, $q, swfEmbedder, Base64) {
         }
 
         //functions globally accessible for flash ExternalInterface
-        $window.onFlashSoundRecorded = function (outputAudioB64, outputFormat, outputSampleRate) {
+        $window.onFlashSoundRecorded = function (outputAudioB64, outputFormat, outputCodec, outputSampleRate, outputChannels) {
             var outputAudio = b64toByteArray(outputAudioB64);
             var blob = new Blob([outputAudio.buffer], { type: 'audio/' + outputFormat });
 
             deferred.resolve({
                 'format':outputFormat,
+                'codec':outputCodec,
                 'sampleRate':outputSampleRate,
+                'channels':outputChannels,
                 'blob':blob
             });
         };

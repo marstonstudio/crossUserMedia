@@ -23,7 +23,7 @@ public class AudioUtil {
 
     static private final Logger logger = Logger.getLogger(AudioUtil.class);
 
-    public static File convertAudioFile(File inputFile, FileFormat inputFormat, Integer inputSampleRate, FileFormat outputFormat) throws InterruptedException, IOException {
+    public static File convertAudioFile(File inputFile, FileFormat inputFormat, String inputCodec, Integer inputSampleRate, int inputChannels, FileFormat outputFormat) throws InterruptedException, IOException {
         logger.info("inputFile: " + inputFile + ", inputFormat:" + inputFormat + ", inputSampleRate:" + inputSampleRate + ", outputFormat:" + outputFormat);
 
         if(inputFormat == outputFormat) {
@@ -33,10 +33,10 @@ public class AudioUtil {
         }
 
         if(inputFormat.isPcm()) {
-            return convertPcmToWav(inputFile, inputFormat, inputSampleRate);
+            return convertPcmToWav(inputFile, inputFormat, inputCodec, inputSampleRate, inputChannels);
         }
 
-        if(inputFormat.isAac() && outputFormat.equals(FileFormat.WAV)) {
+        if(inputFormat.isAac()) {
             return convertAacToWav(inputFile);
         }
 
@@ -44,7 +44,7 @@ public class AudioUtil {
     }
 
     //http://stackoverflow.com/questions/4440015/java-pcm-to-wav
-    public static File convertPcmToWav(File pcmFile, FileFormat inputFormat, Integer inputSampleRate) throws IOException {
+    public static File convertPcmToWav(File pcmFile, FileFormat inputFormat, String inputCodec, Integer inputSampleRate, int inputChannels) throws IOException {
         logger.info("convertPcmToWav");
 
         if(inputSampleRate == null) {
@@ -55,7 +55,7 @@ public class AudioUtil {
         byte[] int16PcmData = convertFloat32ToInt16Pcm(float32PcmData, inputFormat.getByteOrder());
 
         File wavFile = FileUtil.createOutputFile(pcmFile, FileFormat.WAV.getExtension(), false);
-        writeWavFile(wavFile, int16PcmData, inputSampleRate, 1, 16);
+        writeWavFile(wavFile, int16PcmData, inputSampleRate, inputChannels, 16);
         return wavFile;
     }
 

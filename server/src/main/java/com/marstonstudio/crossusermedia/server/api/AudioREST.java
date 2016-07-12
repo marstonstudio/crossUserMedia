@@ -43,23 +43,23 @@ public class AudioREST {
             @Context HttpServletRequest hsr,
             @FormDataParam("payload") final InputStream payloadBlob,
             @FormDataParam("inputFormat") final String inputFormatName,
-            @FormDataParam("inputSampleRate") final Integer inputSampleRate,
-            @FormDataParam("outputFormat") final String outputFormatName
+            @FormDataParam("inputCodec") final String inputCodec,
+            @DefaultValue("44100") @FormDataParam("inputSampleRate") final Integer inputSampleRate,
+            @DefaultValue("1") @FormDataParam("inputChannels") final Integer inputChannels
     ) throws IOException {
         logger.info("POST /audio");
 
         FileFormat inputFormat = FileFormat.fromString(inputFormatName);
-        FileFormat outputFormat = FileFormat.fromString(outputFormatName);
-
-        validateAudioType("inputFormat", inputFormat);
-        validateAudioType("outputFormat", outputFormat);
+        if(inputFormat == null) {
+            throw new WebApplicationException("inputFormat is required and must be one of " + FileFormat.toEnumeratedList(), Response.Status.METHOD_NOT_ALLOWED);
+        }
 
         byte[] inputBytes = FileUtil.decodeBlob(payloadBlob);
         File inputFile = FileUtil.getNewEmptyFile(inputFormat.getExtension());
         FileUtil.saveBytesToFile(inputFile, inputBytes);
 
         try {
-            File outputFile = AudioUtil.convertAudioFile(inputFile, inputFormat, inputSampleRate, outputFormat);
+            File outputFile = AudioUtil.convertAudioFile(inputFile, inputFormat, inputCodec, inputSampleRate, inputChannels, FileFormat.WAV);
             logger.info("encoded outputFile:" + outputFile);
             return new ResponseSet(
                     FileUtil.getAudioUrlFromFile(hsr, inputFile),
@@ -72,10 +72,5 @@ public class AudioREST {
 
     }
 
-    private void validateAudioType(String paramName, Enum audioFormat) {
-        if(audioFormat == null) {
-            throw new WebApplicationException(paramName + " is required and must be one of " + FileFormat.toEnumeratedList(), Response.Status.METHOD_NOT_ALLOWED);
-        }
-    }
 
 }

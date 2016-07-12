@@ -49,11 +49,12 @@ package com.marstonstudio.crossusermedia.encoder {
             var status:int = com.marstonstudio.crossusermedia.encoder.flascc.init(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, outputBufferMaxSeconds);
         }
 
-        public function load(input:ByteArray):void {
+        public function load(input:ByteArray = null):void {
+            
             //Convert the input byte array into a C friendly type with its length
-            var inputLength:int = input.length;
+            var inputLength:int = input != null ? input.length : 0;
             var inputPointer:int = CModule.malloc(inputLength);
-            CModule.writeBytes(inputPointer, inputLength, input);
+            if(input != null) CModule.writeBytes(inputPointer, inputLength, input);
 
             try {
                 var status:int = com.marstonstudio.crossusermedia.encoder.flascc.loadPointer(inputPointer, inputLength);
@@ -75,11 +76,7 @@ package com.marstonstudio.crossusermedia.encoder {
         public function onFlushCallback():void {
             log("Encoder.as", "onFlushCallback");
 
-            var outputAudio:ByteArray = getOutput();
-            var outputFormat:String = getOutputFormat();
-            var outputSampleRate:int = getOutputSampleRate();
-
-            CModule.rootSprite.dispatchEvent(new EncoderEvent(EncoderEvent.COMPLETE, outputAudio, outputFormat, outputSampleRate));
+            CModule.rootSprite.dispatchEvent(new EncoderEvent(EncoderEvent.COMPLETE, getOutput(), getOutputFormat(), getOutputCodec(), getOutputSampleRate(), getOutputChannels()));
         }
         
         public function getOutput():ByteArray {
@@ -96,8 +93,16 @@ package com.marstonstudio.crossusermedia.encoder {
             return com.marstonstudio.crossusermedia.encoder.flascc.getOutputFormat();
         }
 
+        public function getOutputCodec():String {
+            return com.marstonstudio.crossusermedia.encoder.flascc.getOutputCodec();
+        }
+
         public function getOutputSampleRate():int {
             return com.marstonstudio.crossusermedia.encoder.flascc.getOutputSampleRate();
+        }
+
+        public function getOutputChannels():int {
+            return com.marstonstudio.crossusermedia.encoder.flascc.getOutputChannels();
         }
         
         public function dispose(status:int):void {

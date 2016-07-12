@@ -82,6 +82,22 @@ void as3_get_output_format()
     AS3_ReturnAS3Var(outputFormat);
 }
 
+
+void as3_get_output_codec() __attribute__((
+        used,
+        annotate("as3sig:public function getOutputCodec():String"),
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
+    ));
+
+void as3_get_output_codec()
+{
+    char *o_codec = (char*) get_output_codec();
+
+    AS3_DeclareVar(outputCodec, String);
+    AS3_CopyCStringToVar(outputCodec, o_codec, strlen(o_codec));
+    AS3_ReturnAS3Var(outputCodec);
+}
+
 void as3_get_output_sample_rate() __attribute__((
         used,
         annotate("as3sig:public function getOutputSampleRate():int"),
@@ -92,6 +108,18 @@ void as3_get_output_sample_rate()
 {
     int o_sample_rate = get_output_sample_rate();
     AS3_Return(o_sample_rate);
+}
+
+void as3_get_output_channels() __attribute__((
+        used,
+        annotate("as3sig:public function getOutputChannels():int"),
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
+    ));
+
+void as3_get_output_channels()
+{
+    int o_channels = get_output_channels();
+    AS3_Return(o_channels);
 }
 
 void as3_get_output_pointer() __attribute__((

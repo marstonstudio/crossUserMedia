@@ -10,10 +10,6 @@ this.onmessage = function(e) {
             load(e.data.inputAudio);
             break;
 
-        case 'flush':
-            flush();
-            break;
-
         case 'dispose':
             dispose();
             break;
@@ -43,9 +39,13 @@ var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, out
 };
 
 var load = function(inputAudio) {
-    console.log('encoder.js load inputAudio.byteLength:' + inputAudio.byteLength);
+    if(inputAudio !== undefined) {
+        console.log('encoder.js load byteLength:' + inputAudio.byteLength);
+    } else {
+        console.log('encoder.js load flushing');
+    }
 
-    var inputAudioArray = new Uint8Array(inputAudio);
+    var inputAudioArray = inputAudio !== undefined ? new Uint8Array(inputAudio) : new Uint8Array();
     var status = Module.ccall(
         'load',
         'number',
@@ -56,25 +56,24 @@ var load = function(inputAudio) {
     self.postMessage({'cmd':'loadComplete'});
 };
 
-var flush = function() {
-    console.log('encoder.js :: flush');
-    var status = Module.ccall('flush', 'number');
-};
-
 var onFlushCallback = function() {
     console.log('encoder.js :: onFlushCallback');
 
     var outputPointer = Module.ccall('get_output_pointer', 'number');
     var outputLength = Module.ccall('get_output_length', 'number');
     var outputFormat = Module.ccall('get_output_format', 'string');
+    var outputCodec = Module.ccall('get_output_codec', 'string');
     var outputSampleRate = Module.ccall('get_output_sample_rate', 'number');
+    var outputChannels = Module.ccall('get_output_channels', 'number');
 
     var outputAudio = Module.HEAPU8.slice(outputPointer, outputPointer + outputLength);
 
     self.postMessage({
         'cmd':'flushComplete',
         'outputFormat':outputFormat,
+        'outputCodec':outputCodec,
         'outputSampleRate':outputSampleRate,
+        'outputChannels':outputChannels,
         'outputAudio':outputAudio.buffer},
         [outputAudio.buffer]
     );

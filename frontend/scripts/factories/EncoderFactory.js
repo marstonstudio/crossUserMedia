@@ -4,10 +4,6 @@ module.exports = function ($log, $q, pcmencoder) {
 
     var encoder;
     var deferred;
-
-    var loadCalls;
-    var loadCompletes;
-
     
     var workerOnMessage = function(e) {
         $log.log('EncoderFactory.js :: workerOnMessage cmd:' + e.data.cmd);
@@ -23,9 +19,6 @@ module.exports = function ($log, $q, pcmencoder) {
                 break;
 
             case 'loadComplete':
-                loadCompletes += 1;
-                $log.log('EncoderFactory.js :: loadCompletes:' + loadCompletes);
-
                 deferred.resolve();
                 break;
 
@@ -34,7 +27,9 @@ module.exports = function ($log, $q, pcmencoder) {
                     var blob = new Blob([e.data.outputAudio], { type: 'audio/' + e.data.outputFormat });
                     deferred.resolve({
                         'format':e.data.outputFormat,
+                        'codec':e.data.outputCodec,
                         'sampleRate':e.data.outputSampleRate,
+                        'channels':e.data.outputChannels,
                         'blob':blob
                     });
                 } else {
@@ -73,9 +68,6 @@ module.exports = function ($log, $q, pcmencoder) {
     Service.init = function (inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, maxSeconds) {
         //$log.log('EncoderFactory.js :: init');
 
-        loadCalls = 0;
-        loadCompletes = 0;
-
         deferred = $q.defer();
         encoder.postMessage({
             'cmd':'init', 
@@ -94,24 +86,15 @@ module.exports = function ($log, $q, pcmencoder) {
     };
 
     Service.load = function(inputAudio) {
-        //$log.log('EncoderFactory.load inputAudio.byteLength:' + inputAudio.byteLength);
-
-        loadCalls += 1;
+        //$log.log('EncoderFactory.load');
 
         deferred = $q.defer();
-        encoder.postMessage({'cmd':'load', 'inputAudio':inputAudio}, [inputAudio]);
-        return deferred.promise;
-    };
-
-    Service.flush = function() {
-        if(loadCompletes < loadCalls) {
-            $log.error('EncoderFactory.js :: flush will fail. loadCalls:' + loadCalls + ', loadCompletes:' + loadCompletes);
+        if(inputAudio !== undefined) {
+            encoder.postMessage({'cmd':'load', 'inputAudio':inputAudio}, [inputAudio]);
         } else {
-            $log.info('EncoderFactory.js :: flush will succeed. loadCalls:' + loadCalls + ', loadCompletes:' + loadCompletes);
+            encoder.postMessage({'cmd':'load'});
         }
-
-        deferred = $q.defer();
-        encoder.postMessage({'cmd':'flush'});
+        
         return deferred.promise;
     };
 
