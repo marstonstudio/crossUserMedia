@@ -99,7 +99,6 @@ package com.marstonstudio.crossusermedia.encoder {
             }
             
         }
-
         
         private function executeFlushComplete():void {
             log("Encoder.as", "executeFlushComplete");

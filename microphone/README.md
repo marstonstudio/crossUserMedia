@@ -30,7 +30,7 @@ CONVERTER_JAR=$WORKING_DIR/flex-utilities/flex-maven-tools/flex-sdk-converter/cl
 **Use the Apache Flex Utilities to download the SDK**
 ```
 cd $WORKING_DIR
-FLEX_VERSION=4.14.1
+FLEX_VERSION=4.15.0
 FLASH_VERSIONS=14.0,15.0,16.0,17.0,18.0
 AIR_VERSIONS=18.0
 ACCEPT_LICENSE=-Dcom.adobe.systemIdsForWhichTheTermsOfTheAdobeLicenseAgreementAreAccepted=df3793c7
@@ -41,6 +41,9 @@ java $ACCEPT_LICENSE -jar $CONVERTER_JAR -flexVersion $FLEX_VERSION -flashVersio
 ```
 cd $WORKING_DIR
 java -jar $CONVERTER_JAR -fdkDir fdk-dir -mavenDir maven-dir convert
+```
+Install to local maven repository
+```
 cp -R $WORKING_DIR/maven-dir/ ~/.m2/repository/
 ```
 or if you have a private repository such as Nexus

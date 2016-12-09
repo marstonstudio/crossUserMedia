@@ -11,7 +11,7 @@ module.exports = function($rootScope, $log, $http) {
         formData.append('inputChannels', inputChannels.toString());
 
         //bogus way of setting Content-Type='multipart/form-data'
-        //https://uncorkedstudios.com/blog/multipartformdata-file-upload-with-angularjs
+        //http://www.uncorkedstudios.com/blog/multipartformdata-file-upload-with-angularjs
         return $http.post(
             '/rest/audio',
             formData,

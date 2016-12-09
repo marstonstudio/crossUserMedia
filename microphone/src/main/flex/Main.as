@@ -42,7 +42,6 @@ import flash.utils.Timer;
          to prevent build error must add a compiler option to in IntelliJ overriding value set in pom.xml
          File->Project Structure->Modules->microphone->Compiler Options->Additional compiler options->"-define+=CONFIG::cffFont,false"
 
-         http://apache-flex-users.2333346.n4.nabble.com/Flex-Mojos-Fonts-and-Theme-Questions-tc10999.html
          https://youtrack.jetbrains.com/issue/IDEA-144541
         */
         CONFIG::cffFont {

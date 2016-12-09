@@ -168,8 +168,8 @@
         </dependency-->
 
         <dependency>
-            <groupId>com.xuggle.xuggler</groupId>
-            <artifactId>xuggle-xuggler</artifactId>
+            <groupId>com.xuggle</groupId>
+            <artifactId>xuggler</artifactId>
             <version>5.4</version>
             <exclusions>
                 <exclusion>

@@ -397,7 +397,10 @@ SwrContext *init_resampler(AVCodecContext *i_codec_context, AVCodecContext *o_co
                                             av_get_default_channel_layout(i_codec_context->channels),
                                             i_codec_context->sample_fmt, i_codec_context->sample_rate,
                                             0, NULL));
-    
+
+    //TODO: pwpwpw support sample rate conversion, output different than input rate
+    // @see ffmpeg/docs/examples/resampling_audio.c
+
     //Perform a sanity check so that the number of converted samples is
     // not greater than the number of samples to be converted.
     // If the sample rates differ, this case has to be handled differently

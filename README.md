@@ -18,8 +18,10 @@ A similar [HTML5 Microphone & Web Audio Demo](https://dev.modern.ie/testdrive/de
 
 ### Coding TODO ###
 
+- [ ] fully document with screenshots
 - [ ] handle max recording length timeout
-- [ ] updated deprecated ffmpeg avcodec_decode_audio4() and avcodec_encode_audio2()
-- [ ] support sample rate conversion in encoder
 - [ ] JNI wrapper for ffmpeg decoder
 - [ ] microphone selector using enumerateDevices()
+- [ ] upgrade to Angular2
+- [ ] updated deprecated ffmpeg avcodec_decode_audio4() and avcodec_encode_audio2()
+- [ ] support sample rate conversion in encoder
