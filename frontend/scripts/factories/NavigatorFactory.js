@@ -6,6 +6,7 @@ module.exports = function($window, $q) {
 
     var navigator = $window.navigator;
 
+    //Service.getUserMediaEnabled = false;
     Service.getUserMediaEnabled = (
         navigator.getUserMedia || 
         navigator.webkitGetUserMedia || 

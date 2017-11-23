@@ -70,8 +70,8 @@ gulp.task('compileLess', ['clean'] , function() {
 //TODO: make this more conditional on an environment variable
 gulp.task('assembleStyles', [
     'compileLess',
-    'generateFonts',
-    'concatenateFonts'
+//    'generateFonts',
+//    'concatenateFonts'
 ]);
 
 gulp.task('analyzeScripts', ['clean'], function(){

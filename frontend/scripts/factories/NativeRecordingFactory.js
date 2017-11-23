@@ -58,7 +58,7 @@ module.exports = function($rootScope, $log, $window, $q, Navigator, Encoder) {
 
         audioStream = stream;
 
-        audioContext = new window.AudioContext();
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
         audioInput = audioContext.createMediaStreamSource(audioStream);
 

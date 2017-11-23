@@ -5,13 +5,21 @@ this.onmessage = function(e) {
         case 'init':
             init(e.data.inputFormat, e.data.inputCodec, e.data.inputSampleRate, e.data.inputChannels, e.data.outputFormat, e.data.outputCodec, e.data.outputSampleRate, e.data.outputChannels, e.data.outputBitRate, e.data.maxSeconds);
             break;
-        
+
         case 'load':
             load(e.data.inputAudio);
             break;
 
+        case 'clear':
+            clear();
+            break;
+
         case 'dispose':
             dispose();
+            break;
+
+        case 'abort':
+            abort();
             break;
 
         default:
@@ -28,12 +36,12 @@ var loadCalls = 0;
 
 var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, outputFormat, outputCodec, outputSampleRate, outputChannels, outputBitRate, maxSeconds) {
     console.log('encoder.js :: init inputFormat:' + inputFormat + ', inputCodec:' + inputCodec + ', inputSampleRate:' + inputSampleRate + ', inputChannels:' + inputChannels
-                            + ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec +', outputSampleRate:' + outputSampleRate + ', outputChannels:' + outputChannels
-                            + ', outputBitRate:' + outputBitRate + ", maxSeconds:" + maxSeconds);
+        + ', outputFormat:' + outputFormat + ', outputCodec:' + outputCodec +', outputSampleRate:' + outputSampleRate + ', outputChannels:' + outputChannels
+        + ', outputBitRate:' + outputBitRate + ", maxSeconds:" + maxSeconds);
 
     loadQueue.length = 0;
     loadCalls = 0;
-    
+
     var status = Module.ccall(
         'init',
         'number',
@@ -46,17 +54,17 @@ var init = function(inputFormat, inputCodec, inputSampleRate, inputChannels, out
 
 var load = function(inputAudio) {
     var inputAudioBytes = inputAudio !== undefined ? new Uint8Array(inputAudio) : new Uint8Array();
-    console.log('encoder.js load byteLength:' + inputAudioBytes.byteLength + ', loadQueue.length:' + loadQueue.length + ', calls:' + ++loadCalls);
+    //console.log('encoder.js load byteLength:' + inputAudioBytes.byteLength + ', loadQueue.length:' + loadQueue.length + ', calls:' + ++loadCalls);
 
     loadQueue.push(inputAudioBytes);
     executeLoad();
 };
 
 var executeLoad = function() {
-    
+
     var loadLocked = Module.ccall('get_load_locked_status', 'number');
     if (!loadLocked && loadQueue.length > 0) {
-        
+
         var inputAudioBytes = loadQueue.shift();
         var status = Module.ccall(
             'load',
@@ -64,15 +72,15 @@ var executeLoad = function() {
             ['array', 'number'],
             [inputAudioBytes, inputAudioBytes.length]
         );
-        
+
         //was in fact loadLocked, put the inputAudio back
         if(status === 1) {
             loadQueue.unshift(inputAudioBytes);
-            
-        //called with inputAudioBytes.length === 0 to trigger flush   
+
+            //called with inputAudioBytes.length === 0 to trigger flush
         } else if(inputAudioBytes.length === 0) {
             executeFlushComplete();
-            
+
         } else {
             self.postMessage({'cmd':'loadComplete'});
             if(loadQueue.length > 0) {
@@ -103,15 +111,21 @@ var executeFlushComplete = function() {
     );
 }
 
+var clear = function() {
+    console.log('encoder.js :: clear');
+    Module.ccall('clear', null);
+    self.postMessage({'cmd':'clearComplete'});
+}
+
 var dispose = function() {
     console.log('encoder.js :: dispose');
 
     try {
         Module.ccall('dispose', null, ['number'], [0]);
-        close();
     } catch(ex) {
         if(!(ex instanceof ExitStatus)) {
             throw ex;
         }
     }
+    self.postMessage({'cmd':'disposeComplete'});
 };
