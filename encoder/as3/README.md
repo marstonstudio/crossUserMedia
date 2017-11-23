@@ -3,7 +3,7 @@
 
 1. Ensure that you are running on either a Cygwin or Mac environment.
 
-2. Download air sdk 18.0 from https://helpx.adobe.com/air/kb/archived-air-sdk-version.html
+2. Download air sdk 18.0 from https://helpx.adobe.com/air/kb/archived-air-sdk-version.html and unpack the contents to the location /usr/local/air_sdk
 
 3. Navigate to `frameworks/flex-config.xml` and at about line 46, replace as follows:
 
@@ -20,6 +20,7 @@
     <path-element>libs/player/18.0/playerglobal.swc</path-element>
    </e xternal-library-path>
    ```
+4. Download and install the crossbridge compiler from http://crossbridge.io and unpack the contents to the location /usr/local/crossbridge
 
 4. Run `build.sh` either from Cygwin or from a Mac terminal window.
 

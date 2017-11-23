@@ -23,17 +23,23 @@ git clone https://git-wip-us.apache.org/repos/asf/flex-utilities.git $WORKING_DI
 cd $WORKING_DIR/flex-utilities
 git checkout develop
 cd $WORKING_DIR/flex-utilities/flex-maven-tools/flex-sdk-converter
+export JAVA_HOME="$(/usr/libexec/java_home -v 1.8)"
 mvn install
 CONVERTER_JAR=$WORKING_DIR/flex-utilities/flex-maven-tools/flex-sdk-converter/cli/target/apache-flex-sdk-converter-1.0.0-SNAPSHOT.jar
+```
+
+**Install the Java Cryptography Extension (JCE) [Unlimited Strength Jurisdiction Policy Files 8](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html)**
+```
+/Library/Java/JavaVirtualMachines/jdk1.8.0_152.jdk/Contents/Home/jre/lib/security/
 ```
 
 **Use the Apache Flex Utilities to download the SDK**
 ```
 cd $WORKING_DIR
-FLEX_VERSION=4.15.0
-FLASH_VERSIONS=14.0,15.0,16.0,17.0,18.0
-AIR_VERSIONS=18.0
-ACCEPT_LICENSE=-Dcom.adobe.systemIdsForWhichTheTermsOfTheAdobeLicenseAgreementAreAccepted=df3793c7
+export FLEX_VERSION=4.16.0
+export FLASH_VERSIONS=14.0,15.0,16.0,17.0,18.0
+export AIR_VERSIONS=18.0
+export ACCEPT_LICENSE=-Dcom.adobe.systemIdsForWhichTheTermsOfTheAdobeLicenseAgreementAreAccepted=fbbf24c3
 java $ACCEPT_LICENSE -jar $CONVERTER_JAR -flexVersion $FLEX_VERSION -flashVersions $FLASH_VERSIONS -airVersion $AIR_VERSIONS -platforms WINDOWS,MAC -fontkit -fdkDir fdk-dir download
 ```
 

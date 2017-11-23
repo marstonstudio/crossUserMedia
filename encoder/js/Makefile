@@ -6,11 +6,13 @@ INSTALL_DIR = ../../frontend/node_modules/pcmencoder
 
 LDFLAGS = -L./dist/lib
 
-LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
+LDLIBS = -lm -lavdevice -lavfilter -lavformat -lavcodec -lswresample -lswscale -lavutil -lz
 
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 # https://kripken.github.io/emscripten-site/docs/optimizing/Optimizing-Code.html
 # https://kripken.github.io/emscripten-site/docs/porting/Debugging.html
+# more debugging: --emit-symbol-map -g -g4
+#export EMCC_DEBUG=0
 
 CFLAGS = -v -O3 \
 	-I./dist/include \
@@ -21,12 +23,18 @@ CFLAGS = -v -O3 \
 	--pre-js pre.js \
 	--post-js post.js
 
+ifeq ($(FORMAT), wasm)
+	FORMATFLAGS = -s BINARYEN=1 -s BINARYEN_TRAP_MODE="'clamp'"
+else
+	FORMATFLAGS = -s BINARYEN=0 --memory-init-file 1
+endif
+
 ################################################################
 
 all: program
 
 program: prepare
-	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS) $(LDLIBS)
+	$(CC) $(CFLAGS) $(FORMATFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS) $(LDLIBS)
 
 prepare:
 	mkdir -p dist

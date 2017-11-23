@@ -10,7 +10,7 @@ mkdir dist
 cd ../ffmpeg
 
 #Only perform the make clean beforehand if the configure script has been called before
-if [ -f "config.mak" ]
+if [ -f "config.h" ]
 then
     echo "Cleaning past configuration"
     make clean
@@ -30,13 +30,11 @@ fi
 \
     --enable-pthreads \
     --disable-w32threads \
+    --disable-network \
     --disable-os2threads \
 \
-    --disable-d3d11va \
-    --disable-dxva2 \
-    --disable-vaapi \
-    --disable-vda \
-    --disable-vdpau \
+    --disable-audiotoolbox \
+    --disable-videotoolbox \
 \
     --disable-encoders \
     --enable-encoder=aac \
@@ -59,7 +57,6 @@ fi
     --enable-filter=aresample \
 \
     --disable-iconv \
-    --disable-sdl \
     --disable-securetransport \
     --disable-xlib \
 \

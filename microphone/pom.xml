@@ -17,7 +17,7 @@
     </prerequisites>
 
     <properties>
-        <flex.version>4.15.0</flex.version>
+        <flex.version>4.16.0</flex.version>
         <player.version>18.0</player.version>
         <configurationReport>true</configurationReport>
         <player.debug>true</player.debug>

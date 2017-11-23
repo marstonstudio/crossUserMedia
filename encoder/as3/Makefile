@@ -9,7 +9,7 @@ TARGET = dist/encoder.swc
 
 LDFLAGS = -L./dist/lib
 
-LDLIBS = -lm -lavdevice -lavformat -lavfilter -lavcodec -lswresample -lswscale -lavutil
+LDLIBS = -lm -lavdevice -lavfilter -lavformat -lavcodec -lswresample -lswscale -lavutil -lz
 
 CFLAGS = -v -O2 \
 	-I./dist/include \
@@ -48,5 +48,6 @@ install:
 		-DgeneratePom=true
 
 clean:
+	rm -Rf ~/.m2/repository/com/marstonstudio/crossusermedia/
 	rm -f $(OBJECT)
 	rm -f $(TARGET)

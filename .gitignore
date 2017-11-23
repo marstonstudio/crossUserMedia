@@ -11,3 +11,4 @@ encoder/as3/blog.html
 frontend/dist
 frontend/node
 frontend/node_modules
+frontend/package-lock.json
