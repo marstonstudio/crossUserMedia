@@ -64,7 +64,7 @@ module.exports = function ($log, $q, pcmencoder) {
         //$log.log('EncoderFactory.js :: prepare');
 
         deferredPrepare = $q.defer();
-        encoder = new Worker('/js/encoder.js');
+        encoder = new Worker('/js/encoder.js');  //TODO: get wasm build working
         encoder.onmessage = workerOnMessage;
         encoder.onerror = workerOnError;
         return deferredPrepare.promise;

@@ -229,7 +229,7 @@ struct buffer_data {
 
 static void av_log_encoder(void *avcl, int level, const char *fmt, va_list vl)
 {
-    //pwpwpw: risks here? does this need to be freed or protected against overflow?
+    //TODO: risks here? does this need to be freed or protected against overflow?
     char message[255];
     int ret = vsprintf(message, fmt, vl);
 
@@ -282,7 +282,7 @@ int input_read(void *ptr, uint8_t *buf, int buf_size)
     TRACE("bd->ptr: %p bd->offset: %d data_left: %d buf_size: %d", bd->ptr, bd->offset, data_left, buf_size);
 
     //Overflow protection
-    // pwpwpw:is this an actual problem if this occurs?
+    // TODO:is this an actual problem if this occurs?
     if(buf_size > data_left)
     {
         buf_size = data_left;
@@ -854,7 +854,7 @@ ERROR_CODE decode_audio_frame(AVFrame *frame, AVFormatContext *i_format_context,
       }
     } else {
       _error = 0;
-      // PWPWPW Is there left over data waiting int the codec?
+      // TODO: Is there left over data waiting int the codec?
     }
     LOG("frame_available = %d",frame_available);
 
@@ -931,7 +931,7 @@ ERROR_CODE read_decode_convert_and_store(AVAudioFifo *audio_fifo, AVFormatContex
       CHK_VOID(av_freep(&output_samples[0]));
       CHK_VOID(free(output_samples));
     }
-    // PWPW is there still data waiting in the Resampler?
+    // TODO: is there still data waiting in the Resampler?
 
 cleanup:
     if(input_frame)
@@ -992,7 +992,7 @@ ERROR_CODE encode_audio_frame(AVFrame *frame, AVFormatContext *o_format_context,
       //Write one audio frame from the temporary packet to the output file.
       CHK_ERROR(av_write_frame(o_format_context, &output_packet));
     }
-    // PWPWPW
+    // TODO:
     // sometimes avcodec_receive_packet returns "code=-11 Resource temporarily unavailable"
     // is this a problem
 
@@ -1299,4 +1299,59 @@ size_t available(size_t max,size_t min)
        }
     }
 
+}
+
+void decode()
+{
+    int in = open("../../microphone/src/test/resources/audio.raw", O_RDONLY);
+    TRACE("open() --> %d",in);
+
+    #define FRAME_SIZE 4096
+    unsigned char buffer[FRAME_SIZE];
+    int bytesRead = read(in, buffer, FRAME_SIZE);
+    while(bytesRead > 0) {
+        load(buffer,bytesRead);
+        bytesRead = read(in, buffer, FRAME_SIZE);
+    }
+    load(0,0);
+    close(in);
+}
+
+int main(int argc, char **argv)
+{
+    INFO("build: %s, %s", __DATE__, __TIME__);
+
+    av_log_set_callback(av_log_encoder);
+
+    #ifdef __EMSCRIPTEN__
+    emscripten_exit_with_live_runtime();
+    #endif
+
+    #ifdef __FLASHPLAYER__
+    AS3_GoAsync();
+    #endif
+
+    #ifdef __TEST__
+    while( 1 ) {
+    //LOG("Available=%ld",available(4096,0));
+    init(
+        "f32be", //const char *i_format_name,
+        "pcm_f32be", //const char *i_codec_name,
+        16000, //int i_sample_rate,
+        1, //int i_channels,
+        "mp4", //const char *o_format_name,
+        "aac", //const char *o_codec_name,
+        16000, //int o_sample_rate,
+        1, //int o_channels,
+        16*16000, //int o_bit_rate,
+        10 //int o_buffer_max_seconds
+    );
+
+    decode();
+    clear();
+    sleep(5);
+    //LOG("Available=%ld",available(4096,0));
+
+    }
+    #endif
 }

@@ -1,7 +1,7 @@
 package {
 
-import com.marstonstudio.crossusermedia.encoder.events.EncoderEvent;
-import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
+    import com.marstonstudio.crossusermedia.encoder.events.EncoderEvent;
+    import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
     import com.marstonstudio.crossusermedia.microphone.Recorder;
     import com.marstonstudio.crossusermedia.microphone.sprites.CFFTextField;
     import com.marstonstudio.crossusermedia.microphone.util.Base64Encoder;
@@ -17,8 +17,7 @@ import com.marstonstudio.crossusermedia.microphone.events.RecordingEvent;
     import flash.external.ExternalInterface;
     import flash.system.Security;
     import flash.system.SecurityPanel;
-import flash.system.System;
-import flash.utils.Timer;
+    import flash.utils.Timer;
 
     [SWF(width="430", height="276", frameRate="24", backgroundColor="#FFFFFF")]
     public class Main extends Sprite {
@@ -32,6 +31,9 @@ import flash.utils.Timer;
         private var _microphonePermissionConfirmed:Boolean;
         private var _microphonePermissionTimer:Timer;
         private const _microphonePermissionDelay:Number = 3000;
+
+        private var _securityShown:Boolean;
+        private var _checkSettingsCount:int;
 
         private const _backgroundWidth:int = 430;
         private const _backgroundHeight:int = 276;
@@ -56,6 +58,10 @@ import flash.utils.Timer;
 
         public function Main() {
             Console.log("Main.as", "buildTimestamp:" + BUILD::timestamp + ", cffFont:" + CONFIG::cffFont);
+            Console.logCapabilities("Main.as");
+
+            flash.system.Security.allowDomain("*");
+            flash.system.Security.allowInsecureDomain("*");
 
             this.addEventListener(EncoderEvent.COMPLETE, onEncoderComplete);
             this.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
@@ -84,11 +90,6 @@ import flash.utils.Timer;
             stage.dispatchEvent(new Event(Event.RESIZE));
             stage.addEventListener(MouseEvent.CLICK, onStageClick);
 
-            ExternalInterface.marshallExceptions = true;
-            ExternalInterface.addCallback("setFlashVisible", setFlashVisible);
-            ExternalInterface.addCallback("startRecording", externalStartRecording);
-            ExternalInterface.addCallback("stopRecording", externalStopRecording);
-
             _microphonePermissionConfirmed = false;
             _microphonePermissionTimer = new Timer(_microphonePermissionDelay, 1);
             _microphonePermissionTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onMicrophonePermissionTimerComplete);
@@ -96,13 +97,20 @@ import flash.utils.Timer;
             _recorder = new Recorder(this);
             _recorder.addEventListener(RecordingEvent.SAMPLE_DATA, onRecording);
 
-            Security.showSettings(SecurityPanel.PRIVACY);
+            ExternalInterface.marshallExceptions = true;
+            ExternalInterface.addCallback("setFlashVisible", setFlashVisible);
+            ExternalInterface.addCallback("startRecording", externalStartRecording);
+            ExternalInterface.addCallback("stopRecording", externalStopRecording);
+            //ExternalInterface.call("onFlashLoadComplete", true);
+
+            Console.log("Main.as", "load complete");
         }
 
         private function onStageResize(event:Event):void {
             Console.log("Main.as", "onStageResize stageWidth:" + stage.stageWidth + ", stageHeight:" + stage.stageHeight);
             _background.x = (stage.stageWidth - _background.width) / 2;
             _background.y = (stage.stageHeight - _background.height) / 2;
+            Security.showSettings(SecurityPanel.PRIVACY);
         }
 
         private function onStageClick(event:MouseEvent):void {
@@ -110,10 +118,14 @@ import flash.utils.Timer;
         }
 
         private function setFlashVisible(value:Boolean):void {
+            //ExternalInterface.call("onFlashSoundReset");
+
             if(value) {
                 _textField.text = "Please enable microphone access in privacy settings.";
                 _textField.x = (_backgroundWidth - _textField.textWidth) / 2;
                 Security.showSettings(SecurityPanel.PRIVACY);
+                _securityShown = false;
+                _checkSettingsCount = 0;
                 stage.addEventListener(Event.ENTER_FRAME, onCheckSettingsOpen);
                 ExternalInterface.call("onFlashVisibilityChange", true);
             } else {
@@ -127,11 +139,19 @@ import flash.utils.Timer;
         //http://stackoverflow.com/questions/5315076/securitypanel-close-event
         //http://stackoverflow.com/questions/6945055/flash-security-settings-panel-listening-for-close-event
         private function onCheckSettingsOpen(event:Event):void {
+
             var detector:BitmapData = new BitmapData(1, 1);
             try {
                 detector.draw(stage);
-                setFlashVisible(false);
+                Console.log("Main.as", "onCheckSettingsOpen able to draw");
+                if(_securityShown) setFlashVisible(false);
+
+                //failover detection that the security settings were never shown
+                _checkSettingsCount++;
+                if(_checkSettingsCount >= 4) Security.showSettings(SecurityPanel.PRIVACY);
+
             } catch(error:Error) {
+                _securityShown = true;
             } finally {
                 detector.dispose();
                 detector = null;
@@ -147,7 +167,7 @@ import flash.utils.Timer;
                 _microphonePermissionTimer.start();
             }
             
-            _recorder.record(passthru);
+            _recorder.record();
         }
 
         private function externalStopRecording():void {
@@ -164,15 +184,18 @@ import flash.utils.Timer;
                 _microphonePermissionTimer.stop();
             }
 
-            ExternalInterface.call("onFlashRecording", event.time / 1000, _recorder.activityLevel);
+            ExternalInterface.call("onFlashRecording", event.time / 1000, _recorder.boostedActivityLevel);
         }
 
         private function onMicrophonePermissionTimerComplete(event:TimerEvent):void {
             Console.log("Main.as", "onMicrophonePermissionTimerComplete");
+            _recorder.stop();
             setFlashVisible(true);
+            //ExternalInterface.call("onFlashSoundReset");
         }
 
         private function onEncoderComplete(event:EncoderEvent):void {
+            Console.log("Main.as", "onEncoderComplete");
             ExternalInterface.call("onFlashStatusMessage", "audio saving");
 
             var b64:Base64Encoder = new Base64Encoder();

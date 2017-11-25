@@ -67,6 +67,7 @@ package com.marstonstudio.crossusermedia.encoder {
         private function executeLoad():void {
             
             var loadLocked:Boolean = (com.marstonstudio.crossusermedia.encoder.flascc.getLoadLockedStatus() == 1);
+            log('Encoder.as', 'executeLoad() loadLocked:' + loadLocked + ', loadQueue.length:' + loadQueue.length);
             if(!loadLocked && loadQueue.length > 0) {
                 var inputAudioBytes:ByteArray = loadQueue.shift();
                 var inputLength:int = inputAudioBytes.length;

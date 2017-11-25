@@ -4,6 +4,7 @@
 *.iml
 target/
 fonts.ser
+assets/java/keystore
 encoder/js/dist
 encoder/js/node_modules
 encoder/as3/dist

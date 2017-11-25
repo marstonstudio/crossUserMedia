@@ -48,6 +48,5 @@ install:
 		-DgeneratePom=true
 
 clean:
-	rm -Rf ~/.m2/repository/com/marstonstudio/crossusermedia/
 	rm -f $(OBJECT)
 	rm -f $(TARGET)

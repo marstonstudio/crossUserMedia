@@ -10,7 +10,7 @@
 void as3_init() __attribute__((
         used,
         annotate("as3sig:public function init(inputFormat:String, inputCodec:String, inputSampleRate:int, inputChannels:int, outputFormat:String, outputCodec:String, outputSampleRate:int, outputChannels:int, outputBitRate:int, outputBufferMaxSeconds:int):int"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_init(const char *i_format_name, const char *i_codec_name, int i_sample_rate,
@@ -42,7 +42,7 @@ void as3_init(const char *i_format_name, const char *i_codec_name, int i_sample_
 void as3_load_pointer() __attribute__((
         used,
         annotate("as3sig:public function loadPointer(inputPointer:int, inputLength:int):int"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_load_pointer(uint8_t *i_data, int i_length)
@@ -58,7 +58,7 @@ void as3_load_pointer(uint8_t *i_data, int i_length)
 void as3_get_output_format() __attribute__((
         used,
         annotate("as3sig:public function getOutputFormat():String"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_get_output_format()
@@ -74,7 +74,7 @@ void as3_get_output_format()
 void as3_get_output_codec() __attribute__((
         used,
         annotate("as3sig:public function getOutputCodec():String"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_get_output_codec()
@@ -89,7 +89,7 @@ void as3_get_output_codec()
 void as3_get_output_sample_rate() __attribute__((
         used,
         annotate("as3sig:public function getOutputSampleRate():int"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_get_output_sample_rate()
@@ -101,7 +101,7 @@ void as3_get_output_sample_rate()
 void as3_get_output_channels() __attribute__((
         used,
         annotate("as3sig:public function getOutputChannels():int"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_get_output_channels()
@@ -113,7 +113,7 @@ void as3_get_output_channels()
 void as3_get_output_pointer() __attribute__((
         used,
         annotate("as3sig:public function getOutputPointer():int"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_get_output_pointer()
@@ -125,7 +125,7 @@ void as3_get_output_pointer()
 void as3_get_output_length() __attribute__((
         used,
         annotate("as3sig:public function getOutputLength():int"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_get_output_length()
@@ -137,7 +137,7 @@ void as3_get_output_length()
 void as3_get_load_locked_status() __attribute__((
         used,
         annotate("as3sig:public function getLoadLockedStatus():int"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_get_load_locked_status()
@@ -149,7 +149,7 @@ void as3_get_load_locked_status()
 void as3_clear() __attribute__((
         used,
         annotate("as3sig:public function clear():void"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_clear()
@@ -160,7 +160,7 @@ void as3_clear()
 void as3_dispose() __attribute__((
         used,
         annotate("as3sig:public function dispose(status:int):void"),
-        annotate("as3package:com.babelcentral.pcmencoder.flascc")
+        annotate("as3package:com.marstonstudio.crossusermedia.encoder.flascc")
     ));
 
 void as3_dispose(int status)
