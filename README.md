@@ -1,20 +1,20 @@
 # crossUserMedia #
 
 crossUserMedia demonstrates how to use the HTML5 getUserMedia control and the Flash Microphone object for a cross browser audio file recorder.
-The demo allows a user to record sound using the microphone from a browser session, pipeline the raw PCM bytes to a clientside ffmpeg encoder, and then play the audio back as an AAC encoded MP4 file.
+The demo allows a user to record sound using the microphone from a browser session, pipeline the raw PCM bytes to a clientside FFMPEG encoder, and then play the audio back as an AAC encoded MP4 file.
 
 I built this project to serve as a proof of concept for moving the speech powered video player on [www.englishcentral.com](https://www.englishcentral.com) from Flash to HTML5. 
 We had a requirement to record compressed audio in the browser for uploading to a server, which is not the standard use case for WebRTC.
-Chrome and Firefox each have support for the similar MediaRecorder API, but we wanted to record AAC files instead of OPUS, and we needed to support older browsers including IE11.
+Chrome and Firefox each have support for the similar MediaRecorder API, but we wanted to record 16Khz AAC files instead of 48Khz OPUS and we needed to support older browsers including IE11.
 
 ![Image of Recording](https://raw.githubusercontent.com/marstonstudio/crossUserMedia/master/assets/images/recording.png)
-Presented here is a single C wrapper around the FFMPEG libraries that is compiled into both JavaScript using Emscripten and Flash using Crossbridge.
-The user interface is written in AngularJS for all Browsers. 
+Presented here is a single C wrapper around the FFMPEG libraries that is cross compiled into both JavaScript using Emscripten and Flash using Crossbridge.
+The user interface is written entirely in AngularJS and built using Gulp. 
 Browsers that support getUserMedia() will use HTML5 microphone access and send PCM data to a web worker running FFMPEG without any Flash.
-Browsers without getUserMedia() use a hidden Flash control that provides microphone and compresses the audio using FFMPEG; the audio is returned to the AngularJS as Base64 encoded call using ExternalInterface.
+Browsers without getUserMedia() use a hidden Flash control that provides microphone support and compresses the audio using FFMPEG; the audio is returned to the AngularJS as a Base64 encoded string through ExternalInterface function calls.
 
-![Image of Permissions](https://raw.githubusercontent.com/marstonstudio/crossUserMedia/master/assets/images/flashpermissions.png)
 ![Image of Permissions](https://raw.githubusercontent.com/marstonstudio/crossUserMedia/master/assets/images/html5permissions.png)
+![Image of Permissions](https://raw.githubusercontent.com/marstonstudio/crossUserMedia/master/assets/images/flashpermissions.png)
 
 When I was writing this project I drew upon a wide set of fragments and snippets of code from other people's work across the web.
 In particular, I was inspired by the work of [Thibault Imbert](http://www.adobe.com/devnet/author_bios/thibault_imbert.html) on capturing microphone audio in [JavaScript](http://typedarray.org/from-microphone-to-wav-to-server/) and [ActionScript](http://www.bytearray.org/?p=1858).
