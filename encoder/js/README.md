@@ -63,7 +63,7 @@ Then see if `mingw32-make` exists as an executable runnable directly from MinGW.
 If using homebrew on OS X, do the following to install emscripten and generate the ~/.emscripten config file:
 
 ```
-brew install emscripten node yuicompressor
+brew install emscripten binaryen node yuicompressor
 emcc -v
 ```
 

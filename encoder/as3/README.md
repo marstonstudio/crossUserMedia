@@ -1,3 +1,4 @@
+# crossUserMedia - Compiling FFMPEG for Flash using Crossbridge #
 
 ## Setup
 
@@ -11,14 +12,14 @@
    ```
    <external-library-path>
     <path-element>libs/player/{targetPlayerMajorVersion}.{targetPlayerMinorVersion}/playerglobal.swc</path-element>
-   </e xternal-library-path>
+   </external-library-path>
    ```
    
    To
    ```
    <external-library-path>
     <path-element>libs/player/18.0/playerglobal.swc</path-element>
-   </e xternal-library-path>
+   </external-library-path>
    ```
 4. Download and install the crossbridge compiler from http://crossbridge.io and unpack the contents to the location /usr/local/crossbridge
 

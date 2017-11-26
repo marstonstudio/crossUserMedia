@@ -1,4 +1,4 @@
-# crossUserMedia #
+# crossUserMedia - Overview #
 
 crossUserMedia demonstrates how to use the HTML5 getUserMedia control and the Flash Microphone object for a cross browser audio file recorder.
 The demo allows a user to record sound using the microphone from a browser session, pipeline the raw PCM bytes to a clientside FFMPEG encoder, and then play the audio back as an AAC encoded MP4 file.
@@ -20,12 +20,12 @@ When I was writing this project I drew upon a wide set of fragments and snippets
 In particular, I was inspired by the work of [Thibault Imbert](http://www.adobe.com/devnet/author_bios/thibault_imbert.html) on capturing microphone audio in [JavaScript](http://typedarray.org/from-microphone-to-wav-to-server/) and [ActionScript](http://www.bytearray.org/?p=1858).
 I also drew from a similar [HTML5 Microphone & Web Audio Demo](https://dev.modern.ie/testdrive/demos/microphone/) available for Microsoft EDGE browser.
 
-I'm presenting the code on github to return to the community of people that are hacking difficult projects involving Emscripten, Web Audio, or FFMEPG.
-I believe it will be useful for others that are hunting for examples of setting up Makefiles and other fragments.
-I have done my best to fully document setting up this project in an environment, but I will say that it is tricky and difficult.
+I'm presenting the code on github to return to the community of people that are hacking difficult projects involving Web Workers, Emscripten, Crossbridge, Web Audio, FFMEPG, or anything else that I've used here.
+I believe it will be useful for others that are hunting for examples of setting up Makefiles for cross compilation or other fragments.
+I have done my best to fully document setting up this project in an environment for anyone that would like to compile it, but I will say that it is tricky and difficult.
 If anyone out there endeavors to try and get all of this running, please feel free to reach out to me through a ticket and I'll see if I can help.
 
-An Angular Typescript version of this player has been running in production since Spring of 2017 on EnglishCentral. 
+An Angular Typescript version of this player has been running in production on EnglishCentral since Spring of 2017. 
 In our final version we used NPM repositories to simplify the links between different components and removed gulp.js.
 
 ## Requirements ##
@@ -34,7 +34,7 @@ In our final version we used NPM repositories to simplify the links between diff
 * [Tomcat 8](https://tomcat.apache.org)
 
 ## Setup Steps ##
-* [Mavenized Apache Flex artifacts - Documented in microphone/README.md](microphone/README.md)
-* [Font tools - Documented in frontend/README.md](frontend/README.md)
 * [Emscripten - Documented in encoder/js/README.md](encoder/js/README.md)
 * [Crossbridge - Documented in encoder/as3/README.md](encoder/as3/README.md)
+* [Mavenized Apache Flex artifacts - Documented in microphone/README.md](microphone/README.md)
+* [Font tools - Documented in frontend/README.md](frontend/README.md)
