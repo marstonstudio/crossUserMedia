@@ -7,12 +7,14 @@ module.exports = function($window, $q) {
     var navigator = $window.navigator;
 
     //Service.getUserMediaEnabled = false;
+
     Service.getUserMediaEnabled = (
         navigator.getUserMedia || 
         navigator.webkitGetUserMedia || 
         navigator.mozGetUserMedia || 
         navigator.mediaDevices && navigator.mediaDevices.getUserMedia
     );
+
 
     var promisifiedOldGetUserMedia = function(constraints, successCallback, errorCallback) {
 
