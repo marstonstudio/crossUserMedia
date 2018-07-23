@@ -42,6 +42,10 @@ module.exports = function ($log, $q, pcmencoder) {
                 }
                 encoder.postMessage({'cmd':'dispose'});
                 break;
+
+            case 'disposeComplete':
+                $log.log('EncoderFactory.js :: workerOnMessage cmd:' + e.data.cmd);
+                break;
             
             default:
                 $log.error('EncoderFactory.js :: unknown command ' + e.data.cmd);
@@ -65,6 +69,7 @@ module.exports = function ($log, $q, pcmencoder) {
 
         deferredPrepare = $q.defer();
         encoder = new Worker('/js/encoder.js');  //TODO: get wasm build working
+        //encoder = new Worker('/js/encoder.wasm');
         encoder.onmessage = workerOnMessage;
         encoder.onerror = workerOnError;
         return deferredPrepare.promise;

@@ -4,9 +4,9 @@
 
 Encoder.js uses the [emscripten crosscompiler](http://kripken.github.io/emscripten-site) to compile [encoder.c](/encoder/c/encoder.c),
 underlying [FFMPEG](https://ffmpeg.org) libraries, and the [pre.js](/encoder/js/pre.js) and [post.js](/encoder/js/post.js) javascript wrappers
-into [ams.js](http://asmjs.org) code which can be run in a browser.
+into [asm.js](http://asmjs.org) code which can be run in a browser.
 It works great in Chrome, Firefox, Edge, and Safari and encodes audio at 3x real time.
-It runs sloooowly in Internet Explorer (1/6 real time) because that browser does not have the [ams.js](http://asmjs.org) optimizations.
+It runs sloooowly in Internet Explorer (1/6 real time) because that browser does not have the [asm.js](http://asmjs.org) optimizations.
 For Internet Explorer, see the ActionScript version [Encoder.swc](/encoder/as3/README.md) instead.
 
 The JavaScript cross compiled version of the encoder is bundled as an npm package and is intended to run in a
@@ -87,7 +87,8 @@ ln -s /usr/local/opt/emscripten/libexec/emmake /usr/local/opt/emscripten/libexec
 ```
 
 Now follow instructions which appeared in the homebrew installation message about editing the path to LLVM in the `~/.emscripten` config file.
-Change the LLVM_ROOT property in `~/.emscripten` from `/usr/bin` to be `/usr/local/opt/emscripten/libexec/llvm/bin`.
+Change the LLVM_ROOT property in `~/.emscripten` from `/usr/bin` to be `/usr/local/opt/emscripten/libexec/llvm/bin`. Also set the BINARYEN path to be `/usr/local/opt/binaryen`.
+
 Confirm emscripten properly installed by running the sanity check.
 
 ```

@@ -65,12 +65,12 @@
 
     </build>
 
-    <!--repositories>
+    <repositories>
         <repository>
-            <id>bintray</id>
-            <url>http://jcenter.bintray.com</url>
+            <id>xuggler</id>
+            <url>https://www.dcm4che.org/maven2/</url>
         </repository>
-    </repositories-->
+    </repositories>
 
     <dependencies>
 
@@ -168,8 +168,8 @@
         </dependency-->
 
         <dependency>
-            <groupId>com.xuggle</groupId>
-            <artifactId>xuggler</artifactId>
+            <groupId>xuggle</groupId>
+            <artifactId>xuggle-xuggler</artifactId>
             <version>5.4</version>
             <exclusions>
                 <exclusion>

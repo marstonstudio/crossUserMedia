@@ -7,4 +7,4 @@ Font tools must be installed in order for the `gulp-fontgen` plugin to work.
 
 ### Mac OS.X
 * [Install homebrew](http://brew.sh)
-* `brew install fontforge ttf2eot batik ttfautohint ttf2woff2`
+* `brew install fontforge ttf2eot batik ttfautohint`

@@ -1,5 +1,10 @@
 .DS_Store
+.classpath
+.factorypath
 .idea/
+.project
+.settings
+.vscode
 
 *.iml
 target/
